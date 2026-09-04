@@ -1,0 +1,129 @@
+.dash {
+  min-height: 100vh;
+  background: #f7f8fb;
+  background-image: radial-gradient(rgba(16, 24, 40, 0.05) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+.dash__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 40px;
+  background: #fff;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dash__logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dash__logo-icon {
+  height: 32px;
+  width: auto;
+}
+
+.dash__logo-word {
+  height: 16px;
+  width: auto;
+  /* wordmark asset is metallic-light; darken it for a white header */
+  filter: brightness(0.35);
+}
+
+.dash__logout {
+  border: 1.5px solid var(--color-border);
+  background: #fff;
+  color: var(--color-text);
+  font-size: 13.5px;
+  font-weight: 600;
+  padding: 9px 18px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.dash__logout:hover {
+  border-color: var(--color-primary);
+  background: #f5f8ff;
+  color: var(--color-primary);
+}
+
+.dash__main {
+  display: flex;
+  justify-content: center;
+  padding: 64px 24px;
+}
+
+.dash__card {
+  width: 100%;
+  max-width: 560px;
+  background: #fff;
+  border-radius: var(--radius-lg);
+  padding: 40px;
+  box-shadow: var(--shadow-card);
+  border: 1px solid rgba(16, 24, 40, 0.04);
+}
+
+.dash__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #16a34a;
+  background: #ecfdf3;
+  border: 1px solid #b8f0cc;
+  padding: 5px 12px;
+  border-radius: 999px;
+  margin-bottom: 20px;
+}
+
+.dash__title {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: var(--color-navy);
+}
+
+.dash__desc {
+  font-size: 14.5px;
+  color: var(--color-text-muted);
+  margin: 0 0 32px;
+}
+
+.dash__meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px 24px;
+  margin: 0;
+  padding-top: 24px;
+  border-top: 1px solid var(--color-border);
+}
+
+.dash__meta dt {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+
+.dash__meta dd {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+@media (max-width: 480px) {
+  .dash__header {
+    padding: 16px 20px;
+  }
+
+  .dash__meta {
+    grid-template-columns: 1fr;
+  }
+}

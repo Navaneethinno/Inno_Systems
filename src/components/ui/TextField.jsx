@@ -23,6 +23,12 @@ export const TextField = forwardRef(
               <path d="m2.5 6 7.5 5 7.5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
           )}
+          {icon === "user" && (
+            <svg className="tf__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <circle cx="10" cy="6.5" r="3.25" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M3.5 17c0-3.31 2.91-6 6.5-6s6.5 2.69 6.5 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          )}
           {icon === "lock" && (
             <svg className="tf__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
               <rect x="4" y="9" width="12" height="8" rx="2" stroke="currentColor" strokeWidth="1.5" />

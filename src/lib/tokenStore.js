@@ -1,22 +1,49 @@
 import { env } from "../config/env";
 
 /**
- * Thin wrapper around persistence so the storage mechanism (localStorage
- * today) can change later without touching the API layer or auth service.
+ * Thin wrapper around persistence so the storage mechanism can change later
+ * without touching the API layer or auth service.
+ *
+ * "Remember me" writes to localStorage (survives closing the tab); an
+ * unchecked login writes to sessionStorage (cleared when the tab closes).
+ * Reads check both, since we don't know which one was used at write time.
  */
+function read(key) {
+  return localStorage.getItem(key) ?? sessionStorage.getItem(key);
+}
+
 export const tokenStore = {
   getAccessToken() {
-    return localStorage.getItem(env.tokenStorageKey);
+    return read(env.tokenStorageKey);
   },
   getRefreshToken() {
-    return localStorage.getItem(env.refreshStorageKey);
+    return read(env.refreshStorageKey);
   },
-  setTokens(accessToken, refreshToken) {
-    localStorage.setItem(env.tokenStorageKey, accessToken);
-    if (refreshToken) localStorage.setItem(env.refreshStorageKey, refreshToken);
+  getUser() {
+    const raw = read(env.userStorageKey);
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  },
+  setSession({ jwtToken, refreshToken, user, persist }) {
+    const storage = persist ? localStorage : sessionStorage;
+    storage.setItem(env.tokenStorageKey, jwtToken);
+    if (refreshToken) storage.setItem(env.refreshStorageKey, refreshToken);
+    if (user) storage.setItem(env.userStorageKey, JSON.stringify(user));
+  },
+  updateTokens({ jwtToken, refreshToken }) {
+    const storage = localStorage.getItem(env.tokenStorageKey) ? localStorage : sessionStorage;
+    if (jwtToken) storage.setItem(env.tokenStorageKey, jwtToken);
+    if (refreshToken) storage.setItem(env.refreshStorageKey, refreshToken);
   },
   clear() {
-    localStorage.removeItem(env.tokenStorageKey);
-    localStorage.removeItem(env.refreshStorageKey);
+    for (const storage of [localStorage, sessionStorage]) {
+      storage.removeItem(env.tokenStorageKey);
+      storage.removeItem(env.refreshStorageKey);
+      storage.removeItem(env.userStorageKey);
+    }
   },
 };

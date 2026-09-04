@@ -1,5 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useNavigate } from "react-router-dom";
 import { loginSchema } from "../schema/loginSchema";
 import { useAuth } from "../hooks/useAuth";
 import { TextField } from "../../../components/ui/TextField";
@@ -16,6 +17,7 @@ const stats = [
 
 export function LoginPage() {
   const { login, isLoading, error, clearError } = useAuth();
+  const navigate = useNavigate();
 
   const {
     register,
@@ -23,12 +25,13 @@ export function LoginPage() {
     formState: { errors },
   } = useForm({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: "", password: "", rememberMe: false },
+    defaultValues: { username: "", password: "", rememberMe: false },
   });
 
   const onSubmit = async (values) => {
     try {
       await login(values);
+      navigate("/", { replace: true });
     } catch {
       // error surfaced via auth context state
     }
@@ -94,14 +97,14 @@ export function LoginPage() {
 
           <form className="login__form" onSubmit={handleSubmit(onSubmit)} noValidate>
             <TextField
-              id="email"
-              label="Email address"
-              type="email"
-              icon="mail"
-              placeholder="you@company.com"
-              autoComplete="email"
-              error={errors.email?.message}
-              {...register("email")}
+              id="username"
+              label="Username"
+              type="text"
+              icon="user"
+              placeholder="Enter your username"
+              autoComplete="username"
+              error={errors.username?.message}
+              {...register("username")}
             />
 
             <TextField
@@ -115,15 +118,10 @@ export function LoginPage() {
               {...register("password")}
             />
 
-            <div className="login__row">
-              <label className="login__checkbox">
-                <input type="checkbox" {...register("rememberMe")} />
-                <span>Remember me</span>
-              </label>
-              <a href="/forgot-password" className="login__link">
-                Forgot password?
-              </a>
-            </div>
+            <label className="login__checkbox">
+              <input type="checkbox" {...register("rememberMe")} />
+              <span>Remember me</span>
+            </label>
 
             <Button type="submit" fullWidth loading={isLoading}>
               {isLoading ? (

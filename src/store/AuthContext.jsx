@@ -4,7 +4,9 @@ import { authService } from "../features/auth/services/authService";
 export const AuthContext = createContext(undefined);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  // No /me endpoint exists on this backend — rehydrate the user we cached
+  // at login time as long as a token is still present.
+  const [user, setUser] = useState(() => (authService.isAuthenticated() ? authService.getStoredUser() : null));
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -22,8 +24,8 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  const logout = useCallback(async () => {
-    await authService.logout();
+  const logout = useCallback(() => {
+    authService.logout();
     setUser(null);
   }, []);
 

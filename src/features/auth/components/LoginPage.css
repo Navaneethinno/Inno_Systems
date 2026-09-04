@@ -229,13 +229,6 @@
   gap: 18px;
 }
 
-.login__row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: -4px;
-}
-
 .login__checkbox {
   display: flex;
   align-items: center;
@@ -243,23 +236,13 @@
   font-size: 13.5px;
   color: var(--color-slate);
   cursor: pointer;
+  margin-top: -4px;
 }
 
 .login__checkbox input {
   width: 15px;
   height: 15px;
   accent-color: var(--color-primary);
-}
-
-.login__link {
-  font-size: 13.5px;
-  color: var(--color-primary);
-  text-decoration: none;
-  font-weight: 600;
-}
-
-.login__link:hover {
-  text-decoration: underline;
 }
 
 .login__security-note {
