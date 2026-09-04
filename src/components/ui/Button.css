@@ -10,15 +10,40 @@
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease, background 0.12s ease;
+}
+
+.btn--primary {
   color: #fff;
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
   box-shadow: 0 10px 24px -8px rgba(34, 102, 238, 0.55);
-  transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
 }
 
-.btn:hover:not(:disabled) {
+.btn--primary:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow: 0 14px 28px -8px rgba(34, 102, 238, 0.6);
+}
+
+.btn--secondary {
+  color: var(--color-text);
+  background: #fff;
+  border: 1.5px solid var(--color-border);
+}
+
+.btn--secondary:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  background: #f5f8ff;
+  color: var(--color-primary);
+}
+
+.btn--danger {
+  color: #fff;
+  background: linear-gradient(135deg, #e0342f 0%, #b8241f 100%);
+  box-shadow: 0 10px 24px -8px rgba(224, 52, 47, 0.5);
+}
+
+.btn--danger:hover:not(:disabled) {
+  transform: translateY(-1px);
 }
 
 .btn:active:not(:disabled) {

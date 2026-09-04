@@ -1,9 +1,9 @@
 import "./Button.css";
 
-export function Button({ loading, fullWidth, children, disabled, className = "", ...rest }) {
+export function Button({ loading, fullWidth, variant = "primary", children, disabled, className = "", ...rest }) {
   return (
     <button
-      className={`btn ${fullWidth ? "btn--full" : ""} ${className}`}
+      className={`btn btn--${variant} ${fullWidth ? "btn--full" : ""} ${className}`}
       disabled={disabled || loading}
       {...rest}
     >

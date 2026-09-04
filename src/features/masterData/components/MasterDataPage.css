@@ -1,0 +1,57 @@
+.mdp__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.mdp__title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-navy);
+  margin: 0 0 4px;
+}
+
+.mdp__subtitle {
+  font-size: 13.5px;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.mdp__error {
+  background: #fdecec;
+  border: 1px solid #f6c4c2;
+  color: #9c2b27;
+  font-size: 13px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+}
+
+.mdp__state {
+  padding: 40px;
+  color: var(--color-text-muted);
+}
+
+.mdp__form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mdp__checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: var(--color-slate);
+  cursor: pointer;
+}
+
+.mdp__checkbox input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--color-primary);
+}

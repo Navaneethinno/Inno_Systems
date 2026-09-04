@@ -1,0 +1,251 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useParams } from "react-router-dom";
+import { masterEntities } from "../config/masterEntities";
+import { masterDataService } from "../services/masterDataService";
+import { DataTable } from "../../../components/ui/DataTable";
+import { Button } from "../../../components/ui/Button";
+import { Modal } from "../../../components/ui/Modal";
+import { TextField } from "../../../components/ui/TextField";
+import { Select } from "../../../components/ui/Select";
+import "./MasterDataPage.css";
+
+function rowLabel(row) {
+  return row.name ?? row.menu_name ?? row.action_name ?? row.title ?? `#${row.id}`;
+}
+
+const emptyValues = (fields) =>
+  Object.fromEntries(fields.map((f) => [f.name, f.type === "status" ? true : ""]));
+
+export function MasterCrudPage() {
+  const { entityKey } = useParams();
+  const config = masterEntities[entityKey];
+
+  const [rows, setRows] = useState([]);
+  const [optionSets, setOptionSets] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const [modalState, setModalState] = useState(null); // { mode: "add" | "edit", values }
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const loadRows = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await masterDataService.list(entityKey);
+      setRows(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [entityKey]);
+
+  useEffect(() => {
+    loadRows();
+  }, [loadRows]);
+
+  const selectSources = useMemo(
+    () => [...new Set((config?.fields ?? []).filter((f) => f.type === "select").map((f) => f.optionsFrom))],
+    [config]
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const entries = await Promise.all(
+        selectSources.map(async (source) => {
+          try {
+            const list = await masterDataService.list(source);
+            return [source, list];
+          } catch {
+            return [source, []];
+          }
+        })
+      );
+      if (!cancelled) setOptionSets(Object.fromEntries(entries));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectSources]);
+
+  if (!config) {
+    return <div className="mdp__state">Unknown master data type "{entityKey}".</div>;
+  }
+
+  const openAdd = () => setModalState({ mode: "add", values: emptyValues(config.fields) });
+  const openEdit = (row) => setModalState({ mode: "edit", values: { ...emptyValues(config.fields), ...row } });
+  const closeModal = () => setModalState(null);
+
+  const handleFieldChange = (name, value) => {
+    setModalState((prev) => ({ ...prev, values: { ...prev.values, [name]: value } }));
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setIsSaving(true);
+    setError(null);
+    try {
+      const payload = { ...modalState.values };
+      config.fields.forEach((f) => {
+        if (f.type === "select" || f.type === "number") payload[f.name] = Number(payload[f.name]) || 0;
+        if (f.type === "status") payload[f.name] = payload[f.name] ? 1 : 0;
+      });
+
+      if (modalState.mode === "add") {
+        await masterDataService.add(entityKey, payload);
+      } else {
+        await masterDataService.edit(entityKey, { ...payload, id: modalState.values.id });
+      }
+      closeModal();
+      await loadRows();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setIsSaving(true);
+    setError(null);
+    try {
+      await masterDataService.remove(entityKey, deleteTarget.id);
+      setDeleteTarget(null);
+      await loadRows();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const columns = config.columns.map((col) =>
+    col.status
+      ? {
+          ...col,
+          render: (row) => (
+            <span className={`dt__status ${row[col.key] ? "dt__status--active" : "dt__status--inactive"}`}>
+              {row[col.key] ? "Active" : "Inactive"}
+            </span>
+          ),
+        }
+      : col
+  );
+
+  return (
+    <div className="mdp">
+      <div className="mdp__header">
+        <div>
+          <h1 className="mdp__title">{config.label}</h1>
+          <p className="mdp__subtitle">Manage {config.label.toLowerCase()} for the system.</p>
+        </div>
+        <Button onClick={openAdd}>+ Add {config.label.slice(0, -1)}</Button>
+      </div>
+
+      {error && <div className="mdp__error">{error}</div>}
+
+      <DataTable
+        columns={columns}
+        rows={rows}
+        isLoading={isLoading}
+        actions={(row) => (
+          <>
+            <button className="dt__icon-btn" onClick={() => openEdit(row)} aria-label="Edit">
+              ✎
+            </button>
+            <button className="dt__icon-btn dt__icon-btn--danger" onClick={() => setDeleteTarget(row)} aria-label="Delete">
+              🗑
+            </button>
+          </>
+        )}
+      />
+
+      {modalState && (
+        <Modal
+          title={modalState.mode === "add" ? `Add ${config.label.slice(0, -1)}` : `Edit ${config.label.slice(0, -1)}`}
+          onClose={closeModal}
+          footer={
+            <>
+              <Button variant="secondary" onClick={closeModal} type="button">
+                Cancel
+              </Button>
+              <Button type="submit" form="mdp-form" loading={isSaving}>
+                Save
+              </Button>
+            </>
+          }
+        >
+          <form id="mdp-form" onSubmit={handleSave} className="mdp__form">
+            {config.fields.map((field) => {
+              if (field.type === "select") {
+                const options = (optionSets[field.optionsFrom] ?? []).map((r) => ({
+                  value: r.id,
+                  label: rowLabel(r),
+                }));
+                return (
+                  <Select
+                    key={field.name}
+                    label={field.label}
+                    placeholder={`Select ${field.label.toLowerCase()}`}
+                    options={options}
+                    required={field.required}
+                    value={modalState.values[field.name] ?? ""}
+                    onChange={(e) => handleFieldChange(field.name, e.target.value)}
+                  />
+                );
+              }
+              if (field.type === "status") {
+                return (
+                  <label key={field.name} className="mdp__checkbox">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(modalState.values[field.name])}
+                      onChange={(e) => handleFieldChange(field.name, e.target.checked)}
+                    />
+                    <span>{field.label}</span>
+                  </label>
+                );
+              }
+              return (
+                <TextField
+                  key={field.name}
+                  label={field.label}
+                  type={field.type === "number" ? "number" : "text"}
+                  required={field.required}
+                  value={modalState.values[field.name] ?? ""}
+                  onChange={(e) => handleFieldChange(field.name, e.target.value)}
+                />
+              );
+            })}
+          </form>
+        </Modal>
+      )}
+
+      {deleteTarget && (
+        <Modal
+          title={`Delete ${config.label.slice(0, -1)}`}
+          onClose={() => setDeleteTarget(null)}
+          width={400}
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setDeleteTarget(null)}>
+                Cancel
+              </Button>
+              <Button variant="danger" onClick={handleDelete} loading={isSaving}>
+                Delete
+              </Button>
+            </>
+          }
+        >
+          <p>
+            Are you sure you want to delete <strong>{rowLabel(deleteTarget)}</strong>? This sets its status to
+            inactive.
+          </p>
+        </Modal>
+      )}
+    </div>
+  );
+}
