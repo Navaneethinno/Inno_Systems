@@ -2,9 +2,9 @@ import { httpClient } from "../../../api/httpClient";
 import { extractList } from "../../../lib/extractList";
 
 /**
- * SYSTEM-gated creation endpoints, per handoff.md's sample payloads.
- * These stay under /system (confirmed live, unlike the /master/* list
- * endpoints — see masterDataService.js).
+ * SYSTEM-gated endpoints, per handoff.md's sample payloads. Everything
+ * here is under /system — the only exception across the whole API is
+ * the master-data /list endpoints (see masterDataService.js).
  */
 export const systemService = {
   async addProfile(payload) {
@@ -27,15 +27,16 @@ export const systemService = {
     return envelope.data;
   },
 
-  // Dropdown sources for institution/profile pickers — not under /system,
-  // matching the same pattern as the master-data /list endpoints.
+  // Dropdown sources for institution/profile pickers. These are named
+  // get_active/getall, not /list, so — unlike the master-data /list
+  // endpoints — they stay under /system.
   async listActiveInstitutions() {
-    const { data: envelope } = await httpClient.post("/institution/profile/get_active", { view: "dropdown" });
+    const { data: envelope } = await httpClient.post("/system/institution/profile/get_active", { view: "dropdown" });
     return extractList(envelope.data);
   },
 
   async listProfiles() {
-    const { data: envelope } = await httpClient.post("/profile/getall", { view: "dropdown" });
+    const { data: envelope } = await httpClient.post("/system/profile/getall", { view: "dropdown" });
     return extractList(envelope.data);
   },
 };
