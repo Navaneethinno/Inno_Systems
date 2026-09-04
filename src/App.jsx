@@ -7,6 +7,7 @@ import { DashboardPage } from "./pages/dashboard/DashboardPage";
 import { MasterCrudPage } from "./features/masterData/components/MasterCrudPage";
 import { MasterListPage } from "./features/masterData/components/MasterListPage";
 import { SystemFormPage } from "./features/system/components/SystemFormPage";
+import { ProfileFormPage } from "./features/system/components/ProfileFormPage";
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
             <Route path="/" element={<DashboardPage />} />
             <Route path="/master/:entityKey" element={<MasterCrudPage />} />
             <Route path="/reference/:entityKey" element={<MasterListPage />} />
+            <Route path="/system/profile" element={<ProfileFormPage />} />
             <Route path="/system/:formKey" element={<SystemFormPage />} />
           </Route>
         </Routes>

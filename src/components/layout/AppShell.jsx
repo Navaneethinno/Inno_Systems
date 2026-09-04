@@ -56,6 +56,9 @@ export function AppShell() {
           )}
 
           <div className="shell__section-label">System</div>
+          <NavLink to="/system/profile" className={({ isActive }) => `shell__link ${isActive ? "shell__link--active" : ""}`}>
+            Add Profile
+          </NavLink>
           {Object.keys(systemForms).map((key) => (
             <NavLink
               key={key}

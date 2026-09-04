@@ -1,21 +1,3 @@
-.sfp__warning {
-  background: #fffaeb;
-  border: 1px solid #fde68a;
-  color: #92600a;
-  font-size: 13px;
-  padding: 10px 14px;
-  border-radius: var(--radius-sm);
-  margin-bottom: 16px;
-}
-
-.sfp__warning code {
-  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
-  font-size: 12px;
-  background: rgba(0, 0, 0, 0.06);
-  padding: 1px 5px;
-  border-radius: 4px;
-}
-
 .sfp__success {
   background: #ecfdf3;
   border: 1px solid #b8f0cc;
@@ -39,4 +21,23 @@
 
 .sfp__submit {
   align-self: flex-start;
+}
+
+.sfp__textarea {
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 14.5px;
+  font-family: inherit;
+  color: var(--color-text);
+  background: #fbfcfe;
+  resize: vertical;
+  min-height: 72px;
+}
+
+.sfp__textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(34, 102, 238, 0.12);
 }

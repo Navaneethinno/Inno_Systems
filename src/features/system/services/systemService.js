@@ -1,13 +1,10 @@
 import { httpClient } from "../../../api/httpClient";
+import { extractList } from "../../../lib/extractList";
 
 /**
- * handoff.md documents these as SYSTEM-gated pass-throughs to existing
- * handlers ("use the existing request shape") without giving the actual
- * field names. The payload shapes below are inferred from the
- * `admintabdef.User` fields visible in the login response and from the
- * naming pattern of the master-data endpoints — they are NOT confirmed
- * against the backend. Verify field names with the backend team before
- * relying on these in production.
+ * SYSTEM-gated creation endpoints, per handoff.md's sample payloads.
+ * These stay under /system (confirmed live, unlike the /master/* list
+ * endpoints — see masterDataService.js).
  */
 export const systemService = {
   async addProfile(payload) {
@@ -28,5 +25,17 @@ export const systemService = {
   async addInstitutionModule(payload) {
     const { data: envelope } = await httpClient.post("/system/institution/module/add", payload);
     return envelope.data;
+  },
+
+  // Dropdown sources for institution/profile pickers — not under /system,
+  // matching the same pattern as the master-data /list endpoints.
+  async listActiveInstitutions() {
+    const { data: envelope } = await httpClient.post("/institution/profile/get_active", { view: "dropdown" });
+    return extractList(envelope.data);
+  },
+
+  async listProfiles() {
+    const { data: envelope } = await httpClient.post("/profile/getall", { view: "dropdown" });
+    return extractList(envelope.data);
   },
 };
