@@ -8,11 +8,17 @@ import { tokenStore } from "../lib/tokenStore";
  * so auth headers, refresh, and error normalization stay in one place.
  *
  * The backend wraps every response in a `ComposeResponseV1` envelope:
- * { message, status: "SUCCESS" | "FAIL", code, remark, data?, api }.
- * A network-level 200 with status "FAIL" is still a failure — the response
- * interceptor below turns that into a rejected promise so callers can just
- * `await` and `catch`.
+ * { message, status, code, remark, data?, api }. Status casing isn't
+ * consistent across handlers ("Fail", "FAIL", "Success" have all been
+ * observed live), so it's compared case-insensitively everywhere. A
+ * network-level 200 with a failing status is still a failure — the
+ * response interceptor below turns that into a rejected promise so
+ * callers can just `await` and `catch`. Business failures are also seen
+ * on non-2xx status codes (404, 500) with the same envelope shape.
  */
+function isFailStatus(status) {
+  return typeof status === "string" && status.toUpperCase() === "FAIL";
+}
 export const httpClient = axios.create({
   baseURL: env.apiBaseUrl,
   timeout: 15000,
@@ -35,7 +41,7 @@ let pendingQueue = [];
 
 httpClient.interceptors.response.use(
   (response) => {
-    if (response.data && response.data.status === "FAIL") {
+    if (response.data && isFailStatus(response.data.status)) {
       return Promise.reject(envelopeError(response));
     }
     return response;
@@ -64,7 +70,7 @@ httpClient.interceptors.response.use(
           { headers: { Authorization: `Bearer ${refreshToken}` } }
         );
 
-        if (data.status === "FAIL") throw envelopeError({ data });
+        if (isFailStatus(data.status)) throw envelopeError({ data });
 
         const session = data.data?.user_session_info ?? data.data ?? {};
         tokenStore.updateTokens({ jwtToken: session.jwt_token, refreshToken: session.refresh_token });
