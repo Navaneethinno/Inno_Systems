@@ -1,0 +1,78 @@
+.tf {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.tf__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-slate);
+  letter-spacing: 0.01em;
+}
+
+.tf__control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0 14px;
+  background: #fbfcfe;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.tf__control:focus-within {
+  border-color: var(--color-primary);
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(34, 102, 238, 0.12);
+}
+
+.tf--error .tf__control {
+  border-color: var(--color-danger);
+}
+
+.tf__icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.tf__input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 12px 0;
+  font-size: 14.5px;
+  color: var(--color-text);
+}
+
+.tf__input::placeholder {
+  color: #a0a7b4;
+}
+
+.tf__toggle {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  display: flex;
+}
+
+.tf__toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+.tf__toggle:hover {
+  color: var(--color-primary);
+}
+
+.tf__error {
+  font-size: 12.5px;
+  color: var(--color-danger);
+}
