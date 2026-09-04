@@ -58,8 +58,8 @@ export const masterEntities = {
     ],
     columns: [
       { key: "id", label: "ID" },
-      { key: "menu_id", label: "Menu ID" },
-      { key: "action_id", label: "Action ID" },
+      { key: "menu_id", label: "Menu", lookup: "menu" },
+      { key: "action_id", label: "Action", lookup: "action" },
       { key: "priority", label: "Priority" },
       { key: "status", label: "Status", status: true },
     ],

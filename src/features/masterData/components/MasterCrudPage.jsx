@@ -130,18 +130,28 @@ export function MasterCrudPage() {
     }
   };
 
-  const columns = config.columns.map((col) =>
-    col.status
-      ? {
-          ...col,
-          render: (row) => (
-            <span className={`dt__status ${row[col.key] ? "dt__status--active" : "dt__status--inactive"}`}>
-              {row[col.key] ? "Active" : "Inactive"}
-            </span>
-          ),
-        }
-      : col
-  );
+  const columns = config.columns.map((col) => {
+    if (col.status) {
+      return {
+        ...col,
+        render: (row) => (
+          <span className={`dt__status ${row[col.key] ? "dt__status--active" : "dt__status--inactive"}`}>
+            {row[col.key] ? "Active" : "Inactive"}
+          </span>
+        ),
+      };
+    }
+    if (col.lookup) {
+      return {
+        ...col,
+        render: (row) => {
+          const match = (optionSets[col.lookup] ?? []).find((r) => r.id === row[col.key]);
+          return match ? rowLabel(match) : row[col.key];
+        },
+      };
+    }
+    return col;
+  });
 
   return (
     <div className="mdp">

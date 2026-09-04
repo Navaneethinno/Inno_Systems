@@ -1,0 +1,236 @@
+.map__module {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 420px;
+  margin-bottom: 20px;
+}
+
+.map__module-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.map__empty {
+  padding: 32px;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 13.5px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  background: #fff;
+}
+
+.map__empty--panel {
+  border: none;
+  padding: 24px 16px;
+}
+
+.map__retry {
+  border: none;
+  background: none;
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}
+
+.map__layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.map__panel-title {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-navy);
+  margin-bottom: 12px;
+}
+
+.map__menus,
+.map__actions {
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+}
+
+.map__menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.map__menu-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #fbfcfe;
+  padding: 12px 14px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.map__menu-card:hover {
+  border-color: var(--color-primary);
+}
+
+.map__menu-card--active {
+  border-color: var(--color-primary);
+  background: #f5f8ff;
+}
+
+.map__menu-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-border);
+  flex-shrink: 0;
+}
+
+.map__menu-card--active .map__menu-dot {
+  background: var(--color-primary);
+}
+
+.map__menu-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.map__menu-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.map__menu-meta {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.map__actions-hint {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin: -6px 0 16px;
+}
+
+.map__action-table {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.map__action-head,
+.map__action-row {
+  display: grid;
+  grid-template-columns: 1fr 120px 100px;
+  align-items: center;
+  padding: 10px 14px;
+  gap: 12px;
+}
+
+.map__action-head {
+  background: #f9fafb;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.map__action-row {
+  border-top: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.map__action-row:hover {
+  background: #fafbff;
+}
+
+.map__action-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.map__action-name input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-primary);
+}
+
+.map__priority-input {
+  width: 64px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+  font-size: 13.5px;
+  color: var(--color-text);
+  background: #fbfcfe;
+}
+
+.map__priority-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  background: #fff;
+}
+
+.map__priority-empty {
+  color: var(--color-text-muted);
+}
+
+.map__save-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.map__skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.map__skeleton-card,
+.map__skeleton-row {
+  height: 46px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg, #f1f2f4 25%, #f8f9fa 37%, #f1f2f4 63%);
+  background-size: 400% 100%;
+  animation: map-shimmer 1.4s ease infinite;
+}
+
+@keyframes map-shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+@media (max-width: 860px) {
+  .map__layout {
+    grid-template-columns: 1fr;
+  }
+}

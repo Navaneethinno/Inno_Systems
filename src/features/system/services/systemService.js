@@ -31,12 +31,12 @@ export const systemService = {
   // get_active/getall, not /list, so — unlike the master-data /list
   // endpoints — they stay under /system.
   async listActiveInstitutions() {
-    const { data: envelope } = await httpClient.post("/system/institution/profile/get_active", { view: "dropdown" });
+    const { data: envelope } = await httpClient.post("/institution/profile/get_active", { view: "dropdown" });
     return extractList(envelope.data);
   },
 
   async listProfiles() {
-    const { data: envelope } = await httpClient.post("/system/profile/getall", { view: "dropdown" });
+    const { data: envelope } = await httpClient.post("/profile/getall", { view: "dropdown" });
     return extractList(envelope.data);
   },
 };

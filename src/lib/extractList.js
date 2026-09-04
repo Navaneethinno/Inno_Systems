@@ -8,5 +8,6 @@ export function extractList(payload) {
   if (Array.isArray(payload?.rows)) return payload.rows;
   if (Array.isArray(payload?.items)) return payload.items;
   if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.profile_data)) return payload.profile_data;
   return [];
 }

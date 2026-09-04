@@ -5,6 +5,7 @@ import { AppShell } from "./components/layout/AppShell";
 import { LoginPage } from "./features/auth/components/LoginPage";
 import { DashboardPage } from "./pages/dashboard/DashboardPage";
 import { MasterCrudPage } from "./features/masterData/components/MasterCrudPage";
+import { MenuActionsPage } from "./features/masterData/components/MenuActionsPage";
 import { MasterListPage } from "./features/masterData/components/MasterListPage";
 import { SystemFormPage } from "./features/system/components/SystemFormPage";
 import { ProfileFormPage } from "./features/system/components/ProfileFormPage";
@@ -31,6 +32,7 @@ function App() {
             }
           >
             <Route path="/" element={<DashboardPage />} />
+            <Route path="/master/menu_action" element={<MenuActionsPage />} />
             <Route path="/master/:entityKey" element={<MasterCrudPage />} />
             <Route path="/reference/:entityKey" element={<MasterListPage />} />
             <Route path="/system/profile" element={<ProfileFormPage />} />

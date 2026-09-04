@@ -30,6 +30,16 @@
   margin-bottom: 16px;
 }
 
+.mdp__success {
+  background: #ecfdf3;
+  border: 1px solid #b8f0cc;
+  color: #15803d;
+  font-size: 13px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+}
+
 .mdp__state {
   padding: 40px;
   color: var(--color-text-muted);
