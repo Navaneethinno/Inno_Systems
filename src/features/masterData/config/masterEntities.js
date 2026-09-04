@@ -1,5 +1,5 @@
 /**
- * One entry per /system/master/{type} entity.
+ * One entry per /master/{type} entity.
  *
  * `writable: true` means add/edit/delete are documented in handoff.md and
  * get a full CRUD page. Everything else only has a confirmed /list
