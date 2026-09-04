@@ -26,7 +26,15 @@ export const masterEntities = {
     fields: [
       { name: "menu_name", label: "Menu name", type: "text", required: true },
       { name: "module_id", label: "Module", type: "select", optionsFrom: "module", required: true },
-      { name: "parent_menu_id", label: "Parent menu", type: "select", optionsFrom: "menu" },
+      {
+        name: "parent_menu_id",
+        label: "Parent menu",
+        type: "select",
+        optionsFrom: "menu",
+        // Only menus that belong to the module picked above can be a parent.
+        dependsOn: "module_id",
+        filterBy: (row, values) => String(row.module_id) === String(values.module_id),
+      },
       { name: "priority", label: "Priority", type: "number" },
       { name: "status", label: "Active", type: "status" },
     ],

@@ -80,7 +80,15 @@ export function MasterCrudPage() {
   const closeModal = () => setModalState(null);
 
   const handleFieldChange = (name, value) => {
-    setModalState((prev) => ({ ...prev, values: { ...prev.values, [name]: value } }));
+    setModalState((prev) => {
+      const values = { ...prev.values, [name]: value };
+      // Clear any select whose options depend on the field that just changed
+      // — its previously chosen value may no longer be a valid option.
+      config.fields.forEach((f) => {
+        if (f.dependsOn === name) values[f.name] = "";
+      });
+      return { ...prev, values };
+    });
   };
 
   const handleSave = async (e) => {
@@ -181,17 +189,29 @@ export function MasterCrudPage() {
           <form id="mdp-form" onSubmit={handleSave} className="mdp__form">
             {config.fields.map((field) => {
               if (field.type === "select") {
-                const options = (optionSets[field.optionsFrom] ?? []).map((r) => ({
-                  value: r.id,
-                  label: rowLabel(r),
-                }));
+                const sourceRows = optionSets[field.optionsFrom] ?? [];
+                const options = sourceRows
+                  .filter((r) => r.id !== modalState.values.id) // a record can't be its own parent
+                  .filter((r) => (field.filterBy ? field.filterBy(r, modalState.values) : true))
+                  .map((r) => ({ value: r.id, label: rowLabel(r) }));
+
+                const waitingOnDependency =
+                  field.dependsOn && !modalState.values[field.dependsOn] ? true : false;
+
+                const dependencyField = config.fields.find((f) => f.name === field.dependsOn);
+
                 return (
                   <Select
                     key={field.name}
                     label={field.label}
-                    placeholder={`Select ${field.label.toLowerCase()}`}
+                    placeholder={
+                      waitingOnDependency
+                        ? `Select ${dependencyField?.label.toLowerCase() ?? "a value"} first`
+                        : `Select ${field.label.toLowerCase()}`
+                    }
                     options={options}
                     required={field.required}
+                    disabled={waitingOnDependency}
                     value={modalState.values[field.name] ?? ""}
                     onChange={(e) => handleFieldChange(field.name, e.target.value)}
                   />
