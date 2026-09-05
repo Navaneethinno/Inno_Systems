@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./store/AuthContext";
+import { ThemeProvider } from "./store/ThemeContext";
 import { ProtectedRoute, PublicOnlyRoute } from "./routes/ProtectedRoute";
 import { AppShell } from "./components/layout/AppShell";
 import { LoginPage } from "./features/auth/components/LoginPage";
@@ -14,37 +15,39 @@ import { InstitutionModuleFormPage } from "./features/system/components/Institut
 
 function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <Routes>
-          <Route
-            path="/login"
-            element={
-              <PublicOnlyRoute>
-                <LoginPage />
-              </PublicOnlyRoute>
-            }
-          />
+    <ThemeProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <Routes>
+            <Route
+              path="/login"
+              element={
+                <PublicOnlyRoute>
+                  <LoginPage />
+                </PublicOnlyRoute>
+              }
+            />
 
-          <Route
-            element={
-              <ProtectedRoute>
-                <AppShell />
-              </ProtectedRoute>
-            }
-          >
-            <Route path="/" element={<DashboardPage />} />
-            <Route path="/master/menu_action" element={<MenuActionsPage />} />
-            <Route path="/master/:entityKey" element={<MasterCrudPage />} />
-            <Route path="/reference/:entityKey" element={<MasterListPage />} />
-            <Route path="/system/profile" element={<ProfileFormPage />} />
-            <Route path="/system/institution" element={<InstitutionFormPage />} />
-            <Route path="/system/institutionModule" element={<InstitutionModuleFormPage />} />
-            <Route path="/system/:formKey" element={<SystemFormPage />} />
-          </Route>
-        </Routes>
-      </AuthProvider>
-    </BrowserRouter>
+            <Route
+              element={
+                <ProtectedRoute>
+                  <AppShell />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/" element={<DashboardPage />} />
+              <Route path="/master/menu_action" element={<MenuActionsPage />} />
+              <Route path="/master/:entityKey" element={<MasterCrudPage />} />
+              <Route path="/reference/:entityKey" element={<MasterListPage />} />
+              <Route path="/system/profile" element={<ProfileFormPage />} />
+              <Route path="/system/institution" element={<InstitutionFormPage />} />
+              <Route path="/system/institutionModule" element={<InstitutionModuleFormPage />} />
+              <Route path="/system/:formKey" element={<SystemFormPage />} />
+            </Route>
+          </Routes>
+        </AuthProvider>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 

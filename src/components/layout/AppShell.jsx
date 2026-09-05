@@ -3,6 +3,7 @@ import { NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../../features/auth/hooks/useAuth";
 import { masterEntities, writableEntityKeys, readOnlyEntityKeys } from "../../features/masterData/config/masterEntities";
 import { systemForms } from "../../features/system/config/systemForms";
+import { ThemeToggle } from "../ui/ThemeToggle";
 import logoIcon from "../../assets/logo-icon.png";
 import logoWordmark from "../../assets/logo-wordmark.png";
 import "./AppShell.css";
@@ -78,22 +79,24 @@ export function AppShell() {
 
       <div className="shell__main">
         <header className="shell__header">
+          <div className="shell__header-brand">
+            <img src={logoIcon} alt="" className="shell__header-logo" />
+            <span className="shell__header-brand-text">Innovitegra</span>
+          </div>
+
           <span className="shell__brand">
-            <span className="shell__brand-dot" aria-hidden="true" />
-            <span className="shell__brand-system">System</span>{" "}
-            <span className="shell__brand-console">Console</span>
+            <span className="shell__brand-system">System</span> <span className="shell__brand-console">Console</span>
           </span>
 
           <div className="shell__header-right">
-            <div className="shell__profile">
-              <span className="shell__avatar">{user?.username?.[0]?.toUpperCase() ?? "?"}</span>
-              <span className="shell__profile-text">
-                <span className="shell__user">{user?.username}</span>
-                <span className="shell__role">{user?.profileName ?? "System User"}</span>
-              </span>
-            </div>
+            <ThemeToggle />
 
             <span className="shell__divider" aria-hidden="true" />
+
+            <span className="shell__profile-text">
+              <span className="shell__user">{user?.username}</span>
+              <span className="shell__role">{user?.profileName ?? "System User"}</span>
+            </span>
 
             <button type="button" className="shell__logout" onClick={logout}>
               <svg viewBox="0 0 20 20" fill="none" width="15" height="15" aria-hidden="true">

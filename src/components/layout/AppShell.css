@@ -2,7 +2,7 @@
   min-height: 100vh;
   display: grid;
   grid-template-columns: 248px 1fr;
-  background: #f7f8fb;
+  background: var(--color-page-bg);
 }
 
 .shell__sidebar {
@@ -146,13 +146,35 @@
 
 .shell__header {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 16px;
-  padding: 14px 32px;
-  background: #fff;
+  padding: 12px 32px;
+  background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
   box-shadow: 0 1px 0 rgba(16, 24, 40, 0.02), 0 2px 8px -6px rgba(16, 24, 40, 0.06);
+}
+
+.shell__header-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 6px 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+}
+
+.shell__header-logo {
+  height: 22px;
+  width: auto;
+}
+
+.shell__header-brand-text {
+  font-family: var(--font-display);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: 0.02em;
 }
 
 .shell__brand {
@@ -166,16 +188,8 @@
   letter-spacing: 0.02em;
 }
 
-.shell__brand-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-accent), var(--color-primary));
-  flex-shrink: 0;
-}
-
 .shell__brand-system {
-  color: var(--color-navy);
+  color: var(--color-text);
 }
 
 .shell__brand-console {
@@ -190,27 +204,6 @@
   display: flex;
   align-items: center;
   gap: 16px;
-}
-
-.shell__profile {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.shell__avatar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
-  color: #fff;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 14px;
-  flex-shrink: 0;
 }
 
 .shell__profile-text {
@@ -241,7 +234,7 @@
   align-items: center;
   gap: 7px;
   border: 1.5px solid var(--color-border);
-  background: #fff;
+  background: var(--color-surface);
   color: var(--color-text);
   font-size: 13px;
   font-weight: 600;
@@ -261,6 +254,16 @@
   flex: 1;
   padding: 28px 32px;
   overflow-x: hidden;
+}
+
+@media (max-width: 640px) {
+  .shell__header-brand-text {
+    display: none;
+  }
+
+  .shell__profile-text {
+    display: none;
+  }
 }
 
 @media (max-width: 900px) {

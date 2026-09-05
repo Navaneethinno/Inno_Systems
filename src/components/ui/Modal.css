@@ -12,7 +12,7 @@
 
 .modal__panel {
   width: 100%;
-  background: #fff;
+  background: var(--color-surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   max-height: calc(100vh - 40px);
@@ -33,7 +33,7 @@
   font-family: var(--font-display);
   font-size: 18px;
   font-weight: 700;
-  color: var(--color-navy);
+  color: var(--color-text);
   margin: 0;
 }
 

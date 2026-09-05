@@ -19,13 +19,13 @@
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-sm);
   padding: 0 14px;
-  background: #fbfcfe;
+  background: var(--color-input-bg);
   transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
 
 .tf__control:focus-within {
   border-color: var(--color-primary);
-  background: #ffffff;
+  background: var(--color-surface);
   box-shadow: 0 0 0 4px rgba(34, 102, 238, 0.12);
 }
 
@@ -95,4 +95,8 @@
 .tf__select:disabled {
   cursor: not-allowed;
   color: var(--color-text-muted);
+}
+
+:root[data-theme="dark"] .tf__select {
+  color-scheme: dark;
 }

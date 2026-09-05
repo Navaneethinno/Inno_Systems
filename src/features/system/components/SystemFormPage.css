@@ -27,7 +27,7 @@
   font-size: 14.5px;
   font-family: inherit;
   color: var(--color-text);
-  background: #fbfcfe;
+  background: var(--color-input-bg);
   resize: vertical;
   min-height: 72px;
 }
@@ -35,7 +35,7 @@
 .sfp__textarea:focus {
   outline: none;
   border-color: var(--color-primary);
-  background: #fff;
+  background: var(--color-surface);
   box-shadow: 0 0 0 4px rgba(34, 102, 238, 0.12);
 }
 

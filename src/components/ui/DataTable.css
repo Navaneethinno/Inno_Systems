@@ -8,7 +8,7 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 13.5px;
-  background: #fff;
+  background: var(--color-surface);
 }
 
 .dt th {
@@ -18,7 +18,7 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--color-text-muted);
-  background: #f9fafb;
+  background: var(--color-table-head);
   padding: 12px 16px;
   white-space: nowrap;
   border-bottom: 1px solid var(--color-border);
@@ -36,7 +36,7 @@
 }
 
 .dt tbody tr:hover {
-  background: #fafbff;
+  background: var(--color-table-head);
 }
 
 .dt__actions-head {
@@ -57,7 +57,7 @@
   height: 30px;
   border-radius: var(--radius-sm);
   border: 1.5px solid var(--color-border);
-  background: #fff;
+  background: var(--color-surface);
   color: var(--color-text-muted);
   cursor: pointer;
 }
@@ -81,7 +81,7 @@
   font-size: 13.5px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: #fff;
+  background: var(--color-surface);
 }
 
 .dt__status {

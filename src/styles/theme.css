@@ -7,10 +7,13 @@
   --color-slate: #495255;
   --color-gray-light: #dedfdf;
   --color-surface: #ffffff;
+  --color-page-bg: #f7f8fb;
+  --color-table-head: #f9fafb;
   --color-text: #101828;
   --color-text-muted: #667085;
   --color-danger: #e0342f;
   --color-border: #e4e7ec;
+  --color-input-bg: #fbfcfe;
 
   --radius-sm: 8px;
   --radius-md: 14px;
@@ -19,6 +22,20 @@
   --shadow-card: 0 24px 60px -20px rgba(5, 11, 46, 0.35);
   --font-display: "Poppins", "Gotham", "Segoe UI", sans-serif;
   --font-body: "Inter", "Gotham", "Segoe UI", sans-serif;
+}
+
+/* Dark mode: toggled via a "theme" attribute on <html>, not OS preference,
+   so it's an explicit user choice (persisted to localStorage). */
+:root[data-theme="dark"] {
+  --color-surface: #12172a;
+  --color-page-bg: #0b0e1a;
+  --color-table-head: #171d33;
+  --color-text: #e7e9f3;
+  --color-text-muted: #8f96ad;
+  --color-border: #262c44;
+  --color-input-bg: #171b2e;
+  --color-gray-light: #2a3050;
+  --shadow-card: 0 24px 60px -20px rgba(0, 0, 0, 0.6);
 }
 
 * {
@@ -35,7 +52,9 @@ body {
   margin: 0;
   font-family: var(--font-body);
   color: var(--color-text);
+  background: var(--color-page-bg);
   -webkit-font-smoothing: antialiased;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 button {

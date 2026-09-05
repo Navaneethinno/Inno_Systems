@@ -21,7 +21,7 @@
   font-size: 13.5px;
   border: 1px dashed var(--color-border);
   border-radius: var(--radius-md);
-  background: #fff;
+  background: var(--color-surface);
 }
 
 .map__empty--panel {
@@ -52,13 +52,13 @@
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
-  color: var(--color-navy);
+  color: var(--color-text);
   margin-bottom: 12px;
 }
 
 .map__menus,
 .map__actions {
-  background: #fff;
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: 20px;
@@ -78,7 +78,7 @@
   text-align: left;
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: #fbfcfe;
+  background: var(--color-input-bg);
   padding: 12px 14px;
   cursor: pointer;
   font-family: inherit;
@@ -147,7 +147,7 @@
 }
 
 .map__action-head {
-  background: #f9fafb;
+  background: var(--color-table-head);
   font-size: 11.5px;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -186,13 +186,13 @@
   padding: 6px 8px;
   font-size: 13.5px;
   color: var(--color-text);
-  background: #fbfcfe;
+  background: var(--color-input-bg);
 }
 
 .map__priority-input:focus {
   outline: none;
   border-color: var(--color-primary);
-  background: #fff;
+  background: var(--color-surface);
 }
 
 .map__priority-empty {
