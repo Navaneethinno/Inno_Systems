@@ -69,6 +69,7 @@ export const masterEntities = {
   },
 
   // Read-only reference data — list endpoint only, per handoff.
+  institution_type: { label: "Institution Types", writable: false },
   action: { label: "Actions", writable: false },
   channel: { label: "Channels", writable: false },
   country: { label: "Countries", writable: false },

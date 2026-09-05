@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { systemService } from "../services/systemService";
+import { masterDataService } from "../../masterData/services/masterDataService";
+import { rowLabel, rowValue } from "../../../lib/rowLabel";
 import { TextField } from "../../../components/ui/TextField";
 import { Select } from "../../../components/ui/Select";
 import { Button } from "../../../components/ui/Button";
@@ -45,9 +47,21 @@ function Checkbox({ label, checked, onChange }) {
 
 export function InstitutionFormPage() {
   const [values, setValues] = useState(initialState);
+  const [institutionTypes, setInstitutionTypes] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    masterDataService
+      .list("institution_type")
+      .then((rows) => !cancelled && setInstitutionTypes(rows))
+      .catch(() => !cancelled && setInstitutionTypes([]));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const set = (name, value) => setValues((prev) => ({ ...prev, [name]: value }));
   const toggleIdentifier = (id, checked) =>
@@ -114,10 +128,11 @@ export function InstitutionFormPage() {
         <div className="ifp__grid">
           <TextField label="Code" required value={values.code} onChange={(e) => set("code", e.target.value)} />
           <TextField label="Name" required value={values.name} onChange={(e) => set("name", e.target.value)} />
-          <TextField
-            label="Type (numeric code)"
-            type="number"
+          <Select
+            label="Type"
+            placeholder="Select institution type"
             required
+            options={institutionTypes.map((row) => ({ value: rowValue(row), label: rowLabel(row) }))}
             value={values.type}
             onChange={(e) => set("type", e.target.value)}
           />
@@ -128,10 +143,6 @@ export function InstitutionFormPage() {
             onChange={(e) => set("timezone", e.target.value)}
           />
         </div>
-        <p className="ifp__hint">
-          "Type" has no documented list of valid codes/names yet — verify accepted values with the backend before
-          relying on this in production.
-        </p>
 
         <h2 className="pfp__section-title">Language</h2>
         <div className="ifp__grid">
