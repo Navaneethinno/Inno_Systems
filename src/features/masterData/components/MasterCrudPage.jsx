@@ -7,6 +7,7 @@ import { Button } from "../../../components/ui/Button";
 import { Modal } from "../../../components/ui/Modal";
 import { TextField } from "../../../components/ui/TextField";
 import { Select } from "../../../components/ui/Select";
+import { StatusBadge } from "../../../components/ui/StatusBadge";
 import "./MasterDataPage.css";
 
 function rowLabel(row) {
@@ -132,14 +133,7 @@ export function MasterCrudPage() {
 
   const columns = config.columns.map((col) => {
     if (col.status) {
-      return {
-        ...col,
-        render: (row) => (
-          <span className={`dt__status ${row[col.key] ? "dt__status--active" : "dt__status--inactive"}`}>
-            {row[col.key] ? "Active" : "Inactive"}
-          </span>
-        ),
-      };
+      return { ...col, render: (row) => <StatusBadge active={Boolean(row[col.key])} /> };
     }
     if (col.lookup) {
       return {

@@ -4,6 +4,7 @@ import { saveMenuActions } from "../services/menuActionService";
 import { rowLabel } from "../../../lib/rowLabel";
 import { Select } from "../../../components/ui/Select";
 import { Button } from "../../../components/ui/Button";
+import { StatusBadge } from "../../../components/ui/StatusBadge";
 import "./MasterDataPage.css";
 import "./MenuActionsPage.css";
 
@@ -259,9 +260,7 @@ export function MenuActionsPage() {
                             )}
                           </span>
                           <span className="map__action-status">
-                            {checked && (
-                              <span className="dt__status dt__status--active">Active</span>
-                            )}
+                            {checked && <StatusBadge active />}
                           </span>
                         </label>
                       );

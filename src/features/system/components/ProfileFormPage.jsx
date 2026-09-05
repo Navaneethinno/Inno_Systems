@@ -5,6 +5,7 @@ import { rowLabel, rowValue } from "../../../lib/rowLabel";
 import { TextField } from "../../../components/ui/TextField";
 import { Select } from "../../../components/ui/Select";
 import { Button } from "../../../components/ui/Button";
+import { StatusBadge } from "../../../components/ui/StatusBadge";
 import { EntityManagerPage } from "./EntityManagerPage";
 import "./SystemFormPage.css";
 import "./ProfileFormPage.css";
@@ -215,15 +216,7 @@ export function ProfileFormPage() {
         { key: "id", label: "ID", render: (row) => rowValue(row) ?? "—" },
         { key: "name", label: "Name", render: (row) => rowLabel(row) },
         { key: "institution_name", label: "Institution", render: (row) => row.institution_name ?? "—" },
-        {
-          key: "status",
-          label: "Status",
-          render: (row) => (
-            <span className={`dt__status ${row.status ? "dt__status--active" : "dt__status--inactive"}`}>
-              {row.status ? "Active" : "Inactive"}
-            </span>
-          ),
-        },
+        { key: "status", label: "Status", render: (row) => <StatusBadge active={Boolean(row.status)} /> },
       ]}
       loadRows={() => systemService.listProfiles()}
       renderForm={({ onSuccess, onCancel }) => <ProfileForm onSuccess={onSuccess} onCancel={onCancel} />}

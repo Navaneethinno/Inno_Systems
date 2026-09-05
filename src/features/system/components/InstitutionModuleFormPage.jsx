@@ -7,6 +7,7 @@ import { Select } from "../../../components/ui/Select";
 import { Button } from "../../../components/ui/Button";
 import { Modal } from "../../../components/ui/Modal";
 import { DataTable } from "../../../components/ui/DataTable";
+import { StatusBadge } from "../../../components/ui/StatusBadge";
 import "../../masterData/components/MasterDataPage.css";
 import "../../masterData/components/MenuActionsPage.css";
 import "./SystemFormPage.css";
@@ -117,7 +118,9 @@ const columns = [
   {
     key: "configuration_status",
     label: "Status",
-    render: (row) => row.configuration_status ?? (row.status ? "Active" : "Inactive"),
+    render: (row) => (
+      <StatusBadge active={row.configuration_status ? row.configuration_status === "ACTIVE" : Boolean(row.status)} />
+    ),
   },
 ];
 

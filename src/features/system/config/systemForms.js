@@ -1,4 +1,6 @@
+import { createElement } from "react";
 import { rowValue } from "../../../lib/rowLabel";
+import { StatusBadge } from "../../../components/ui/StatusBadge";
 
 /**
  * Field lists mirror the real captured request/response pairs in
@@ -30,7 +32,7 @@ export const systemForms = {
       {
         key: "status",
         label: "Status",
-        render: (row) => (row.status ? "Active" : "Inactive"),
+        render: (row) => createElement(StatusBadge, { active: Boolean(row.status) }),
       },
     ],
     fields: [
