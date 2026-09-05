@@ -56,7 +56,16 @@
 }
 
 .dt__actions {
-  display: flex;
+  /* display:flex directly on a <td> pulls it out of normal table-cell
+     layout, which throws off the browser's auto column-width algorithm
+     for the whole row (was squeezing neighboring columns' text). Flex
+     lives on the inner wrapper instead; the cell itself stays a plain
+     table-cell. */
+  text-align: right;
+}
+
+.dt__actions-inner {
+  display: inline-flex;
   justify-content: flex-end;
   gap: 8px;
 }

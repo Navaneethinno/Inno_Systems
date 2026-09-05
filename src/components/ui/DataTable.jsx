@@ -34,7 +34,11 @@ export function DataTable({ columns, rows, actions, isLoading, emptyMessage = "N
                   {col.render ? col.render(row) : String(row[col.key] ?? "—")}
                 </td>
               ))}
-              {actions && <td className="dt__actions">{actions(row)}</td>}
+              {actions && (
+                <td className="dt__actions">
+                  <span className="dt__actions-inner">{actions(row)}</span>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
