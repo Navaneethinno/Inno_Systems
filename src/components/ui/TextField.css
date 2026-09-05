@@ -80,9 +80,19 @@
 .tf__select {
   appearance: none;
   cursor: pointer;
+  /* Forces the native option-list popup to render in the light palette
+     the rest of this control uses, regardless of OS/browser dark mode —
+     the popup itself isn't otherwise stylable cross-browser. */
+  color-scheme: light;
+  font-family: inherit;
   background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><path d="m5 8 5 5 5-5" stroke="%23667085" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>');
   background-repeat: no-repeat;
   background-position: right 0 center;
   background-size: 16px;
   padding-right: 22px;
+}
+
+.tf__select:disabled {
+  cursor: not-allowed;
+  color: var(--color-text-muted);
 }

@@ -1,3 +1,5 @@
+import { rowValue } from "../../../lib/rowLabel";
+
 /**
  * Field lists mirror the real captured request/response pairs in
  * SYSTEM_API_REQUEST_RESPONSE.md. Any field that references another entity
@@ -17,11 +19,14 @@ export const systemForms = {
     // again"), i.e. a real route — so this gets the same list+add-modal
     // pattern as profile/institution/institutionModule.
     listMethod: "listUsers",
+    // Real /user/list rows use user_id/username/profile_name/
+    // institution_name — not the user_name/email/mobile field names the
+    // add request uses (confirmed live against a real response).
     columns: [
-      { key: "id", label: "ID" },
-      { key: "user_name", label: "Username" },
-      { key: "email", label: "Email" },
-      { key: "mobile", label: "Mobile" },
+      { key: "id", label: "ID", render: (row) => rowValue(row) ?? "—" },
+      { key: "username", label: "Username" },
+      { key: "profile_name", label: "Profile" },
+      { key: "institution_name", label: "Institution" },
       {
         key: "status",
         label: "Status",

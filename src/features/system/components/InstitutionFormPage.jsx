@@ -89,14 +89,16 @@ function InstitutionForm({ onSuccess, onCancel }) {
     setValues((prev) => ({ ...prev, identifiers: { ...prev.identifiers, [id]: checked } }));
 
   // The default language must always be one of the supported languages —
-  // picking a new default auto-checks it, and it can't be unchecked while
-  // it's still the default.
+  // picking a new default auto-checks it and un-checks whichever language
+  // was previously the (auto-checked) default, and it can't be unchecked
+  // while it's still the default.
   const setDefaultLanguage = (code) =>
-    setValues((prev) => ({
-      ...prev,
-      defaultLanguage: code,
-      supportedLanguages: { ...prev.supportedLanguages, [code]: true },
-    }));
+    setValues((prev) => {
+      const nextSupported = { ...prev.supportedLanguages };
+      if (prev.defaultLanguage) nextSupported[prev.defaultLanguage] = false;
+      nextSupported[code] = true;
+      return { ...prev, defaultLanguage: code, supportedLanguages: nextSupported };
+    });
 
   const toggleSupportedLanguage = (code, checked) => {
     if (!checked && code === values.defaultLanguage) return;
@@ -180,6 +182,7 @@ function InstitutionForm({ onSuccess, onCancel }) {
           onChange={(e) => setDefaultLanguage(e.target.value)}
         />
       </div>
+      <h3 className="ifp__subheading">Supported Languages</h3>
       <div className="ifp__checks">
         {languages.map((row) => {
           const code = rowCode(row);
