@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { masterDataService } from "../../masterData/services/masterDataService";
 import { systemService } from "../services/systemService";
-import { rowLabel } from "../../../lib/rowLabel";
+import { rowLabel, rowValue } from "../../../lib/rowLabel";
 import { TextField } from "../../../components/ui/TextField";
 import { Select } from "../../../components/ui/Select";
 import { Button } from "../../../components/ui/Button";
-import "../../masterData/components/MasterDataPage.css";
+import { EntityManagerPage } from "./EntityManagerPage";
 import "./SystemFormPage.css";
 import "./ProfileFormPage.css";
 
-export function ProfileFormPage() {
+function ProfileForm({ onSuccess, onCancel }) {
   const [profileName, setProfileName] = useState("");
   const [instProfileId, setInstProfileId] = useState("");
   const [institutions, setInstitutions] = useState([]);
@@ -19,7 +19,6 @@ export function ProfileFormPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -57,7 +56,7 @@ export function ProfileFormPage() {
   }, []);
 
   const institutionOptions = useMemo(
-    () => institutions.map((row) => ({ value: row.id ?? row.inst_profile_id, label: rowLabel(row) })),
+    () => institutions.map((row) => ({ value: rowValue(row), label: rowLabel(row) })),
     [institutions]
   );
 
@@ -92,7 +91,6 @@ export function ProfileFormPage() {
     e.preventDefault();
     setIsSaving(true);
     setError(null);
-    setSuccess(null);
     try {
       const menu_info = Object.entries(assignments)
         .filter(([, a]) => a.included)
@@ -112,11 +110,8 @@ export function ProfileFormPage() {
         menu_info,
       };
 
-      const result = await systemService.addProfile(payload);
-      setSuccess(`Profile created${result?.profile_id ? ` (id: ${result.profile_id})` : ""}.`);
-      setProfileName("");
-      setInstProfileId("");
-      setAssignments({});
+      await systemService.addProfile(payload);
+      onSuccess();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -125,96 +120,103 @@ export function ProfileFormPage() {
   };
 
   return (
-    <div className="mdp">
-      <div className="mdp__header">
-        <div>
-          <h1 className="mdp__title">Add Profile</h1>
-          <p className="mdp__subtitle">Creates a profile and assigns menu/action access.</p>
-        </div>
+    <form className="pfp__form" onSubmit={handleSubmit}>
+      {error && <div className="mdp__error">{error}</div>}
+
+      <div className="pfp__basics">
+        <TextField
+          label="Profile name"
+          required
+          value={profileName}
+          onChange={(e) => setProfileName(e.target.value)}
+        />
+        <Select
+          label="Institution"
+          placeholder="Select institution"
+          required
+          options={institutionOptions}
+          value={instProfileId}
+          onChange={(e) => setInstProfileId(e.target.value)}
+        />
       </div>
 
-      {error && <div className="mdp__error">{error}</div>}
-      {success && <div className="sfp__success">{success}</div>}
+      <h2 className="pfp__section-title">Menu access</h2>
+      {isLoading ? (
+        <div className="mdp__state">Loading menus…</div>
+      ) : menus.length === 0 ? (
+        <div className="mdp__state">No menus found.</div>
+      ) : (
+        <div className="pfp__menu-list">
+          {menus.map((menu) => {
+            const assignment = assignments[menu.id];
+            const included = Boolean(assignment?.included);
+            const menuActions = actionsByMenu[menu.id] ?? [];
 
-      <form className="pfp__form" onSubmit={handleSubmit}>
-        <div className="pfp__basics">
-          <TextField
-            label="Profile name"
-            required
-            value={profileName}
-            onChange={(e) => setProfileName(e.target.value)}
-          />
-          <Select
-            label="Institution"
-            placeholder="Select institution"
-            required
-            options={institutionOptions}
-            value={instProfileId}
-            onChange={(e) => setInstProfileId(e.target.value)}
-          />
+            return (
+              <div key={menu.id} className={`pfp__menu-card ${included ? "pfp__menu-card--active" : ""}`}>
+                <label className="pfp__menu-header">
+                  <input type="checkbox" checked={included} onChange={(e) => toggleMenu(menu.id, e.target.checked)} />
+                  <span>{rowLabel(menu)}</span>
+                </label>
+
+                {included && (
+                  <div className="pfp__menu-body">
+                    {menuActions.length === 0 ? (
+                      <p className="pfp__no-actions">No actions configured for this menu.</p>
+                    ) : (
+                      <div className="pfp__actions">
+                        {menuActions.map((action) => (
+                          <label key={action.id} className="pfp__action">
+                            <input
+                              type="checkbox"
+                              checked={Boolean(assignment?.actionIds?.has(action.id))}
+                              onChange={() => toggleAction(menu.id, action.id)}
+                            />
+                            <span>{rowLabel(action)}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                    <label className="pfp__config-only">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(assignment?.isConfigOnly)}
+                        onChange={(e) => toggleConfigOnly(menu.id, e.target.checked)}
+                      />
+                      <span>Configuration only</span>
+                    </label>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
+      )}
 
-        <h2 className="pfp__section-title">Menu access</h2>
-        {isLoading ? (
-          <div className="mdp__state">Loading menus…</div>
-        ) : menus.length === 0 ? (
-          <div className="mdp__state">No menus found.</div>
-        ) : (
-          <div className="pfp__menu-list">
-            {menus.map((menu) => {
-              const assignment = assignments[menu.id];
-              const included = Boolean(assignment?.included);
-              const menuActions = actionsByMenu[menu.id] ?? [];
-
-              return (
-                <div key={menu.id} className={`pfp__menu-card ${included ? "pfp__menu-card--active" : ""}`}>
-                  <label className="pfp__menu-header">
-                    <input
-                      type="checkbox"
-                      checked={included}
-                      onChange={(e) => toggleMenu(menu.id, e.target.checked)}
-                    />
-                    <span>{rowLabel(menu)}</span>
-                  </label>
-
-                  {included && (
-                    <div className="pfp__menu-body">
-                      {menuActions.length === 0 ? (
-                        <p className="pfp__no-actions">No actions configured for this menu.</p>
-                      ) : (
-                        <div className="pfp__actions">
-                          {menuActions.map((action) => (
-                            <label key={action.id} className="pfp__action">
-                              <input
-                                type="checkbox"
-                                checked={Boolean(assignment?.actionIds?.has(action.id))}
-                                onChange={() => toggleAction(menu.id, action.id)}
-                              />
-                              <span>{rowLabel(action)}</span>
-                            </label>
-                          ))}
-                        </div>
-                      )}
-                      <label className="pfp__config-only">
-                        <input
-                          type="checkbox"
-                          checked={Boolean(assignment?.isConfigOnly)}
-                          onChange={(e) => toggleConfigOnly(menu.id, e.target.checked)}
-                        />
-                        <span>Configuration only</span>
-                      </label>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        <Button type="submit" loading={isSaving} className="sfp__submit">
+      <div className="pfp__form-actions">
+        <Button type="button" variant="secondary" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="submit" loading={isSaving}>
           Create Profile
         </Button>
-      </form>
-    </div>
+      </div>
+    </form>
+  );
+}
+
+export function ProfileFormPage() {
+  return (
+    <EntityManagerPage
+      title="Profiles"
+      subtitle="Profiles created via the system API, with their menu/action access."
+      addLabel="Add Profile"
+      columns={[
+        { key: "id", label: "ID" },
+        { key: "name", label: "Name", render: (row) => rowLabel(row) },
+      ]}
+      loadRows={() => systemService.listProfiles()}
+      renderForm={({ onSuccess, onCancel }) => <ProfileForm onSuccess={onSuccess} onCancel={onCancel} />}
+    />
   );
 }

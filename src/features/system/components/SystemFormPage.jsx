@@ -118,6 +118,7 @@ export function SystemFormPage() {
         </div>
       </div>
 
+      {config.listNote && <div className="sfp__note">{config.listNote}</div>}
       {error && <div className="mdp__error">{error}</div>}
       {success && <div className="sfp__success">{success}</div>}
 

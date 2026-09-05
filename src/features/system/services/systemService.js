@@ -42,4 +42,13 @@ export const systemService = {
     const { data: envelope } = await httpClient.post("/profile/getall", { view: "dropdown" });
     return extractList(envelope.data);
   },
+
+  // Confirmed live via curl: /institution/module/get_active requires auth
+  // ("Please log in again"), matching the /institution/profile/get_active
+  // naming pattern — /system/institution/module/* and /institution/module/
+  // {getall,list} all fall through to the generic fallback instead.
+  async listInstitutionModules() {
+    const { data: envelope } = await httpClient.post("/institution/module/get_active", { view: "dropdown" });
+    return extractList(envelope.data);
+  },
 };

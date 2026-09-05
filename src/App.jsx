@@ -10,6 +10,7 @@ import { MasterListPage } from "./features/masterData/components/MasterListPage"
 import { SystemFormPage } from "./features/system/components/SystemFormPage";
 import { ProfileFormPage } from "./features/system/components/ProfileFormPage";
 import { InstitutionFormPage } from "./features/system/components/InstitutionFormPage";
+import { InstitutionModuleFormPage } from "./features/system/components/InstitutionModuleFormPage";
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function App() {
             <Route path="/reference/:entityKey" element={<MasterListPage />} />
             <Route path="/system/profile" element={<ProfileFormPage />} />
             <Route path="/system/institution" element={<InstitutionFormPage />} />
+            <Route path="/system/institutionModule" element={<InstitutionModuleFormPage />} />
             <Route path="/system/:formKey" element={<SystemFormPage />} />
           </Route>
         </Routes>

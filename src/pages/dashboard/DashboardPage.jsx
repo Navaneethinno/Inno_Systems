@@ -61,6 +61,10 @@ export function DashboardPage() {
             <span className="dash__tile-label">Add Institution</span>
             <span className="dash__tile-hint">Create new record</span>
           </Link>
+          <Link to="/system/institutionModule" className="dash__tile">
+            <span className="dash__tile-label">Add Institution Module</span>
+            <span className="dash__tile-hint">Assign a module</span>
+          </Link>
           {Object.keys(systemForms).map((key) => (
             <Link key={key} to={`/system/${key}`} className="dash__tile">
               <span className="dash__tile-label">Add {systemForms[key].label}</span>

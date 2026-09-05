@@ -69,7 +69,12 @@ src/
     system/
       config/             # field definitions for the add forms (user, institutionModule)
       services/           # systemService — profile/user/institution/institution-module add + dropdown sources
-      components/         # SystemFormPage (flat forms), ProfileFormPage & InstitutionFormPage (nested payloads)
+      components/
+        EntityManagerPage.jsx        # shared list-table + "+ Add" modal shell
+        SystemFormPage.jsx           # bare form for entities with no list source (User)
+        ProfileFormPage.jsx          # profile list + nested menu/action assignment modal
+        InstitutionFormPage.jsx      # institution list + nested schema modal
+        InstitutionModuleFormPage.jsx # institution-module list + add modal
 ```
 
 ## Backend contract
@@ -81,12 +86,17 @@ Implements the flow from `SYSTEM_API_REQUEST_RESPONSE.md` — a live capture of 
 - All responses use the shared envelope `{ message, status, code, remark, data, api }`. Status casing varies live ("Fail"/"Success", not "FAIL"/"SUCCESS"), so it's compared case-insensitively. A failing status is treated as an error even on HTTP 200 — and business failures have also been observed on 404/500 with the same envelope shape.
 - `POST /system/master/{module,menu,menu_action}/{add,edit,delete}` — full add/edit/delete UI at `/master/:entityKey` (menu_action instead gets the dedicated Module → Menu → Actions page at the same route). Dependent fields (menu's module/parent menu, menu_action's menu/action) are `<select>`s resolved by name, never raw ID inputs. Delete is a **soft delete** — the row is kept with a "deleted" status code, not removed.
 - `POST /master/{type}/list` — **the one exception without `/system`**, confirmed by curl (the `/system`-prefixed version of `list` returns a generic fallback response, not the real handler). Used both for the 3 writable types above and the 17 read-only reference types (tables at `/reference/:entityKey`).
-- `POST /system/profile/add` — nested payload (`profile_info` + `menu_info[]`); **`profile_info.profile_id` is omitted entirely on create**, not sent as `0`. Handled by the dedicated `/system/profile` page: pick an institution, then check menus and their actions (sourced from the `menu`/`action`/`menu_action` master lists) to build `menu_info`. `POST /system/profile/edit` also exists (takes the same shape plus a real `profile_id`) but isn't implemented — there's no endpoint to fetch a profile's current menu/action assignments to prefill an edit form.
+- `POST /system/profile/add` — nested payload (`profile_info` + `menu_info[]`); **`profile_info.profile_id` is omitted entirely on create**, not sent as `0`. `POST /system/profile/edit` also exists (same shape plus a real `profile_id`) but isn't implemented — there's no endpoint to fetch a profile's current menu/action assignments to prefill an edit form.
 - `POST /system/user/add` — institution and profile are `<select>`s sourced from `listActiveInstitutions`/`listProfiles`, not raw ID inputs. Response is `{ user_id }`, not `{ id }` — the success message reads the right field via `successIdField` in `systemForms.js`.
-- `POST /system/institution/add` — dedicated page (`/system/institution`) matching the real nested schema: `language` is `{ default, supported[] }` and `allowed_login_identifiers` is `{ identifiers[] }` — both name-resolved (`type` via `/master/institution_type/list`, language default/supported via `/master/language/list`), not raw codes typed by hand.
+- `POST /system/institution/add` — matches the real nested schema: `language` is `{ default, supported[] }` and `allowed_login_identifiers` is `{ identifiers[] }` — both name-resolved (`type` via `/master/institution_type/list`, language default/supported via `/master/language/list`), not raw codes typed by hand.
 - `POST /system/institution/module/add` — institution and module are name-resolved selects.
 
-Dropdown sources for institution/profile pickers (`listActiveInstitutions`, `listProfiles` in `systemService.js`) aren't in the captured reference doc at all — their paths (no `/system` prefix) are only confirmed by an earlier curl check, not a real request/response capture. Worth re-verifying against a real session.
+**List + add-modal pattern**: Profile, Institution, and Institution Module each get a table of what already exists (via `EntityManagerPage.jsx`) with a "+ Add" button that opens the create form in a modal — not a bare form with no way to see what you've created. List sources, all confirmed live via curl (a wrong path/prefix falls through to a generic "Config processor is alive" response instead of a real auth-gated one):
+- Profiles: `POST /profile/getall` `{"view":"dropdown"}`
+- Institutions: `POST /institution/profile/get_active` `{"view":"dropdown"}`
+- Institution Modules: `POST /institution/module/get_active` `{"view":"dropdown"}`
+
+None of these three are documented in the captured reference doc, only confirmed by path-probing — worth re-verifying against a real session once the backend's deployed. **Add User stays a bare form** — no list endpoint for users was found (tried `/user/getall`, `/user/get_active`, and the `/system`-prefixed variants of both; all four fall through to the generic fallback). The UI shows a note explaining this; swap it to the same list+modal pattern once a real endpoint is confirmed.
 
 There's no `/me` endpoint, so the logged-in user is cached at login time (`localStorage` if "Remember me" is checked, `sessionStorage` otherwise) and rehydrated on page load as long as a token is present.
 

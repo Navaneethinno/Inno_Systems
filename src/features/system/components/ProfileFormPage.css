@@ -108,6 +108,12 @@
   accent-color: var(--color-primary);
 }
 
+.pfp__form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
 @media (max-width: 560px) {
   .pfp__basics {
     grid-template-columns: 1fr;

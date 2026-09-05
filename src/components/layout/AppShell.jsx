@@ -61,6 +61,9 @@ export function AppShell() {
           <NavLink to="/system/institution" className={({ isActive }) => `shell__link ${isActive ? "shell__link--active" : ""}`}>
             Add Institution
           </NavLink>
+          <NavLink to="/system/institutionModule" className={({ isActive }) => `shell__link ${isActive ? "shell__link--active" : ""}`}>
+            Add Institution Module
+          </NavLink>
           {Object.keys(systemForms).map((key) => (
             <NavLink
               key={key}

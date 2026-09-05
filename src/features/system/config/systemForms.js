@@ -13,6 +13,11 @@ export const systemForms = {
     label: "User",
     serviceMethod: "addUser",
     successIdField: "user_id",
+    // Unlike profile/institution/institutionModule, there's no known
+    // list endpoint for users yet, so this stays a bare form instead of
+    // the list+add-modal pattern used elsewhere — swap it over once one
+    // is confirmed.
+    listNote: "There's no list endpoint for users yet, so created users aren't shown here — only the create form.",
     fields: [
       { name: "user_name", label: "Username", type: "text", required: true },
       { name: "user_pwd", label: "Password", type: "password", required: true },
@@ -55,39 +60,9 @@ export const systemForms = {
     ],
   },
 
-  // "institution" isn't here — its payload nests language/login-identifiers
-  // as objects, not flat fields, so it gets its own page (InstitutionFormPage)
-  // instead of forcing it through this generic flat-field engine.
-
-  institutionModule: {
-    label: "Institution Module",
-    serviceMethod: "addInstitutionModule",
-    fields: [
-      {
-        name: "inst_profile_id",
-        label: "Institution",
-        type: "select",
-        required: true,
-        source: { kind: "system", method: "listActiveInstitutions" },
-      },
-      {
-        name: "module_id",
-        label: "Module",
-        type: "select",
-        required: true,
-        source: { kind: "master", type: "module" },
-      },
-      { name: "effective_from", label: "Effective from", type: "date", required: true },
-      { name: "effective_to", label: "Effective to", type: "date" },
-      {
-        name: "configuration_status",
-        label: "Configuration status",
-        type: "select",
-        staticOptions: [
-          { value: "ACTIVE", label: "Active" },
-          { value: "INACTIVE", label: "Inactive" },
-        ],
-      },
-    ],
-  },
+  // "institution" and "institutionModule" aren't here — institution's
+  // payload nests language/login-identifiers as objects (InstitutionFormPage),
+  // and institutionModule now gets its own list+add-modal page
+  // (InstitutionModuleFormPage) instead of a bare form, same as profile
+  // and institution.
 };
