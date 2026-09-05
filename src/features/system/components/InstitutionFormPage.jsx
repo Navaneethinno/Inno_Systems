@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { systemService } from "../services/systemService";
 import { masterDataService } from "../../masterData/services/masterDataService";
-import { rowLabel, rowValue } from "../../../lib/rowLabel";
+import { rowLabel, rowValue, rowCode } from "../../../lib/rowLabel";
 import { TextField } from "../../../components/ui/TextField";
 import { Select } from "../../../components/ui/Select";
 import { Button } from "../../../components/ui/Button";
@@ -16,8 +16,8 @@ const initialState = {
   name: "",
   type: "",
   timezone: "",
-  defaultLanguage: "en",
-  supportedLanguages: "en",
+  defaultLanguage: "",
+  supportedLanguages: {},
   date_format: "YYYY-MM-DD",
   has_branch: false,
   max_branches_allowed: "",
@@ -48,6 +48,7 @@ function Checkbox({ label, checked, onChange }) {
 export function InstitutionFormPage() {
   const [values, setValues] = useState(initialState);
   const [institutionTypes, setInstitutionTypes] = useState([]);
+  const [languages, setLanguages] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -58,6 +59,27 @@ export function InstitutionFormPage() {
       .list("institution_type")
       .then((rows) => !cancelled && setInstitutionTypes(rows))
       .catch(() => !cancelled && setInstitutionTypes([]));
+
+    masterDataService
+      .list("language")
+      .then((rows) => {
+        if (cancelled) return;
+        setLanguages(rows);
+        // Default to English if present, else whatever comes first.
+        const codes = rows.map(rowCode);
+        const fallback = codes.includes("en") ? "en" : codes[0];
+        if (fallback) {
+          setValues((prev) => ({
+            ...prev,
+            defaultLanguage: prev.defaultLanguage || fallback,
+            supportedLanguages: Object.keys(prev.supportedLanguages).length
+              ? prev.supportedLanguages
+              : { [fallback]: true },
+          }));
+        }
+      })
+      .catch(() => !cancelled && setLanguages([]));
+
     return () => {
       cancelled = true;
     };
@@ -66,8 +88,11 @@ export function InstitutionFormPage() {
   const set = (name, value) => setValues((prev) => ({ ...prev, [name]: value }));
   const toggleIdentifier = (id, checked) =>
     setValues((prev) => ({ ...prev, identifiers: { ...prev.identifiers, [id]: checked } }));
+  const toggleSupportedLanguage = (code, checked) =>
+    setValues((prev) => ({ ...prev, supportedLanguages: { ...prev.supportedLanguages, [code]: checked } }));
 
   const selectedIdentifiers = LOGIN_IDENTIFIERS.filter((id) => values.identifiers[id]);
+  const selectedLanguageCodes = Object.keys(values.supportedLanguages).filter((code) => values.supportedLanguages[code]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -82,7 +107,7 @@ export function InstitutionFormPage() {
         timezone: values.timezone,
         language: {
           default: values.defaultLanguage,
-          supported: values.supportedLanguages.split(",").map((v) => v.trim()).filter(Boolean),
+          supported: selectedLanguageCodes,
         },
         date_format: values.date_format,
         has_branch: values.has_branch,
@@ -146,16 +171,26 @@ export function InstitutionFormPage() {
 
         <h2 className="pfp__section-title">Language</h2>
         <div className="ifp__grid">
-          <TextField
+          <Select
             label="Default language"
+            placeholder="Select default language"
+            options={languages.map((row) => ({ value: rowCode(row), label: rowLabel(row) }))}
             value={values.defaultLanguage}
             onChange={(e) => set("defaultLanguage", e.target.value)}
           />
-          <TextField
-            label="Supported languages (comma-separated)"
-            value={values.supportedLanguages}
-            onChange={(e) => set("supportedLanguages", e.target.value)}
-          />
+        </div>
+        <div className="ifp__checks">
+          {languages.map((row) => {
+            const code = rowCode(row);
+            return (
+              <Checkbox
+                key={code}
+                label={rowLabel(row)}
+                checked={Boolean(values.supportedLanguages[code])}
+                onChange={(v) => toggleSupportedLanguage(code, v)}
+              />
+            );
+          })}
         </div>
 
         <h2 className="pfp__section-title">Branches &amp; KYC</h2>

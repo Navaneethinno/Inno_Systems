@@ -27,3 +27,12 @@ export function rowLabel(row) {
 export function rowValue(row) {
   return row.id ?? row.profile_id ?? row.inst_profile_id ?? row.menu_id ?? row.action_id;
 }
+
+/**
+ * Some payloads (e.g. institution language) want the entity's short code
+ * ("en") rather than its numeric id — this is the code-equivalent of
+ * rowValue/rowLabel above.
+ */
+export function rowCode(row) {
+  return row.code ?? row.language_code ?? row.iso_code ?? row.short_code ?? row.name ?? String(row.id);
+}
