@@ -11,7 +11,6 @@ export function AppShell() {
   const { user, logout } = useAuth();
   const [referenceOpen, setReferenceOpen] = useState(false);
 
-  const displayName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.username;
 
   return (
     <div className="shell">
@@ -59,6 +58,9 @@ export function AppShell() {
           <NavLink to="/system/profile" className={({ isActive }) => `shell__link ${isActive ? "shell__link--active" : ""}`}>
             Add Profile
           </NavLink>
+          <NavLink to="/system/institution" className={({ isActive }) => `shell__link ${isActive ? "shell__link--active" : ""}`}>
+            Add Institution
+          </NavLink>
           {Object.keys(systemForms).map((key) => (
             <NavLink
               key={key}
@@ -73,7 +75,7 @@ export function AppShell() {
 
       <div className="shell__main">
         <header className="shell__header">
-          <span className="shell__user">{displayName}</span>
+          <span className="shell__user">{user?.username}</span>
           <button type="button" className="shell__logout" onClick={logout}>
             Log out
           </button>

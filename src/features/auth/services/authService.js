@@ -23,14 +23,19 @@ export const authService = {
 
     const { user_details: userDetails, user_session_info: session, full_access: fullAccess } = envelope.data;
 
+    // Real login response (captured live) doesn't carry user_fname/mname/lname
+    // on user_details at all — those only ever showed up in handoff.md's
+    // sample admintabdef.User shape, not an actual response. Map only the
+    // fields that are actually present.
     const user = {
       id: userDetails.id,
       username: userDetails.username,
-      firstName: userDetails.user_fname,
-      middleName: userDetails.user_mname,
-      lastName: userDetails.user_lname,
+      profileId: userDetails.profile_id,
+      profileName: userDetails.profile_name,
+      institutionName: userDetails.institution_name,
       isSystem: userDetails.is_system,
       status: userDetails.status,
+      authStatus: userDetails.auth_status,
       fullAccess: fullAccess,
       lastLogin: session.last_login,
     };

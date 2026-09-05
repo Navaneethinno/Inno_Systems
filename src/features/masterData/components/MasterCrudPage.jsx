@@ -145,6 +145,8 @@ export function MasterCrudPage() {
       return {
         ...col,
         render: (row) => {
+          if (col.emptyIfZero && !row[col.key]) return "—";
+          if (col.nameKey && row[col.nameKey]) return row[col.nameKey];
           const match = (optionSets[col.lookup] ?? []).find((r) => r.id === row[col.key]);
           return match ? rowLabel(match) : row[col.key];
         },

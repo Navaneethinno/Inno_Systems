@@ -98,7 +98,9 @@ export function SystemFormPage() {
     setSuccess(null);
     try {
       const result = await systemService[config.serviceMethod](buildPayload());
-      setSuccess(`${config.label} created${result?.id ? ` (id: ${result.id})` : ""}.`);
+      const idField = config.successIdField ?? "id";
+      const createdId = result?.[idField];
+      setSuccess(`${config.label} created${createdId ? ` (${idField}: ${createdId})` : ""}.`);
       setValues(emptyValues(config.fields));
     } catch (err) {
       setError(err.message);

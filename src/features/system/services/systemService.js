@@ -27,9 +27,12 @@ export const systemService = {
     return envelope.data;
   },
 
-  // Dropdown sources for institution/profile pickers. These are named
-  // get_active/getall, not /list, so — unlike the master-data /list
-  // endpoints — they stay under /system.
+  // Dropdown sources for institution/profile pickers. Not documented in
+  // the captured reference doc, so unlike everything else in this file
+  // these are unverified — no /system prefix, confirmed only by an earlier
+  // curl check that this path (without prefix) requires auth ("Please log
+  // in again") while the /system-prefixed version returns a generic
+  // fallback. Re-verify if either endpoint starts behaving oddly.
   async listActiveInstitutions() {
     const { data: envelope } = await httpClient.post("/institution/profile/get_active", { view: "dropdown" });
     return extractList(envelope.data);

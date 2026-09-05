@@ -9,6 +9,7 @@ import { MenuActionsPage } from "./features/masterData/components/MenuActionsPag
 import { MasterListPage } from "./features/masterData/components/MasterListPage";
 import { SystemFormPage } from "./features/system/components/SystemFormPage";
 import { ProfileFormPage } from "./features/system/components/ProfileFormPage";
+import { InstitutionFormPage } from "./features/system/components/InstitutionFormPage";
 
 function App() {
   return (
@@ -36,6 +37,7 @@ function App() {
             <Route path="/master/:entityKey" element={<MasterCrudPage />} />
             <Route path="/reference/:entityKey" element={<MasterListPage />} />
             <Route path="/system/profile" element={<ProfileFormPage />} />
+            <Route path="/system/institution" element={<InstitutionFormPage />} />
             <Route path="/system/:formKey" element={<SystemFormPage />} />
           </Route>
         </Routes>

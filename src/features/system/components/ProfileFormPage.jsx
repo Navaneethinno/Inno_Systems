@@ -102,9 +102,10 @@ export function ProfileFormPage() {
           is_configuration_only: a.isConfigOnly ? 1 : 0,
         }));
 
+      // The real add request omits profile_id entirely (it's only present
+      // when editing an existing profile) — sending 0 is not the same thing.
       const payload = {
         profile_info: {
-          profile_id: 0,
           profile_name: profileName,
           inst_profile_id: Number(instProfileId),
         },

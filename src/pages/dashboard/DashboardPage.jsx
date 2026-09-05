@@ -7,13 +7,11 @@ import "./DashboardPage.css";
 export function DashboardPage() {
   const { user } = useAuth();
 
-  const displayName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.username;
-
   return (
     <div className="dash">
       <div className="dash__welcome">
         <span className="dash__badge">Signed in</span>
-        <h1 className="dash__title">Welcome, {displayName}</h1>
+        <h1 className="dash__title">Welcome, {user?.username}</h1>
         <p className="dash__desc">You're authenticated as a system user with full access.</p>
 
         <dl className="dash__meta">
@@ -22,8 +20,12 @@ export function DashboardPage() {
             <dd>{user?.username}</dd>
           </div>
           <div>
-            <dt>User ID</dt>
-            <dd>{user?.id}</dd>
+            <dt>Profile</dt>
+            <dd>{user?.profileName ?? "—"}</dd>
+          </div>
+          <div>
+            <dt>Institution</dt>
+            <dd>{user?.institutionName ?? "—"}</dd>
           </div>
           <div>
             <dt>Last login</dt>
@@ -54,6 +56,10 @@ export function DashboardPage() {
           <Link to="/system/profile" className="dash__tile">
             <span className="dash__tile-label">Add Profile</span>
             <span className="dash__tile-hint">Menu &amp; action access</span>
+          </Link>
+          <Link to="/system/institution" className="dash__tile">
+            <span className="dash__tile-label">Add Institution</span>
+            <span className="dash__tile-hint">Create new record</span>
           </Link>
           {Object.keys(systemForms).map((key) => (
             <Link key={key} to={`/system/${key}`} className="dash__tile">

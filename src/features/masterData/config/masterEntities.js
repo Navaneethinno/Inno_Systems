@@ -41,8 +41,11 @@ export const masterEntities = {
     columns: [
       { key: "id", label: "ID" },
       { key: "menu_name", label: "Name" },
-      { key: "module_id", label: "Module ID" },
-      { key: "parent_menu_id", label: "Parent ID" },
+      // The API returns module_name/parent_menu_name directly on the row —
+      // fall back to a lookup against the module/menu lists if a given
+      // response doesn't include it.
+      { key: "module_id", label: "Module", lookup: "module", nameKey: "module_name" },
+      { key: "parent_menu_id", label: "Parent Menu", lookup: "menu", nameKey: "parent_menu_name", emptyIfZero: true },
       { key: "priority", label: "Priority" },
       { key: "status", label: "Status", status: true },
     ],
@@ -58,8 +61,8 @@ export const masterEntities = {
     ],
     columns: [
       { key: "id", label: "ID" },
-      { key: "menu_id", label: "Menu", lookup: "menu" },
-      { key: "action_id", label: "Action", lookup: "action" },
+      { key: "menu_id", label: "Menu", lookup: "menu", nameKey: "menu_name" },
+      { key: "action_id", label: "Action", lookup: "action", nameKey: "action_name" },
       { key: "priority", label: "Priority" },
       { key: "status", label: "Status", status: true },
     ],

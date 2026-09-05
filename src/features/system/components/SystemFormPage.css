@@ -41,3 +41,32 @@
   background: #fff;
   box-shadow: 0 0 0 4px rgba(34, 102, 238, 0.12);
 }
+
+.ifp__form {
+  max-width: 640px;
+  gap: 20px;
+}
+
+.ifp__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.ifp__checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 24px;
+}
+
+.ifp__hint {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin: -8px 0 0;
+}
+
+@media (max-width: 520px) {
+  .ifp__grid {
+    grid-template-columns: 1fr;
+  }
+}
