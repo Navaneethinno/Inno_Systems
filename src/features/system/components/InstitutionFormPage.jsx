@@ -36,10 +36,10 @@ const initialState = {
   is_same_login_txn_pin_allowed: false,
 };
 
-function Checkbox({ label, checked, onChange }) {
+function Checkbox({ label, checked, onChange, disabled }) {
   return (
-    <label className="mdp__checkbox">
-      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+    <label className={`mdp__checkbox ${disabled ? "mdp__checkbox--disabled" : ""}`}>
+      <input type="checkbox" checked={checked} disabled={disabled} onChange={(e) => onChange(e.target.checked)} />
       <span>{label}</span>
     </label>
   );
@@ -87,8 +87,21 @@ function InstitutionForm({ onSuccess, onCancel }) {
   const set = (name, value) => setValues((prev) => ({ ...prev, [name]: value }));
   const toggleIdentifier = (id, checked) =>
     setValues((prev) => ({ ...prev, identifiers: { ...prev.identifiers, [id]: checked } }));
-  const toggleSupportedLanguage = (code, checked) =>
+
+  // The default language must always be one of the supported languages —
+  // picking a new default auto-checks it, and it can't be unchecked while
+  // it's still the default.
+  const setDefaultLanguage = (code) =>
+    setValues((prev) => ({
+      ...prev,
+      defaultLanguage: code,
+      supportedLanguages: { ...prev.supportedLanguages, [code]: true },
+    }));
+
+  const toggleSupportedLanguage = (code, checked) => {
+    if (!checked && code === values.defaultLanguage) return;
     setValues((prev) => ({ ...prev, supportedLanguages: { ...prev.supportedLanguages, [code]: checked } }));
+  };
 
   const selectedIdentifiers = LOGIN_IDENTIFIERS.filter((id) => values.identifiers[id]);
   const selectedLanguageCodes = Object.keys(values.supportedLanguages).filter((code) => values.supportedLanguages[code]);
@@ -164,17 +177,19 @@ function InstitutionForm({ onSuccess, onCancel }) {
           placeholder="Select default language"
           options={languages.map((row) => ({ value: rowCode(row), label: rowLabel(row) }))}
           value={values.defaultLanguage}
-          onChange={(e) => set("defaultLanguage", e.target.value)}
+          onChange={(e) => setDefaultLanguage(e.target.value)}
         />
       </div>
       <div className="ifp__checks">
         {languages.map((row) => {
           const code = rowCode(row);
+          const isDefault = code === values.defaultLanguage;
           return (
             <Checkbox
               key={code}
-              label={rowLabel(row)}
+              label={rowLabel(row) + (isDefault ? " (default)" : "")}
               checked={Boolean(values.supportedLanguages[code])}
+              disabled={isDefault}
               onChange={(v) => toggleSupportedLanguage(code, v)}
             />
           );

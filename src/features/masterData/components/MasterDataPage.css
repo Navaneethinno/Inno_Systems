@@ -60,6 +60,11 @@
   cursor: pointer;
 }
 
+.mdp__checkbox--disabled {
+  cursor: default;
+  color: var(--color-text-muted);
+}
+
 .mdp__checkbox input {
   width: 15px;
   height: 15px;
