@@ -88,6 +88,9 @@ export const masterEntities = {
   kyc_data_field: { label: "KYC Data Fields", writable: false },
   kyc_process: { label: "KYC Processes", writable: false },
   kyc_document_type: { label: "KYC Document Types", writable: false },
+  // Lives under /user/, not /master/ — see listPath below and
+  // masterDataService.list's `path` override.
+  password_policy: { label: "Password Policy", writable: false, listPath: "/user/password_policy/list" },
 };
 
 export const writableEntityKeys = Object.keys(masterEntities).filter((k) => masterEntities[k].writable);

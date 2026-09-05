@@ -33,14 +33,14 @@ export function MasterListPage() {
     setIsLoading(true);
     setError(null);
     masterDataService
-      .list(entityKey)
+      .list(entityKey, {}, config?.listPath)
       .then((data) => !cancelled && setRows(data))
       .catch((err) => !cancelled && setError(err.message))
       .finally(() => !cancelled && setIsLoading(false));
     return () => {
       cancelled = true;
     };
-  }, [entityKey]);
+  }, [entityKey, config?.listPath]);
 
   if (!config) {
     return <div className="mdp__state">Unknown master data type "{entityKey}".</div>;

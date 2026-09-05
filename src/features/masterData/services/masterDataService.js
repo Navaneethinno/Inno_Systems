@@ -16,8 +16,10 @@ import { extractList } from "../../../lib/extractList";
  * doesn't match.
  */
 export const masterDataService = {
-  async list(type, filters = {}) {
-    const { data: envelope } = await httpClient.post(`/master/${type}/list`, filters);
+  // `path` overrides the default /master/{type}/list route for entities
+  // that live elsewhere (e.g. password_policy is under /user/, not /master/).
+  async list(type, filters = {}, path) {
+    const { data: envelope } = await httpClient.post(path ?? `/master/${type}/list`, filters);
     return extractList(envelope.data);
   },
 
