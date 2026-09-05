@@ -32,6 +32,7 @@ export const systemForms = {
       {
         key: "status",
         label: "Status",
+        narrow: true,
         render: (row) => createElement(StatusBadge, { active: Boolean(row.status) }),
       },
     ],

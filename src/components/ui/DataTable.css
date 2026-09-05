@@ -39,6 +39,18 @@
   background: var(--color-table-head);
 }
 
+/* Shrink-to-content trick: with table-layout:auto (needed since column
+   sets vary per page), a bare width alone is only a hint the browser can
+   ignore — width:1% forces it to give this column just what its content
+   needs and let the other columns (name/label, etc.) absorb the rest of
+   the table's 100% width instead of leaving it stranded mid-row. */
+.dt__narrow,
+.dt__actions-head,
+.dt__actions {
+  width: 1%;
+  white-space: nowrap;
+}
+
 .dt__actions-head {
   text-align: right;
 }

@@ -216,7 +216,7 @@ export function ProfileFormPage() {
         { key: "id", label: "ID", render: (row) => rowValue(row) ?? "—" },
         { key: "name", label: "Name", render: (row) => rowLabel(row) },
         { key: "institution_name", label: "Institution", render: (row) => row.institution_name ?? "—" },
-        { key: "status", label: "Status", render: (row) => <StatusBadge active={Boolean(row.status)} /> },
+        { key: "status", label: "Status", narrow: true, render: (row) => <StatusBadge active={Boolean(row.status)} /> },
       ]}
       loadRows={() => systemService.listProfiles()}
       renderForm={({ onSuccess, onCancel }) => <ProfileForm onSuccess={onSuccess} onCancel={onCancel} />}

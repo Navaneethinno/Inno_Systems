@@ -17,7 +17,7 @@ export const masterEntities = {
     columns: [
       { key: "id", label: "ID" },
       { key: "name", label: "Name" },
-      { key: "status", label: "Status", status: true },
+      { key: "status", label: "Status", status: true, narrow: true },
     ],
   },
   menu: {
@@ -46,8 +46,8 @@ export const masterEntities = {
       // response doesn't include it.
       { key: "module_id", label: "Module", lookup: "module", nameKey: "module_name" },
       { key: "parent_menu_id", label: "Parent Menu", lookup: "menu", nameKey: "parent_menu_name", emptyIfZero: true },
-      { key: "priority", label: "Priority" },
-      { key: "status", label: "Status", status: true },
+      { key: "priority", label: "Priority", narrow: true },
+      { key: "status", label: "Status", status: true, narrow: true },
     ],
   },
   menu_action: {
@@ -63,8 +63,8 @@ export const masterEntities = {
       { key: "id", label: "ID" },
       { key: "menu_id", label: "Menu", lookup: "menu", nameKey: "menu_name" },
       { key: "action_id", label: "Action", lookup: "action", nameKey: "action_name" },
-      { key: "priority", label: "Priority" },
-      { key: "status", label: "Status", status: true },
+      { key: "priority", label: "Priority", narrow: true },
+      { key: "status", label: "Status", status: true, narrow: true },
     ],
   },
 

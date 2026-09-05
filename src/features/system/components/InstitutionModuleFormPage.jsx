@@ -113,11 +113,12 @@ function InstitutionModuleForm({ institutions, defaultInstProfileId, onSuccess, 
 const columns = [
   { key: "id", label: "ID", render: (row) => rowValue(row) ?? "—" },
   { key: "module_name", label: "Module", render: (row) => row.module_name ?? rowLabel(row) },
-  { key: "effective_from", label: "Effective From" },
-  { key: "effective_to", label: "Effective To" },
+  { key: "effective_from", label: "Effective From", narrow: true },
+  { key: "effective_to", label: "Effective To", narrow: true },
   {
     key: "configuration_status",
     label: "Status",
+    narrow: true,
     render: (row) => (
       <StatusBadge active={row.configuration_status ? row.configuration_status === "ACTIVE" : Boolean(row.status)} />
     ),

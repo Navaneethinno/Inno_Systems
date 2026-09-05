@@ -19,7 +19,9 @@ export function DataTable({ columns, rows, actions, isLoading, emptyMessage = "N
         <thead>
           <tr>
             {columns.map((col) => (
-              <th key={col.key}>{col.label}</th>
+              <th key={col.key} className={col.narrow || col.key === "id" ? "dt__narrow" : undefined}>
+                {col.label}
+              </th>
             ))}
             {actions && <th className="dt__actions-head">Actions</th>}
           </tr>
@@ -28,7 +30,9 @@ export function DataTable({ columns, rows, actions, isLoading, emptyMessage = "N
           {rows.map((row, i) => (
             <tr key={row.id ?? i}>
               {columns.map((col) => (
-                <td key={col.key}>{col.render ? col.render(row) : String(row[col.key] ?? "—")}</td>
+                <td key={col.key} className={col.narrow || col.key === "id" ? "dt__narrow" : undefined}>
+                  {col.render ? col.render(row) : String(row[col.key] ?? "—")}
+                </td>
               ))}
               {actions && <td className="dt__actions">{actions(row)}</td>}
             </tr>
