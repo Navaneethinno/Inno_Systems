@@ -3,15 +3,21 @@ import { useParams } from "react-router-dom";
 import { masterEntities } from "../config/masterEntities";
 import { masterDataService } from "../services/masterDataService";
 import { DataTable } from "../../../components/ui/DataTable";
+import { StatusBadge } from "../../../components/ui/StatusBadge";
 import "./MasterDataPage.css";
 
 function buildColumns(rows) {
   if (rows.length === 0) return [];
   const keys = Object.keys(rows[0]).filter((k) => !k.startsWith("_"));
-  return keys.map((key) => ({
-    key,
-    label: key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
-  }));
+  return keys.map((key) => {
+    const isStatus = key === "status";
+    return {
+      key,
+      label: key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+      narrow: isStatus,
+      render: isStatus ? (row) => <StatusBadge active={Boolean(row[key])} /> : undefined,
+    };
+  });
 }
 
 export function MasterListPage() {
