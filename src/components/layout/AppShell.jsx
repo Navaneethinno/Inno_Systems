@@ -78,10 +78,32 @@ export function AppShell() {
 
       <div className="shell__main">
         <header className="shell__header">
-          <span className="shell__user">{user?.username}</span>
-          <button type="button" className="shell__logout" onClick={logout}>
-            Log out
-          </button>
+          <span className="shell__brand">System Console</span>
+
+          <div className="shell__header-right">
+            <div className="shell__profile">
+              <span className="shell__avatar">{user?.username?.[0]?.toUpperCase() ?? "?"}</span>
+              <span className="shell__profile-text">
+                <span className="shell__user">{user?.username}</span>
+                <span className="shell__role">{user?.profileName ?? "System User"}</span>
+              </span>
+            </div>
+
+            <span className="shell__divider" aria-hidden="true" />
+
+            <button type="button" className="shell__logout" onClick={logout}>
+              <svg viewBox="0 0 20 20" fill="none" width="15" height="15" aria-hidden="true">
+                <path
+                  d="M7.5 17.5h-3a1 1 0 0 1-1-1v-13a1 1 0 0 1 1-1h3M13 14l4-4-4-4M17 10H7.5"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Log out
+            </button>
+          </div>
         </header>
         <main className="shell__content">
           <Outlet />
