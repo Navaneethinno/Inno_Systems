@@ -78,7 +78,11 @@ export function AppShell() {
 
       <div className="shell__main">
         <header className="shell__header">
-          <span className="shell__brand">System Console</span>
+          <span className="shell__brand">
+            <span className="shell__brand-dot" aria-hidden="true" />
+            <span className="shell__brand-system">System</span>{" "}
+            <span className="shell__brand-console">Console</span>
+          </span>
 
           <div className="shell__header-right">
             <div className="shell__profile">

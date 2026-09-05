@@ -13,13 +13,33 @@
   flex-direction: column;
   gap: 24px;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+
+.shell__sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.shell__sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.shell__sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+}
+
+.shell__sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.32);
 }
 
 .shell__logo {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
-  padding: 0 8px;
+  padding: 4px 8px 8px;
 }
 
 .shell__logo-icon {
@@ -95,6 +115,27 @@
   gap: 2px;
   max-height: 320px;
   overflow-y: auto;
+  padding-right: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+
+.shell__submenu::-webkit-scrollbar {
+  width: 5px;
+}
+
+.shell__submenu::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 4px 0;
+}
+
+.shell__submenu::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+}
+
+.shell__submenu::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.38);
 }
 
 .shell__main {
@@ -104,9 +145,9 @@
 }
 
 .shell__header {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   gap: 16px;
   padding: 14px 32px;
   background: #fff;
@@ -115,14 +156,37 @@
 }
 
 .shell__brand {
+  justify-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-family: var(--font-display);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.shell__brand-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-primary));
+  flex-shrink: 0;
+}
+
+.shell__brand-system {
   color: var(--color-navy);
-  letter-spacing: 0.01em;
+}
+
+.shell__brand-console {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .shell__header-right {
+  justify-self: end;
   display: flex;
   align-items: center;
   gap: 16px;

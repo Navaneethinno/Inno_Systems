@@ -91,4 +91,6 @@ export const masterEntities = {
 };
 
 export const writableEntityKeys = Object.keys(masterEntities).filter((k) => masterEntities[k].writable);
-export const readOnlyEntityKeys = Object.keys(masterEntities).filter((k) => !masterEntities[k].writable);
+export const readOnlyEntityKeys = Object.keys(masterEntities)
+  .filter((k) => !masterEntities[k].writable)
+  .sort((a, b) => masterEntities[a].label.localeCompare(masterEntities[b].label));
