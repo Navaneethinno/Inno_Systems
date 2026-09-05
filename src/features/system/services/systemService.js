@@ -43,12 +43,26 @@ export const systemService = {
     return extractList(envelope.data);
   },
 
-  // Confirmed live via curl: /institution/module/get_active requires auth
-  // ("Please log in again"), matching the /institution/profile/get_active
-  // naming pattern — /system/institution/module/* and /institution/module/
-  // {getall,list} all fall through to the generic fallback instead.
-  async listInstitutionModules() {
-    const { data: envelope } = await httpClient.post("/institution/module/get_active", { view: "dropdown" });
+  // Confirmed live: /institution/module/get_active requires auth ("Please
+  // log in again" without a token), matching the /institution/profile/
+  // get_active naming pattern — /system/institution/module/* and
+  // /institution/module/{getall,list} all fall through to the generic
+  // fallback instead. Unlike the other dropdown sources, this one also
+  // requires `inst_profile_id` in the request (confirmed live: omitting it
+  // returns "Field 'inst_profile_id' is required in request") — it lists
+  // modules for one institution, not all institutions' modules at once.
+  async listInstitutionModules(instProfileId) {
+    const { data: envelope } = await httpClient.post("/institution/module/get_active", {
+      view: "dropdown",
+      inst_profile_id: instProfileId,
+    });
+    return extractList(envelope.data);
+  },
+
+  // Confirmed live via curl: /user/list requires auth ("Please log in
+  // again"), i.e. a real route.
+  async listUsers() {
+    const { data: envelope } = await httpClient.post("/user/list", { view: "dropdown" });
     return extractList(envelope.data);
   },
 };

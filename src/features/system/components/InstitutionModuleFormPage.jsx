@@ -1,18 +1,20 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { systemService } from "../services/systemService";
 import { masterDataService } from "../../masterData/services/masterDataService";
 import { rowLabel, rowValue } from "../../../lib/rowLabel";
 import { TextField } from "../../../components/ui/TextField";
 import { Select } from "../../../components/ui/Select";
 import { Button } from "../../../components/ui/Button";
-import { EntityManagerPage } from "./EntityManagerPage";
+import { Modal } from "../../../components/ui/Modal";
+import { DataTable } from "../../../components/ui/DataTable";
+import "../../masterData/components/MasterDataPage.css";
+import "../../masterData/components/MenuActionsPage.css";
 import "./SystemFormPage.css";
 import "./ProfileFormPage.css";
 
-function InstitutionModuleForm({ onSuccess, onCancel }) {
-  const [institutions, setInstitutions] = useState([]);
+function InstitutionModuleForm({ institutions, defaultInstProfileId, onSuccess, onCancel }) {
   const [modules, setModules] = useState([]);
-  const [instProfileId, setInstProfileId] = useState("");
+  const [instProfileId, setInstProfileId] = useState(defaultInstProfileId);
   const [moduleId, setModuleId] = useState("");
   const [effectiveFrom, setEffectiveFrom] = useState("");
   const [effectiveTo, setEffectiveTo] = useState("");
@@ -21,17 +23,7 @@ function InstitutionModuleForm({ onSuccess, onCancel }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    let cancelled = false;
-    Promise.all([systemService.listActiveInstitutions(), masterDataService.list("module")]).then(
-      ([instRows, moduleRows]) => {
-        if (cancelled) return;
-        setInstitutions(instRows);
-        setModules(moduleRows);
-      }
-    );
-    return () => {
-      cancelled = true;
-    };
+    masterDataService.list("module").then(setModules);
   }, []);
 
   const institutionOptions = useMemo(
@@ -52,7 +44,7 @@ function InstitutionModuleForm({ onSuccess, onCancel }) {
         effective_to: effectiveTo || undefined,
         configuration_status: configurationStatus,
       });
-      onSuccess();
+      onSuccess(instProfileId);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -117,24 +109,103 @@ function InstitutionModuleForm({ onSuccess, onCancel }) {
   );
 }
 
+const columns = [
+  { key: "id", label: "ID", render: (row) => rowValue(row) ?? "—" },
+  { key: "module_name", label: "Module", render: (row) => row.module_name ?? rowLabel(row) },
+  { key: "effective_from", label: "Effective From" },
+  { key: "effective_to", label: "Effective To" },
+  {
+    key: "configuration_status",
+    label: "Status",
+    render: (row) => row.configuration_status ?? (row.status ? "Active" : "Inactive"),
+  },
+];
+
 export function InstitutionModuleFormPage() {
+  const [institutions, setInstitutions] = useState([]);
+  const [instProfileId, setInstProfileId] = useState("");
+  const [rows, setRows] = useState([]);
+  const [isLoadingInstitutions, setIsLoadingInstitutions] = useState(true);
+  const [isLoadingModules, setIsLoadingModules] = useState(false);
+  const [error, setError] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    systemService
+      .listActiveInstitutions()
+      .then(setInstitutions)
+      .finally(() => setIsLoadingInstitutions(false));
+  }, []);
+
+  const loadModulesFor = useCallback(async (id) => {
+    if (!id) {
+      setRows([]);
+      return;
+    }
+    setIsLoadingModules(true);
+    setError(null);
+    try {
+      setRows(await systemService.listInstitutionModules(Number(id)));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoadingModules(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadModulesFor(instProfileId);
+  }, [instProfileId, loadModulesFor]);
+
+  const handleCreated = (createdInstProfileId) => {
+    setIsModalOpen(false);
+    // Show the institution just added to, so the new row is visible.
+    if (createdInstProfileId && String(createdInstProfileId) !== String(instProfileId)) {
+      setInstProfileId(String(createdInstProfileId));
+    } else {
+      loadModulesFor(instProfileId);
+    }
+  };
+
   return (
-    <EntityManagerPage
-      title="Institution Modules"
-      subtitle="Modules assigned to institutions."
-      addLabel="Add Institution Module"
-      columns={[
-        { key: "id", label: "ID", render: (row) => rowValue(row) ?? "—" },
-        { key: "institution_name", label: "Institution", render: (row) => row.institution_name ?? rowLabel(row) },
-        { key: "module_name", label: "Module", render: (row) => row.module_name ?? "—" },
-        {
-          key: "configuration_status",
-          label: "Status",
-          render: (row) => row.configuration_status ?? (row.status ? "Active" : "Inactive"),
-        },
-      ]}
-      loadRows={() => systemService.listInstitutionModules()}
-      renderForm={({ onSuccess, onCancel }) => <InstitutionModuleForm onSuccess={onSuccess} onCancel={onCancel} />}
-    />
+    <div className="mdp">
+      <div className="mdp__header">
+        <div>
+          <h1 className="mdp__title">Institution Modules</h1>
+          <p className="mdp__subtitle">Modules assigned to an institution.</p>
+        </div>
+        <Button onClick={() => setIsModalOpen(true)}>+ Add Institution Module</Button>
+      </div>
+
+      <div className="map__module">
+        <span className="map__module-label">Institution</span>
+        <Select
+          placeholder={isLoadingInstitutions ? "Loading institutions…" : "Select institution"}
+          options={institutions.map((row) => ({ value: rowValue(row), label: rowLabel(row) }))}
+          value={instProfileId}
+          disabled={isLoadingInstitutions}
+          onChange={(e) => setInstProfileId(e.target.value)}
+        />
+      </div>
+
+      {error && <div className="mdp__error">{error}</div>}
+
+      {!instProfileId ? (
+        <div className="mdp__state">Select an institution to view its assigned modules.</div>
+      ) : (
+        <DataTable columns={columns} rows={rows} isLoading={isLoadingModules} />
+      )}
+
+      {isModalOpen && (
+        <Modal title="Add Institution Module" onClose={() => setIsModalOpen(false)} width={640}>
+          <InstitutionModuleForm
+            institutions={institutions}
+            defaultInstProfileId={instProfileId}
+            onSuccess={handleCreated}
+            onCancel={() => setIsModalOpen(false)}
+          />
+        </Modal>
+      )}
+    </div>
   );
 }

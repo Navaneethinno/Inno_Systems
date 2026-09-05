@@ -13,11 +13,21 @@ export const systemForms = {
     label: "User",
     serviceMethod: "addUser",
     successIdField: "user_id",
-    // Unlike profile/institution/institutionModule, there's no known
-    // list endpoint for users yet, so this stays a bare form instead of
-    // the list+add-modal pattern used elsewhere — swap it over once one
-    // is confirmed.
-    listNote: "There's no list endpoint for users yet, so created users aren't shown here — only the create form.",
+    // Confirmed live via curl: /user/list requires auth ("Please log in
+    // again"), i.e. a real route — so this gets the same list+add-modal
+    // pattern as profile/institution/institutionModule.
+    listMethod: "listUsers",
+    columns: [
+      { key: "id", label: "ID" },
+      { key: "user_name", label: "Username" },
+      { key: "email", label: "Email" },
+      { key: "mobile", label: "Mobile" },
+      {
+        key: "status",
+        label: "Status",
+        render: (row) => (row.status ? "Active" : "Inactive"),
+      },
+    ],
     fields: [
       { name: "user_name", label: "Username", type: "text", required: true },
       { name: "user_pwd", label: "Password", type: "password", required: true },

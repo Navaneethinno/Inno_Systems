@@ -91,12 +91,13 @@ Implements the flow from `SYSTEM_API_REQUEST_RESPONSE.md` — a live capture of 
 - `POST /system/institution/add` — matches the real nested schema: `language` is `{ default, supported[] }` and `allowed_login_identifiers` is `{ identifiers[] }` — both name-resolved (`type` via `/master/institution_type/list`, language default/supported via `/master/language/list`), not raw codes typed by hand.
 - `POST /system/institution/module/add` — institution and module are name-resolved selects.
 
-**List + add-modal pattern**: Profile, Institution, and Institution Module each get a table of what already exists (via `EntityManagerPage.jsx`) with a "+ Add" button that opens the create form in a modal — not a bare form with no way to see what you've created. List sources, all confirmed live via curl (a wrong path/prefix falls through to a generic "Config processor is alive" response instead of a real auth-gated one):
+**List + add-modal pattern**: Profile, Institution, Institution Module, and User each get a table of what already exists (via `EntityManagerPage.jsx`) with a "+ Add" button that opens the create form in a modal — not a bare form with no way to see what you've created. List sources, all confirmed live (a wrong path/prefix falls through to a generic "Config processor is alive" response instead of a real auth-gated one):
 - Profiles: `POST /profile/getall` `{"view":"dropdown"}`
 - Institutions: `POST /institution/profile/get_active` `{"view":"dropdown"}`
-- Institution Modules: `POST /institution/module/get_active` `{"view":"dropdown"}`
+- Users: `POST /user/list` `{"view":"dropdown"}`
+- Institution Modules: `POST /institution/module/get_active` — **also requires `inst_profile_id` in the body** (confirmed live: omitting it returns `"Field 'inst_profile_id' is required in request"`), unlike every other dropdown source here. It lists one institution's modules, not all of them — so this page picks an institution first, then loads that institution's modules; there's no "all institution-modules" view.
 
-None of these three are documented in the captured reference doc, only confirmed by path-probing — worth re-verifying against a real session once the backend's deployed. **Add User stays a bare form** — no list endpoint for users was found (tried `/user/getall`, `/user/get_active`, and the `/system`-prefixed variants of both; all four fall through to the generic fallback). The UI shows a note explaining this; swap it to the same list+modal pattern once a real endpoint is confirmed.
+None of these are documented in the captured reference doc, only confirmed by live requests — worth re-verifying once the backend redeploys.
 
 There's no `/me` endpoint, so the logged-in user is cached at login time (`localStorage` if "Remember me" is checked, `sessionStorage` otherwise) and rehydrated on page load as long as a token is present.
 
