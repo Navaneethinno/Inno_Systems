@@ -212,8 +212,18 @@ export function ProfileFormPage() {
       subtitle="Profiles created via the system API, with their menu/action access."
       addLabel="Add Profile"
       columns={[
-        { key: "id", label: "ID" },
+        { key: "id", label: "ID", render: (row) => rowValue(row) ?? "—" },
         { key: "name", label: "Name", render: (row) => rowLabel(row) },
+        { key: "institution_name", label: "Institution", render: (row) => row.institution_name ?? "—" },
+        {
+          key: "status",
+          label: "Status",
+          render: (row) => (
+            <span className={`dt__status ${row.status ? "dt__status--active" : "dt__status--inactive"}`}>
+              {row.status ? "Active" : "Inactive"}
+            </span>
+          ),
+        },
       ]}
       loadRows={() => systemService.listProfiles()}
       renderForm={({ onSuccess, onCancel }) => <ProfileForm onSuccess={onSuccess} onCancel={onCancel} />}

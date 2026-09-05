@@ -124,8 +124,14 @@ export function InstitutionModuleFormPage() {
       subtitle="Modules assigned to institutions."
       addLabel="Add Institution Module"
       columns={[
-        { key: "id", label: "ID" },
-        { key: "name", label: "Institution / Module", render: (row) => rowLabel(row) },
+        { key: "id", label: "ID", render: (row) => rowValue(row) ?? "—" },
+        { key: "institution_name", label: "Institution", render: (row) => row.institution_name ?? rowLabel(row) },
+        { key: "module_name", label: "Module", render: (row) => row.module_name ?? "—" },
+        {
+          key: "configuration_status",
+          label: "Status",
+          render: (row) => row.configuration_status ?? (row.status ? "Active" : "Inactive"),
+        },
       ]}
       loadRows={() => systemService.listInstitutionModules()}
       renderForm={({ onSuccess, onCancel }) => <InstitutionModuleForm onSuccess={onSuccess} onCancel={onCancel} />}

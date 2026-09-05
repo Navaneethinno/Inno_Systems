@@ -300,7 +300,7 @@ export function InstitutionFormPage() {
       subtitle="Institutions created via the system API."
       addLabel="Add Institution"
       columns={[
-        { key: "id", label: "ID" },
+        { key: "id", label: "ID", render: (row) => rowValue(row) ?? "—" },
         { key: "name", label: "Name", render: (row) => rowLabel(row) },
       ]}
       loadRows={() => systemService.listActiveInstitutions()}
