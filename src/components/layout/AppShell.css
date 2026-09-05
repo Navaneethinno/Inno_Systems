@@ -206,21 +206,21 @@
   gap: 16px;
 }
 
-.shell__profile-text {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.25;
+.shell__profile {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.shell__profile-icon {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
 }
 
 .shell__user {
   font-size: 13.5px;
   font-weight: 600;
   color: var(--color-text);
-}
-
-.shell__role {
-  font-size: 11.5px;
-  color: var(--color-text-muted);
 }
 
 .shell__divider {
@@ -261,7 +261,7 @@
     display: none;
   }
 
-  .shell__profile-text {
+  .shell__profile {
     display: none;
   }
 }

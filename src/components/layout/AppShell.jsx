@@ -93,9 +93,12 @@ export function AppShell() {
 
             <span className="shell__divider" aria-hidden="true" />
 
-            <span className="shell__profile-text">
+            <span className="shell__profile">
+              <svg viewBox="0 0 20 20" fill="none" width="16" height="16" aria-hidden="true" className="shell__profile-icon">
+                <circle cx="10" cy="6.5" r="3.25" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M3.5 17c0-3.31 2.91-6 6.5-6s6.5 2.69 6.5 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
               <span className="shell__user">{user?.username}</span>
-              <span className="shell__role">{user?.profileName ?? "System User"}</span>
             </span>
 
             <button type="button" className="shell__logout" onClick={logout}>
