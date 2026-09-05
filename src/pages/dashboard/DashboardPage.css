@@ -1,13 +1,16 @@
 .dash {
+  min-height: calc(100vh - 180px);
   display: flex;
-  flex-direction: column;
-  gap: 32px;
+  align-items: center;
+  justify-content: center;
 }
 
 .dash__welcome {
+  width: 100%;
+  max-width: 640px;
   background: #fff;
   border-radius: var(--radius-lg);
-  padding: 32px;
+  padding: 40px;
   box-shadow: var(--shadow-card);
   border: 1px solid rgba(16, 24, 40, 0.04);
 }
@@ -29,7 +32,7 @@
 
 .dash__title {
   font-family: var(--font-display);
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 700;
   margin: 0 0 6px;
   color: var(--color-navy);
@@ -44,9 +47,9 @@
 .dash__meta {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 16px 24px;
+  gap: 20px 24px;
   margin: 0;
-  padding-top: 20px;
+  padding-top: 24px;
   border-top: 1px solid var(--color-border);
 }
 
@@ -62,61 +65,6 @@
   font-size: 14px;
   font-weight: 600;
   color: var(--color-text);
-}
-
-.dash__section-title {
-  font-family: var(--font-display);
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--color-navy);
-  margin: 0 0 14px;
-}
-
-.dash__tiles {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 14px;
-}
-
-.dash__tile {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  background: #fff;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 16px;
-  text-decoration: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
-}
-
-.dash__tile:hover {
-  border-color: var(--color-primary);
-  box-shadow: 0 8px 20px -10px rgba(34, 102, 238, 0.35);
-  transform: translateY(-1px);
-}
-
-.dash__tile-label {
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.dash__tile-hint {
-  font-size: 12px;
-  color: var(--color-text-muted);
-}
-
-.dash__tiles--compact {
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 8px;
-}
-
-.dash__tile--compact {
-  padding: 10px 14px;
-  font-size: 12.5px;
-  font-weight: 500;
-  color: var(--color-slate);
 }
 
 @media (max-width: 700px) {

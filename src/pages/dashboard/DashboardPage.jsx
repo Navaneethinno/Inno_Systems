@@ -1,7 +1,4 @@
-import { Link } from "react-router-dom";
 import { useAuth } from "../../features/auth/hooks/useAuth";
-import { masterEntities, writableEntityKeys, readOnlyEntityKeys } from "../../features/masterData/config/masterEntities";
-import { systemForms } from "../../features/system/config/systemForms";
 import "./DashboardPage.css";
 
 export function DashboardPage() {
@@ -37,53 +34,6 @@ export function DashboardPage() {
           </div>
         </dl>
       </div>
-
-      <section className="dash__section">
-        <h2 className="dash__section-title">Master Data</h2>
-        <div className="dash__tiles">
-          {writableEntityKeys.map((key) => (
-            <Link key={key} to={`/master/${key}`} className="dash__tile">
-              <span className="dash__tile-label">{masterEntities[key].label}</span>
-              <span className="dash__tile-hint">Add, edit, delete</span>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="dash__section">
-        <h2 className="dash__section-title">System</h2>
-        <div className="dash__tiles">
-          <Link to="/system/profile" className="dash__tile">
-            <span className="dash__tile-label">Add Profile</span>
-            <span className="dash__tile-hint">Menu &amp; action access</span>
-          </Link>
-          <Link to="/system/institution" className="dash__tile">
-            <span className="dash__tile-label">Add Institution</span>
-            <span className="dash__tile-hint">Create new record</span>
-          </Link>
-          <Link to="/system/institutionModule" className="dash__tile">
-            <span className="dash__tile-label">Add Institution Module</span>
-            <span className="dash__tile-hint">Assign a module</span>
-          </Link>
-          {Object.keys(systemForms).map((key) => (
-            <Link key={key} to={`/system/${key}`} className="dash__tile">
-              <span className="dash__tile-label">Add {systemForms[key].label}</span>
-              <span className="dash__tile-hint">Create new record</span>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="dash__section">
-        <h2 className="dash__section-title">Reference Data</h2>
-        <div className="dash__tiles dash__tiles--compact">
-          {readOnlyEntityKeys.map((key) => (
-            <Link key={key} to={`/reference/${key}`} className="dash__tile dash__tile--compact">
-              {masterEntities[key].label}
-            </Link>
-          ))}
-        </div>
-      </section>
     </div>
   );
 }
