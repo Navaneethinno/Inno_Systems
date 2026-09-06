@@ -40,12 +40,15 @@
 }
 
 .dt__sort-icon {
-  font-size: 7px;
-  opacity: 0.35;
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.dt__sortable:hover .dt__sort-icon {
+  color: var(--color-primary);
 }
 
 .dt__sort-icon--active {
-  opacity: 1;
   color: var(--color-primary);
 }
 

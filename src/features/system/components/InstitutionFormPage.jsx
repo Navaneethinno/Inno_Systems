@@ -323,14 +323,15 @@ export function InstitutionFormPage() {
       columns={[
         { key: "id", label: "ID", render: (row) => rowValue(row) ?? "—" },
         { key: "name", label: "Name", render: (row) => rowLabel(row) },
-        { key: "code", label: "Code", render: (row) => row.code ?? "—" },
-        { key: "type_name", label: "Type", render: (row) => row.type_name ?? "—" },
         {
           key: "auth_status",
           label: "Status",
           narrow: true,
-          render: (row) =>
-            row.auth_status ? <AuthStatusBadge value={row.auth_status} /> : <StatusBadge active={Boolean(row.status)} />,
+          render: (row) => {
+            if (row.auth_status) return <AuthStatusBadge value={row.auth_status} />;
+            if ("status" in row) return <StatusBadge active={Boolean(row.status)} />;
+            return "—";
+          },
         },
       ]}
       loadRows={() => systemService.listActiveInstitutions()}

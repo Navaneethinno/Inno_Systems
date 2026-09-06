@@ -59,9 +59,28 @@ export function DataTable({ columns, rows, actions, isLoading, emptyMessage = "N
                   <span className="dt__th-inner">
                     {col.label}
                     {isSortable && (
-                      <span className={`dt__sort-icon ${isSorted ? "dt__sort-icon--active" : ""}`}>
-                        {isSorted && sort.dir === -1 ? "▼" : "▲"}
-                      </span>
+                      <svg
+                        className={`dt__sort-icon ${isSorted ? "dt__sort-icon--active" : ""}`}
+                        viewBox="0 0 12 16"
+                        width="10"
+                        height="13"
+                        aria-hidden="true"
+                      >
+                        {(!isSorted || sort.dir === 1) && (
+                          <path
+                            d="M6 1.5 10 6H2z"
+                            fill={isSorted && sort.dir === 1 ? "currentColor" : "currentColor"}
+                            opacity={isSorted && sort.dir === 1 ? 1 : 0.4}
+                          />
+                        )}
+                        {(!isSorted || sort.dir === -1) && (
+                          <path
+                            d="M6 14.5 2 10h8z"
+                            fill="currentColor"
+                            opacity={isSorted && sort.dir === -1 ? 1 : 0.4}
+                          />
+                        )}
+                      </svg>
                     )}
                   </span>
                 </th>

@@ -35,10 +35,11 @@ export const systemForms = {
         key: "auth_status",
         label: "Status",
         narrow: true,
-        render: (row) =>
-          row.auth_status
-            ? createElement(AuthStatusBadge, { value: row.auth_status })
-            : createElement(StatusBadge, { active: Boolean(row.status) }),
+        render: (row) => {
+          if (row.auth_status) return createElement(AuthStatusBadge, { value: row.auth_status });
+          if ("status" in row) return createElement(StatusBadge, { active: Boolean(row.status) });
+          return "—";
+        },
       },
     ],
     fields: [
