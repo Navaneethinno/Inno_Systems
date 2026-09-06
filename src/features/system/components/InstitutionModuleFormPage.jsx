@@ -8,8 +8,10 @@ import { Button } from "../../../components/ui/Button";
 import { Modal } from "../../../components/ui/Modal";
 import { DataTable } from "../../../components/ui/DataTable";
 import { StatusBadge } from "../../../components/ui/StatusBadge";
+import { AuthStatusBadge } from "../../../components/ui/AuthStatusBadge";
 import { FullscreenTableModal } from "../../../components/ui/FullscreenTableModal";
 import { StatusFilterTabs } from "../../../components/ui/StatusFilterTabs";
+import { TableSearchBar } from "../../../components/ui/TableSearchBar";
 import { useAuthStatusFilter } from "../../../hooks/useAuthStatusFilter";
 import "../../masterData/components/MasterDataPage.css";
 import "../../masterData/components/MenuActionsPage.css";
@@ -120,11 +122,17 @@ const columns = [
   { key: "effective_to", label: "Effective To", narrow: true },
   {
     key: "configuration_status",
-    label: "Status",
+    label: "Configuration",
     narrow: true,
     render: (row) => (
       <StatusBadge active={row.configuration_status ? row.configuration_status === "ACTIVE" : Boolean(row.status)} />
     ),
+  },
+  {
+    key: "auth_status",
+    label: "Status",
+    narrow: true,
+    render: (row) => (row.auth_status ? <AuthStatusBadge value={row.auth_status} /> : "—"),
   },
 ];
 
@@ -138,7 +146,8 @@ export function InstitutionModuleFormPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  const { filter, setFilter, filteredRows, hasAuthStatus, pendingCount } = useAuthStatusFilter(rows);
+  const { filter, setFilter, query, setQuery, filteredRows, hasAuthStatus, activeCount, pendingCount, totalCount } =
+    useAuthStatusFilter(rows);
 
   useEffect(() => {
     systemService
@@ -181,6 +190,7 @@ export function InstitutionModuleFormPage() {
     <div className="mdp">
       <div className="mdp__header">
         <div>
+          <span className="mdp__eyebrow">Configuration</span>
           <h1 className="mdp__title">Institution Modules</h1>
           <p className="mdp__subtitle">Modules assigned to an institution.</p>
         </div>
@@ -203,9 +213,18 @@ export function InstitutionModuleFormPage() {
         />
       </div>
 
-      {hasAuthStatus && (
+      {rows.length > 0 && (
         <div className="mdp__toolbar">
-          <StatusFilterTabs filter={filter} onChange={setFilter} pendingCount={pendingCount} />
+          <TableSearchBar value={query} onChange={setQuery} placeholder="Search institution modules…" />
+          {hasAuthStatus && (
+            <StatusFilterTabs
+              filter={filter}
+              onChange={setFilter}
+              totalCount={totalCount}
+              activeCount={activeCount}
+              pendingCount={pendingCount}
+            />
+          )}
         </div>
       )}
 

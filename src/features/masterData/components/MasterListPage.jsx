@@ -6,6 +6,7 @@ import { DataTable } from "../../../components/ui/DataTable";
 import { StatusBadge } from "../../../components/ui/StatusBadge";
 import { Button } from "../../../components/ui/Button";
 import { FullscreenTableModal } from "../../../components/ui/FullscreenTableModal";
+import { TableSearchBar } from "../../../components/ui/TableSearchBar";
 import "./MasterDataPage.css";
 
 function buildColumns(rows) {
@@ -30,6 +31,7 @@ export function MasterListPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -50,6 +52,12 @@ export function MasterListPage() {
   }
 
   const columns = buildColumns(rows);
+  const q = query.trim().toLowerCase();
+  const filteredRows = q
+    ? rows.filter((row) =>
+        Object.values(row).some((v) => v != null && typeof v !== "object" && String(v).toLowerCase().includes(q))
+      )
+    : rows;
 
   return (
     <div className="mdp">
@@ -65,15 +73,21 @@ export function MasterListPage() {
         </div>
       </div>
 
+      {rows.length > 0 && (
+        <div className="mdp__toolbar">
+          <TableSearchBar value={query} onChange={setQuery} placeholder={`Search ${config.label.toLowerCase()}…`} />
+        </div>
+      )}
+
       {error && <div className="mdp__error">{error}</div>}
 
-      <DataTable columns={columns} rows={rows} isLoading={isLoading} />
+      <DataTable columns={columns} rows={filteredRows} isLoading={isLoading} />
 
       {isFullscreen && (
         <FullscreenTableModal
           title={config.label}
           columns={columns}
-          rows={rows}
+          rows={filteredRows}
           onClose={() => setIsFullscreen(false)}
         />
       )}

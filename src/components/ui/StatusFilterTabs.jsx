@@ -1,8 +1,18 @@
 import "./StatusFilterTabs.css";
 
-export function StatusFilterTabs({ filter, onChange, pendingCount }) {
+export function StatusFilterTabs({ filter, onChange, totalCount, activeCount, pendingCount }) {
   return (
     <div className="sft" role="tablist" aria-label="Filter by status">
+      <button
+        type="button"
+        role="tab"
+        aria-selected={filter === "all"}
+        className={`sft__tab ${filter === "all" ? "sft__tab--active" : ""}`}
+        onClick={() => onChange("all")}
+      >
+        All
+        {totalCount > 0 && <span className="sft__count">{totalCount}</span>}
+      </button>
       <button
         type="button"
         role="tab"
@@ -11,6 +21,7 @@ export function StatusFilterTabs({ filter, onChange, pendingCount }) {
         onClick={() => onChange("active")}
       >
         Active
+        {activeCount > 0 && <span className="sft__count sft__count--active">{activeCount}</span>}
       </button>
       <button
         type="button"
@@ -20,7 +31,7 @@ export function StatusFilterTabs({ filter, onChange, pendingCount }) {
         onClick={() => onChange("pending")}
       >
         Pending
-        {pendingCount > 0 && <span className="sft__count">{pendingCount}</span>}
+        {pendingCount > 0 && <span className="sft__count sft__count--pending">{pendingCount}</span>}
       </button>
     </div>
   );

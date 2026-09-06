@@ -10,6 +10,7 @@ import { Select } from "../../../components/ui/Select";
 import { StatusBadge } from "../../../components/ui/StatusBadge";
 import { FullscreenTableModal } from "../../../components/ui/FullscreenTableModal";
 import { StatusFilterTabs } from "../../../components/ui/StatusFilterTabs";
+import { TableSearchBar } from "../../../components/ui/TableSearchBar";
 import { useAuthStatusFilter } from "../../../hooks/useAuthStatusFilter";
 import "./MasterDataPage.css";
 
@@ -34,7 +35,8 @@ export function MasterCrudPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  const { filter, setFilter, filteredRows, hasAuthStatus, pendingCount } = useAuthStatusFilter(rows);
+  const { filter, setFilter, query, setQuery, filteredRows, hasAuthStatus, activeCount, pendingCount, totalCount } =
+    useAuthStatusFilter(rows);
 
   const loadRows = useCallback(async () => {
     setIsLoading(true);
@@ -170,11 +172,18 @@ export function MasterCrudPage() {
         </div>
       </div>
 
-      {hasAuthStatus && (
-        <div className="mdp__toolbar">
-          <StatusFilterTabs filter={filter} onChange={setFilter} pendingCount={pendingCount} />
-        </div>
-      )}
+      <div className="mdp__toolbar">
+        <TableSearchBar value={query} onChange={setQuery} placeholder={`Search ${config.label.toLowerCase()}…`} />
+        {hasAuthStatus && (
+          <StatusFilterTabs
+            filter={filter}
+            onChange={setFilter}
+            totalCount={totalCount}
+            activeCount={activeCount}
+            pendingCount={pendingCount}
+          />
+        )}
+      </div>
 
       {error && <div className="mdp__error">{error}</div>}
 

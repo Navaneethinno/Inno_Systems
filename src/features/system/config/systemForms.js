@@ -1,6 +1,7 @@
 import { createElement } from "react";
 import { rowValue } from "../../../lib/rowLabel";
 import { StatusBadge } from "../../../components/ui/StatusBadge";
+import { AuthStatusBadge } from "../../../components/ui/AuthStatusBadge";
 
 /**
  * Field lists mirror the real captured request/response pairs in
@@ -15,6 +16,7 @@ import { StatusBadge } from "../../../components/ui/StatusBadge";
 export const systemForms = {
   user: {
     label: "User",
+    eyebrow: "Directory",
     serviceMethod: "addUser",
     successIdField: "user_id",
     // Confirmed live via curl: /user/list requires auth ("Please log in
@@ -30,10 +32,13 @@ export const systemForms = {
       { key: "profile_name", label: "Profile" },
       { key: "institution_name", label: "Institution" },
       {
-        key: "status",
+        key: "auth_status",
         label: "Status",
         narrow: true,
-        render: (row) => createElement(StatusBadge, { active: Boolean(row.status) }),
+        render: (row) =>
+          row.auth_status
+            ? createElement(AuthStatusBadge, { value: row.auth_status })
+            : createElement(StatusBadge, { active: Boolean(row.status) }),
       },
     ],
     fields: [

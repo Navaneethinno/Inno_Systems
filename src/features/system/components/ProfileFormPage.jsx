@@ -6,6 +6,7 @@ import { TextField } from "../../../components/ui/TextField";
 import { Select } from "../../../components/ui/Select";
 import { Button } from "../../../components/ui/Button";
 import { StatusBadge } from "../../../components/ui/StatusBadge";
+import { AuthStatusBadge } from "../../../components/ui/AuthStatusBadge";
 import { EntityManagerPage } from "./EntityManagerPage";
 import "./SystemFormPage.css";
 import "./ProfileFormPage.css";
@@ -210,13 +211,20 @@ export function ProfileFormPage() {
   return (
     <EntityManagerPage
       title="Profiles"
+      eyebrow="Access Control"
       subtitle="Profiles created via the system API, with their menu/action access."
       addLabel="Add Profile"
       columns={[
         { key: "id", label: "ID", render: (row) => rowValue(row) ?? "—" },
         { key: "name", label: "Name", render: (row) => rowLabel(row) },
         { key: "institution_name", label: "Institution", render: (row) => row.institution_name ?? "—" },
-        { key: "status", label: "Status", narrow: true, render: (row) => <StatusBadge active={Boolean(row.status)} /> },
+        {
+          key: "auth_status",
+          label: "Status",
+          narrow: true,
+          render: (row) =>
+            row.auth_status ? <AuthStatusBadge value={row.auth_status} /> : <StatusBadge active={Boolean(row.status)} />,
+        },
       ]}
       loadRows={() => systemService.listProfiles()}
       renderForm={({ onSuccess, onCancel }) => <ProfileForm onSuccess={onSuccess} onCancel={onCancel} />}

@@ -204,6 +204,7 @@ export function SystemFormPage() {
   return (
     <EntityManagerPage
       title={`${config.label}s`}
+      eyebrow={config.eyebrow}
       subtitle={`Records created via the system API.`}
       addLabel={`Add ${config.label}`}
       columns={config.columns}

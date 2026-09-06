@@ -1,0 +1,33 @@
+.tsb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 200px;
+  max-width: 380px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 999px;
+  padding: 0 14px;
+  background: var(--color-input-bg);
+}
+
+.tsb:focus-within {
+  border-color: var(--color-primary);
+  background: var(--color-surface);
+  box-shadow: 0 0 0 4px rgba(34, 102, 238, 0.12);
+}
+
+.tsb svg {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.tsb input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 10px 0;
+  font-size: 13.5px;
+  color: var(--color-text);
+}

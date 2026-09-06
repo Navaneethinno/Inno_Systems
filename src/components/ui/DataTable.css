@@ -135,21 +135,42 @@
   align-items: center;
   gap: 6px;
   font-weight: 600;
-  font-size: 12.5px;
+  font-size: 12px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  white-space: nowrap;
 }
 
 .dt__status::before {
   content: "";
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: currentColor;
+  flex-shrink: 0;
 }
 
 .dt__status--active {
-  color: #16a34a;
+  color: #15803d;
+  background: #ecfdf3;
+  border-color: #b8f0cc;
+}
+
+.dt__status--pending {
+  color: #a15c07;
+  background: #fff7e6;
+  border-color: #fde3a7;
+}
+
+.dt__status--rejected {
+  color: #b91c1c;
+  background: #fef2f2;
+  border-color: #fecaca;
 }
 
 .dt__status--inactive {
   color: var(--color-text-muted);
+  background: var(--color-table-head);
+  border-color: var(--color-border);
 }

@@ -5,6 +5,8 @@ import { rowLabel, rowValue, rowCode } from "../../../lib/rowLabel";
 import { TextField } from "../../../components/ui/TextField";
 import { Select } from "../../../components/ui/Select";
 import { Button } from "../../../components/ui/Button";
+import { StatusBadge } from "../../../components/ui/StatusBadge";
+import { AuthStatusBadge } from "../../../components/ui/AuthStatusBadge";
 import { EntityManagerPage } from "./EntityManagerPage";
 import "./SystemFormPage.css";
 import "./ProfileFormPage.css";
@@ -315,11 +317,21 @@ export function InstitutionFormPage() {
   return (
     <EntityManagerPage
       title="Institutions"
+      eyebrow="Registry"
       subtitle="Institutions created via the system API."
       addLabel="Add Institution"
       columns={[
         { key: "id", label: "ID", render: (row) => rowValue(row) ?? "—" },
         { key: "name", label: "Name", render: (row) => rowLabel(row) },
+        { key: "code", label: "Code", render: (row) => row.code ?? "—" },
+        { key: "type_name", label: "Type", render: (row) => row.type_name ?? "—" },
+        {
+          key: "auth_status",
+          label: "Status",
+          narrow: true,
+          render: (row) =>
+            row.auth_status ? <AuthStatusBadge value={row.auth_status} /> : <StatusBadge active={Boolean(row.status)} />,
+        },
       ]}
       loadRows={() => systemService.listActiveInstitutions()}
       renderForm={({ onSuccess, onCancel }) => <InstitutionForm onSuccess={onSuccess} onCancel={onCancel} />}

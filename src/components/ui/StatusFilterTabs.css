@@ -16,10 +16,11 @@
   color: var(--color-text-muted);
   font-size: 13px;
   font-weight: 600;
-  padding: 7px 16px;
+  padding: 7px 14px;
   border-radius: 999px;
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
 }
 
 .sft__tab:hover {
@@ -40,8 +41,18 @@
   height: 18px;
   padding: 0 5px;
   border-radius: 999px;
-  background: var(--color-danger);
-  color: #fff;
+  background: var(--color-border);
+  color: var(--color-text-muted);
   font-size: 11px;
   font-weight: 700;
+}
+
+.sft__tab--active .sft__count {
+  background: rgba(34, 102, 238, 0.12);
+  color: var(--color-primary);
+}
+
+.sft__count--pending {
+  background: #fde3a7;
+  color: #a15c07;
 }
