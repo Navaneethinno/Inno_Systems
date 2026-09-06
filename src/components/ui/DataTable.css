@@ -24,6 +24,31 @@
   border-bottom: 1px solid var(--color-border);
 }
 
+.dt__sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.dt__sortable:hover {
+  color: var(--color-primary);
+}
+
+.dt__th-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.dt__sort-icon {
+  font-size: 7px;
+  opacity: 0.35;
+}
+
+.dt__sort-icon--active {
+  opacity: 1;
+  color: var(--color-primary);
+}
+
 .dt td {
   padding: 12px 16px;
   color: var(--color-text);

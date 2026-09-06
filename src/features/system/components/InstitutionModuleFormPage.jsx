@@ -8,6 +8,9 @@ import { Button } from "../../../components/ui/Button";
 import { Modal } from "../../../components/ui/Modal";
 import { DataTable } from "../../../components/ui/DataTable";
 import { StatusBadge } from "../../../components/ui/StatusBadge";
+import { FullscreenTableModal } from "../../../components/ui/FullscreenTableModal";
+import { StatusFilterTabs } from "../../../components/ui/StatusFilterTabs";
+import { useAuthStatusFilter } from "../../../hooks/useAuthStatusFilter";
 import "../../masterData/components/MasterDataPage.css";
 import "../../masterData/components/MenuActionsPage.css";
 import "./SystemFormPage.css";
@@ -133,6 +136,9 @@ export function InstitutionModuleFormPage() {
   const [isLoadingModules, setIsLoadingModules] = useState(false);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const { filter, setFilter, filteredRows, hasAuthStatus, pendingCount } = useAuthStatusFilter(rows);
 
   useEffect(() => {
     systemService
@@ -178,7 +184,12 @@ export function InstitutionModuleFormPage() {
           <h1 className="mdp__title">Institution Modules</h1>
           <p className="mdp__subtitle">Modules assigned to an institution.</p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)}>+ Add Institution Module</Button>
+        <div className="mdp__header-actions">
+          <Button variant="secondary" onClick={() => setIsFullscreen(true)} disabled={rows.length === 0}>
+            ⛶ View all
+          </Button>
+          <Button onClick={() => setIsModalOpen(true)}>+ Add Institution Module</Button>
+        </div>
       </div>
 
       <div className="map__module">
@@ -192,12 +203,18 @@ export function InstitutionModuleFormPage() {
         />
       </div>
 
+      {hasAuthStatus && (
+        <div className="mdp__toolbar">
+          <StatusFilterTabs filter={filter} onChange={setFilter} pendingCount={pendingCount} />
+        </div>
+      )}
+
       {error && <div className="mdp__error">{error}</div>}
 
       {!instProfileId ? (
         <div className="mdp__state">Select an institution to view its assigned modules.</div>
       ) : (
-        <DataTable columns={columns} rows={rows} isLoading={isLoadingModules} />
+        <DataTable columns={columns} rows={filteredRows} isLoading={isLoadingModules} />
       )}
 
       {isModalOpen && (
@@ -209,6 +226,15 @@ export function InstitutionModuleFormPage() {
             onCancel={() => setIsModalOpen(false)}
           />
         </Modal>
+      )}
+
+      {isFullscreen && (
+        <FullscreenTableModal
+          title="Institution Modules"
+          columns={columns}
+          rows={filteredRows}
+          onClose={() => setIsFullscreen(false)}
+        />
       )}
     </div>
   );

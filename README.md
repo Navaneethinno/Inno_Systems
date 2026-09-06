@@ -103,6 +103,16 @@ There's no `/me` endpoint, so the logged-in user is cached at login time (`local
 
 The post-login navigation/sidebar is static (hardcoded in the UI) — there is no menu-tree API to fetch it from.
 
+## Table UX (manager feedback pass)
+
+Applied across every `DataTable`-backed page (Master Data, Reference Data, and the System list+modal pages):
+
+- **Sortable columns** — click any header to sort by that column (asc → desc → unsorted), built into `DataTable.jsx` itself.
+- **"View all"** — a fullscreen modal (`FullscreenTableModal.jsx`) with a search box that filters across every raw field on each row, not just what's visibly rendered. For lists too long to scan by scrolling.
+- **Active/Pending filter** — the real API rows carry a maker-checker `auth_status` (`AUTHORIZED`/`PENDING`/`REJECTED`/`DEAUTHORIZED`), but the UI only needs two states: Active (`AUTHORIZED`) and Pending (everything else, sorted latest-first by `updated_time`). `useAuthStatusFilter.js` detects whether a given list's rows actually carry `auth_status` and only shows the filter tabs when they do — Modules/Menus/Menu Actions don't have this field, so they don't get the tabs.
+- **Popup redesign** — `Modal.css` got a gradient top accent, a proper close button, a tinted footer, and an entrance animation instead of a flat white box.
+- **Password Policy** — Add User's `pwd_policy` is now a name-resolved `<select>` sourced from `/user/password_policy/list` (previously free text), with a "View Password Policy ▾" toggle that expands a read-only panel listing every policy's fields instead of cramming them into the form.
+
 ### Flag: login credentials in the reference doc don't work against the deployed API
 
 `SYSTEM_API_REQUEST_RESPONSE.md` was captured against `http://localhost:15003` (a local dev server), not `https://innoverse-api.innovitegra.in` (what this app is configured to use). Testing the documented `System`/`123456` login against the deployed API returns `"User not found"` — that seed user doesn't exist in this environment. The endpoint paths and payload/response *shapes* were still cross-checked against the deployed API where possible (e.g. the `/system/master/*` vs `/master/*/list` prefix split) and match; only the specific test data differs by environment. You'll need real credentials for whichever environment `VITE_API_BASE_URL` points at.

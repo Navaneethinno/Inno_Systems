@@ -1,0 +1,47 @@
+.sft {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--color-table-head);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+}
+
+.sft__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: none;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.sft__tab:hover {
+  color: var(--color-text);
+}
+
+.sft__tab--active {
+  background: var(--color-surface);
+  color: var(--color-primary);
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.1);
+}
+
+.sft__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--color-danger);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}

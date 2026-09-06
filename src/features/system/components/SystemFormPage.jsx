@@ -18,25 +18,21 @@ function defaultValue(field) {
 
 const emptyValues = (fields) => Object.fromEntries(fields.map((f) => [f.name, defaultValue(f)]));
 
-async function loadOptions(field) {
-  if (field.staticOptions) return field.staticOptions;
+async function loadOptionRows(field) {
   if (!field.source) return [];
-
-  const rows =
-    field.source.kind === "master"
-      ? await masterDataService.list(field.source.type)
-      : await systemService[field.source.method]();
-
-  return rows.map((row) => ({ value: rowValue(row), label: rowLabel(row) }));
+  return field.source.kind === "master"
+    ? await masterDataService.list(field.source.type, {}, field.source.path)
+    : await systemService[field.source.method]();
 }
 
 function GenericForm({ config, onSuccess, onCancel }) {
   const [values, setValues] = useState(() => emptyValues(config.fields));
-  const [optionSets, setOptionSets] = useState({});
+  const [optionRows, setOptionRows] = useState({}); // field.name -> raw rows (for details panels)
+  const [expanded, setExpanded] = useState({}); // field.name -> bool
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
 
-  const selectFields = useMemo(() => config.fields.filter((f) => f.type === "select"), [config.fields]);
+  const selectFields = useMemo(() => config.fields.filter((f) => f.type === "select" && f.source), [config.fields]);
 
   useEffect(() => {
     let cancelled = false;
@@ -44,18 +40,23 @@ function GenericForm({ config, onSuccess, onCancel }) {
       const entries = await Promise.all(
         selectFields.map(async (field) => {
           try {
-            return [field.name, await loadOptions(field)];
+            return [field.name, await loadOptionRows(field)];
           } catch {
             return [field.name, []];
           }
         })
       );
-      if (!cancelled) setOptionSets(Object.fromEntries(entries));
+      if (!cancelled) setOptionRows(Object.fromEntries(entries));
     })();
     return () => {
       cancelled = true;
     };
   }, [selectFields]);
+
+  const optionsFor = (field) => {
+    if (field.staticOptions) return field.staticOptions;
+    return (optionRows[field.name] ?? []).map((row) => ({ value: rowValue(row), label: rowLabel(row) }));
+  };
 
   const handleChange = (name, value) => setValues((prev) => ({ ...prev, [name]: value }));
 
@@ -109,16 +110,47 @@ function GenericForm({ config, onSuccess, onCancel }) {
         }
 
         if (field.type === "select") {
+          const rows = optionRows[field.name] ?? [];
+          const isExpanded = Boolean(expanded[field.name]);
           return (
-            <Select
-              key={field.name}
-              label={field.label}
-              placeholder={`Select ${field.label.toLowerCase()}`}
-              options={optionSets[field.name] ?? []}
-              required={field.required}
-              value={values[field.name] ?? ""}
-              onChange={(e) => handleChange(field.name, e.target.value)}
-            />
+            <div key={field.name} className="sfp__select-block">
+              <Select
+                label={field.label}
+                placeholder={`Select ${field.label.toLowerCase()}`}
+                options={optionsFor(field)}
+                required={field.required}
+                value={values[field.name] ?? ""}
+                onChange={(e) => handleChange(field.name, e.target.value)}
+              />
+
+              {field.expandableDetails && rows.length > 0 && (
+                <>
+                  <button
+                    type="button"
+                    className="sfp__expand-toggle"
+                    onClick={() => setExpanded((prev) => ({ ...prev, [field.name]: !prev[field.name] }))}
+                  >
+                    View {field.label} <span className={`sfp__expand-chevron ${isExpanded ? "sfp__expand-chevron--open" : ""}`}>▾</span>
+                  </button>
+
+                  {isExpanded && (
+                    <ul className="sfp__policy-list">
+                      {rows.map((row) => (
+                        <li key={row.id} className="sfp__policy-item">
+                          <span className="sfp__policy-name">{rowLabel(row)}</span>
+                          <span className="sfp__policy-meta">
+                            {Object.entries(row)
+                              .filter(([k]) => !["id", "name", "status"].includes(k) && !k.endsWith("_name"))
+                              .map(([k, v]) => `${k.replace(/_/g, " ")}: ${v}`)
+                              .join(" · ")}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </>
+              )}
+            </div>
           );
         }
 

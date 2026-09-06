@@ -74,7 +74,13 @@ export const systemForms = {
       { name: "address", label: "Address", type: "textarea" },
       { name: "alternate_mob", label: "Alternate mobile", type: "tel" },
       { name: "alternate_email", label: "Alternate email", type: "email" },
-      { name: "pwd_policy", label: "Password policy", type: "text" },
+      {
+        name: "pwd_policy",
+        label: "Password policy",
+        type: "select",
+        expandableDetails: true,
+        source: { kind: "master", type: "password_policy", path: "/user/password_policy/list" },
+      },
     ],
   },
 

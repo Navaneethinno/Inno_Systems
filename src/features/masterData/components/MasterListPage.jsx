@@ -4,6 +4,8 @@ import { masterEntities } from "../config/masterEntities";
 import { masterDataService } from "../services/masterDataService";
 import { DataTable } from "../../../components/ui/DataTable";
 import { StatusBadge } from "../../../components/ui/StatusBadge";
+import { Button } from "../../../components/ui/Button";
+import { FullscreenTableModal } from "../../../components/ui/FullscreenTableModal";
 import "./MasterDataPage.css";
 
 function buildColumns(rows) {
@@ -27,6 +29,7 @@ export function MasterListPage() {
   const [rows, setRows] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -46,6 +49,8 @@ export function MasterListPage() {
     return <div className="mdp__state">Unknown master data type "{entityKey}".</div>;
   }
 
+  const columns = buildColumns(rows);
+
   return (
     <div className="mdp">
       <div className="mdp__header">
@@ -53,11 +58,25 @@ export function MasterListPage() {
           <h1 className="mdp__title">{config.label}</h1>
           <p className="mdp__subtitle">Reference data — read-only.</p>
         </div>
+        <div className="mdp__header-actions">
+          <Button variant="secondary" onClick={() => setIsFullscreen(true)} disabled={rows.length === 0}>
+            ⛶ View all
+          </Button>
+        </div>
       </div>
 
       {error && <div className="mdp__error">{error}</div>}
 
-      <DataTable columns={buildColumns(rows)} rows={rows} isLoading={isLoading} />
+      <DataTable columns={columns} rows={rows} isLoading={isLoading} />
+
+      {isFullscreen && (
+        <FullscreenTableModal
+          title={config.label}
+          columns={columns}
+          rows={rows}
+          onClose={() => setIsFullscreen(false)}
+        />
+      )}
     </div>
   );
 }

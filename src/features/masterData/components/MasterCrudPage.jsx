@@ -8,6 +8,9 @@ import { Modal } from "../../../components/ui/Modal";
 import { TextField } from "../../../components/ui/TextField";
 import { Select } from "../../../components/ui/Select";
 import { StatusBadge } from "../../../components/ui/StatusBadge";
+import { FullscreenTableModal } from "../../../components/ui/FullscreenTableModal";
+import { StatusFilterTabs } from "../../../components/ui/StatusFilterTabs";
+import { useAuthStatusFilter } from "../../../hooks/useAuthStatusFilter";
 import "./MasterDataPage.css";
 
 function rowLabel(row) {
@@ -29,6 +32,9 @@ export function MasterCrudPage() {
   const [modalState, setModalState] = useState(null); // { mode: "add" | "edit", values }
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const { filter, setFilter, filteredRows, hasAuthStatus, pendingCount } = useAuthStatusFilter(rows);
 
   const loadRows = useCallback(async () => {
     setIsLoading(true);
@@ -156,14 +162,25 @@ export function MasterCrudPage() {
           <h1 className="mdp__title">{config.label}</h1>
           <p className="mdp__subtitle">Manage {config.label.toLowerCase()} for the system.</p>
         </div>
-        <Button onClick={openAdd}>+ Add {config.label.slice(0, -1)}</Button>
+        <div className="mdp__header-actions">
+          <Button variant="secondary" onClick={() => setIsFullscreen(true)} disabled={rows.length === 0}>
+            ⛶ View all
+          </Button>
+          <Button onClick={openAdd}>+ Add {config.label.slice(0, -1)}</Button>
+        </div>
       </div>
+
+      {hasAuthStatus && (
+        <div className="mdp__toolbar">
+          <StatusFilterTabs filter={filter} onChange={setFilter} pendingCount={pendingCount} />
+        </div>
+      )}
 
       {error && <div className="mdp__error">{error}</div>}
 
       <DataTable
         columns={columns}
-        rows={rows}
+        rows={filteredRows}
         isLoading={isLoading}
         actions={(row) => (
           <>
@@ -176,6 +193,29 @@ export function MasterCrudPage() {
           </>
         )}
       />
+
+      {isFullscreen && (
+        <FullscreenTableModal
+          title={config.label}
+          columns={columns}
+          rows={filteredRows}
+          onClose={() => setIsFullscreen(false)}
+          actions={(row) => (
+            <>
+              <button className="dt__icon-btn" onClick={() => openEdit(row)} aria-label="Edit">
+                ✎
+              </button>
+              <button
+                className="dt__icon-btn dt__icon-btn--danger"
+                onClick={() => setDeleteTarget(row)}
+                aria-label="Delete"
+              >
+                🗑
+              </button>
+            </>
+          )}
+        />
+      )}
 
       {modalState && (
         <Modal

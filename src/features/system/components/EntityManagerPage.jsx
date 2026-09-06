@@ -2,6 +2,9 @@ import { useCallback, useEffect, useState } from "react";
 import { DataTable } from "../../../components/ui/DataTable";
 import { Button } from "../../../components/ui/Button";
 import { Modal } from "../../../components/ui/Modal";
+import { FullscreenTableModal } from "../../../components/ui/FullscreenTableModal";
+import { StatusFilterTabs } from "../../../components/ui/StatusFilterTabs";
+import { useAuthStatusFilter } from "../../../hooks/useAuthStatusFilter";
 import "../../masterData/components/MasterDataPage.css";
 import "./SystemFormPage.css";
 
@@ -16,6 +19,9 @@ export function EntityManagerPage({ title, subtitle, addLabel, columns, loadRows
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const { filter, setFilter, filteredRows, hasAuthStatus, pendingCount } = useAuthStatusFilter(rows);
 
   const refresh = useCallback(async () => {
     setIsLoading(true);
@@ -45,18 +51,38 @@ export function EntityManagerPage({ title, subtitle, addLabel, columns, loadRows
           <h1 className="mdp__title">{title}</h1>
           <p className="mdp__subtitle">{subtitle}</p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)}>+ {addLabel}</Button>
+        <div className="mdp__header-actions">
+          <Button variant="secondary" onClick={() => setIsFullscreen(true)} disabled={rows.length === 0}>
+            ⛶ View all
+          </Button>
+          <Button onClick={() => setIsModalOpen(true)}>+ {addLabel}</Button>
+        </div>
       </div>
+
+      {hasAuthStatus && (
+        <div className="mdp__toolbar">
+          <StatusFilterTabs filter={filter} onChange={setFilter} pendingCount={pendingCount} />
+        </div>
+      )}
 
       {note && <div className="sfp__success">{note}</div>}
       {error && <div className="mdp__error">{error}</div>}
 
-      <DataTable columns={columns} rows={rows} isLoading={isLoading} />
+      <DataTable columns={columns} rows={filteredRows} isLoading={isLoading} />
 
       {isModalOpen && (
         <Modal title={addLabel} onClose={() => setIsModalOpen(false)} width={640}>
           {renderForm({ onSuccess: handleCreated, onCancel: () => setIsModalOpen(false) })}
         </Modal>
+      )}
+
+      {isFullscreen && (
+        <FullscreenTableModal
+          title={title}
+          columns={columns}
+          rows={filteredRows}
+          onClose={() => setIsFullscreen(false)}
+        />
       )}
     </div>
   );
