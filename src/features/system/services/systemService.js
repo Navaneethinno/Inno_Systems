@@ -2,26 +2,22 @@ import { httpClient } from "../../../api/httpClient";
 import { extractList, extractOne } from "../../../lib/extractList";
 
 /**
- * SYSTEM-gated endpoints. Paths and payload shapes per SYSTEM_API_GUIDE.md
- * (supersedes the earlier handoff docs where they disagree — e.g. profile
- * add/edit live under /system/user/profile/*, not /system/profile/*).
+ * SYSTEM-gated endpoints. Paths and payload shapes per SYSTEM_API_GUIDE.md.
  * Everything here is under /system — the only exception across the whole
- * API is the master-data /list endpoints (see masterDataService.js).
+ * API is the master-data /master/{type} endpoints (see masterDataService.js).
+ *
+ * The backend redeployed on 2026-09-07 (confirmed live): profile add/edit
+ * moved onto the guide's documented path, /system/profile/* (no /user/
+ * segment) now 404s.
  */
 export const systemService = {
-  // FLAG: SYSTEM_API_GUIDE.md documents these under /system/user/profile/*,
-  // but that path returns the "Config processor is alive" fallback on the
-  // deployed API (confirmed live via curl) — /system/profile/* (no /user/
-  // segment) is what's actually live there right now. Same pattern as
-  // before: the guide describes an environment ahead of what's deployed.
-  // Switch these two paths once the backend catches up.
   async addProfile(payload) {
-    const { data: envelope } = await httpClient.post("/system/profile/add", payload);
+    const { data: envelope } = await httpClient.post("/system/user/profile/add", payload);
     return extractOne(envelope.data);
   },
 
   async editProfile(payload) {
-    const { data: envelope } = await httpClient.post("/system/profile/edit", payload);
+    const { data: envelope } = await httpClient.post("/system/user/profile/edit", payload);
     return extractOne(envelope.data);
   },
 
@@ -47,18 +43,16 @@ export const systemService = {
   },
 
   // Dropdown sources for institution/profile pickers. Not documented in
-  // SYSTEM_API_GUIDE.md, so unlike everything else in this file these are
-  // unverified — no /system prefix, confirmed only by an earlier curl check
-  // that this path (without prefix) requires auth ("Please log in again")
-  // while the /system-prefixed version returns a generic fallback.
-  // Re-verify if either endpoint starts behaving oddly.
+  // SYSTEM_API_GUIDE.md, confirmed live by curl — no /system prefix.
   async listActiveInstitutions() {
     const { data: envelope } = await httpClient.post("/institution/profile/get_active", { view: "dropdown" });
     return extractList(envelope.data);
   },
 
+  // /profile/getall 404s as of the 2026-09-07 backend redeploy — confirmed
+  // live replacement is /user/profile/list.
   async listProfiles() {
-    const { data: envelope } = await httpClient.post("/profile/getall", { view: "dropdown" });
+    const { data: envelope } = await httpClient.post("/user/profile/list", { view: "dropdown" });
     return extractList(envelope.data);
   },
 

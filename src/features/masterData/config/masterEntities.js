@@ -69,12 +69,9 @@ export const masterEntities = {
   },
 
   // Read-only reference data — list endpoint only, per handoff.
-  // (No "action" entry: per SYSTEM_API_GUIDE.md, actions are a fixed list
-  // — 1 Add, 2 View, 3 Edit, 4 Delete, 5 Authorise, 6 Self — not a backend
-  // table. /master/action/list is confirmed live-broken, a genuine server
-  // SQL error unrelated to anything this frontend sends.)
   institution_type: { label: "Institution Types", writable: false },
   language: { label: "Languages", writable: false },
+  action: { label: "Actions", writable: false },
   channel: { label: "Channels", writable: false },
   country: { label: "Countries", writable: false },
   currency: { label: "Currencies", writable: false },

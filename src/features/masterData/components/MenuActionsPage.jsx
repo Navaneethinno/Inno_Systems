@@ -8,24 +8,14 @@ import { StatusBadge } from "../../../components/ui/StatusBadge";
 import "./MasterDataPage.css";
 import "./MenuActionsPage.css";
 
-// Per SYSTEM_API_GUIDE.md: "Actions come from a fixed list: 1 Add, 2 View,
-// 3 Edit, 4 Delete, 5 Authorise, 6 Self." There is no /master/action/list
-// endpoint — the previous code guessed one existed and hit a genuine
-// backend SQL error (its action table has no action_name column). This
-// fixed list is the actual contract.
-const FIXED_ACTIONS = [
-  { id: 1, name: "Add" },
-  { id: 2, name: "View" },
-  { id: 3, name: "Edit" },
-  { id: 4, name: "Delete" },
-  { id: 5, name: "Authorise" },
-  { id: 6, name: "Self" },
-];
-
 export function MenuActionsPage() {
   const [modules, setModules] = useState([]);
   const [menus, setMenus] = useState([]);
-  const actions = FIXED_ACTIONS;
+  // Per SYSTEM_API_GUIDE.md, actions are a fixed list (1 Add, 2 View, 3
+  // Edit, 4 Delete, 5 Authorise, 6 Self). /master/action (confirmed live)
+  // returns exactly that, so this still fetches it like any other
+  // reference type rather than hardcoding it twice.
+  const [actions, setActions] = useState([]);
   const [menuActionRows, setMenuActionRows] = useState([]); // every existing menu/action assignment
 
   const [isLoading, setIsLoading] = useState(true);
@@ -45,13 +35,15 @@ export function MenuActionsPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const [moduleRows, menuRows, menuActionData] = await Promise.all([
+      const [moduleRows, menuRows, actionRows, menuActionData] = await Promise.all([
         masterDataService.list("module"),
         masterDataService.list("menu"),
+        masterDataService.list("action"),
         masterDataService.list("menu_action"),
       ]);
       setModules(moduleRows);
       setMenus(menuRows);
+      setActions(actionRows);
       setMenuActionRows(menuActionData);
     } catch (err) {
       setError(err.message);
