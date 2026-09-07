@@ -90,6 +90,14 @@ Implements the flow from `SYSTEM_API_GUIDE.md` — a live capture of real reques
 - `POST /system/institution/add` — `language` and `allowed_login_identifiers` are flat arrays (`["en"]`, `["MOBILE","EMAIL"]`), identifier/pin-type values are uppercase (`MOBILE`, `NUMERIC`) — no more `{default, supported}` or `{identifiers:[]}` wrapper objects.
 - `POST /system/institution/module/add` — **batch endpoint**: one call takes `{ inst_profile_id, modules: [{module_id, effective_from?, effective_to?, configuration_status?}, ...] }` and assigns all of them, all-or-nothing server-side. The form supports adding multiple module rows in one submission; response is one row per assigned module.
 
+### Known discrepancy: actions are a fixed list, not a backend table
+
+SYSTEM_API_GUIDE.md states: "Actions come from a fixed list: 1 Add, 2 View, 3 Edit, 4 Delete, 5 Authorise, 6 Self." Earlier code wrongly treated `action` as a normal master-data type and fetched it from `/master/action/list`, which is confirmed live-broken (`ERROR: column "action_name" does not exist (SQLSTATE 42703)` — a genuine backend SQL bug, not something fixable from the frontend). Fixed by hardcoding the six actions (`MenuActionsPage.jsx`'s `FIXED_ACTIONS`) and removing `action` from the Reference Data list — there's no live/working table to read it from, and per the guide there doesn't need to be one.
+
+### Known discrepancy: login's `data` is an object, not an array
+
+`SYSTEM_API_GUIDE.md` says `data` is always a list, but live testing shows `/system/user/login` returns `data` as a bare object (`{user_details, user_session_info, full_access}`), not a one-element array. `extractOne()` in `lib/extractList.js` is defensive and handles both shapes. Also confirmed live: the institution field is `user_details.institution_name`, not `inst_profile_name` as the guide's sample shows.
+
 ### Known discrepancy: Profile add/edit path not yet live
 
 `SYSTEM_API_GUIDE.md` documents Profile add/edit under `/system/user/profile/add` and `/system/user/profile/edit` (nested `profile_info` + `menu_info[]` payload). Confirmed via curl that this path isn't deployed yet on `https://innoverse-api.innovitegra.in` — it returns the generic "Config processor is alive" fallback, not a real auth-gated response. The old `/system/profile/add` / `/system/profile/edit` paths (no `/user/` segment) are what's actually live there, so `systemService.js` still calls those, with an inline `FLAG:` comment to switch once the backend redeploys.
