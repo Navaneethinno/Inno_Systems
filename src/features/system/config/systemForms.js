@@ -57,7 +57,6 @@ export const systemForms = {
         label: "Password policy",
         type: "select",
         required: true,
-        expandableDetails: true,
         source: { kind: "master", type: "password_policy", path: "/user/password_policy/list" },
       },
     ],

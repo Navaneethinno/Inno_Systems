@@ -27,8 +27,7 @@ async function loadOptionRows(field) {
 
 function GenericForm({ config, onSuccess, onCancel }) {
   const [values, setValues] = useState(() => emptyValues(config.fields));
-  const [optionRows, setOptionRows] = useState({}); // field.name -> raw rows (for details panels)
-  const [expanded, setExpanded] = useState({}); // field.name -> bool
+  const [optionRows, setOptionRows] = useState({});
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
 
@@ -110,8 +109,6 @@ function GenericForm({ config, onSuccess, onCancel }) {
         }
 
         if (field.type === "select") {
-          const rows = optionRows[field.name] ?? [];
-          const isExpanded = Boolean(expanded[field.name]);
           return (
             <div key={field.name} className="sfp__select-block">
               <Select
@@ -122,34 +119,6 @@ function GenericForm({ config, onSuccess, onCancel }) {
                 value={values[field.name] ?? ""}
                 onChange={(e) => handleChange(field.name, e.target.value)}
               />
-
-              {field.expandableDetails && rows.length > 0 && (
-                <>
-                  <button
-                    type="button"
-                    className="sfp__expand-toggle"
-                    onClick={() => setExpanded((prev) => ({ ...prev, [field.name]: !prev[field.name] }))}
-                  >
-                    View {field.label} <span className={`sfp__expand-chevron ${isExpanded ? "sfp__expand-chevron--open" : ""}`}>▾</span>
-                  </button>
-
-                  {isExpanded && (
-                    <ul className="sfp__policy-list">
-                      {rows.map((row) => (
-                        <li key={row.id} className="sfp__policy-item">
-                          <span className="sfp__policy-name">{rowLabel(row)}</span>
-                          <span className="sfp__policy-meta">
-                            {Object.entries(row)
-                              .filter(([k]) => !["id", "name", "status"].includes(k) && !k.endsWith("_name"))
-                              .map(([k, v]) => `${k.replace(/_/g, " ")}: ${v}`)
-                              .join(" · ")}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </>
-              )}
             </div>
           );
         }
