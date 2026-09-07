@@ -56,7 +56,13 @@ export function FullscreenTableModal({ title, columns, rows, actions, onClose })
         </div>
 
         <div className="ftm__body">
-          <DataTable columns={columns} rows={filteredRows} actions={actions} emptyMessage="No matching records." />
+          <DataTable
+            columns={columns}
+            rows={filteredRows}
+            actions={actions}
+            emptyMessage="No matching records."
+            paginate={false}
+          />
         </div>
       </div>
     </div>

@@ -19,12 +19,23 @@ function compareValues(a, b) {
  * Every column is sortable by its underlying row[col.key] value (click the
  * header to toggle asc/desc) — pass `sortable: false` on a column to opt out.
  *
- * Paginates 10 rows at a time. `pagination` (optional) is the API's own
- * `{ totalRecords, totalPages, currentPage, limit }` envelope field — when
- * given, its `totalRecords` is shown instead of `rows.length` (the two only
- * differ if a caller passed a partial/pre-paged `rows` array).
+ * Paginates 10 rows at a time by default. `pagination` (optional) is the
+ * API's own `{ totalRecords, totalPages, currentPage, limit }` envelope
+ * field — when given, its `totalRecords` is shown instead of `rows.length`
+ * (the two only differ if a caller passed a partial/pre-paged `rows`
+ * array). Pass `paginate={false}` to render every row on one page instead —
+ * used by the "View all" fullscreen modal, whose whole point is showing
+ * everything at once.
  */
-export function DataTable({ columns, rows, actions, isLoading, emptyMessage = "No records found.", pagination }) {
+export function DataTable({
+  columns,
+  rows,
+  actions,
+  isLoading,
+  emptyMessage = "No records found.",
+  pagination,
+  paginate = true,
+}) {
   const [sort, setSort] = useState(null); // { key, dir: 1 | -1 }
   const [page, setPage] = useState(1);
 
@@ -34,7 +45,7 @@ export function DataTable({ columns, rows, actions, isLoading, emptyMessage = "N
   }, [rows, sort]);
 
   const totalRecords = pagination?.totalRecords ?? rows?.length ?? 0;
-  const totalPages = Math.max(1, Math.ceil((sortedRows?.length ?? 0) / PAGE_SIZE));
+  const totalPages = paginate ? Math.max(1, Math.ceil((sortedRows?.length ?? 0) / PAGE_SIZE)) : 1;
 
   useEffect(() => {
     setPage(1);
@@ -42,9 +53,10 @@ export function DataTable({ columns, rows, actions, isLoading, emptyMessage = "N
 
   const pageRows = useMemo(() => {
     if (!sortedRows) return sortedRows;
+    if (!paginate) return sortedRows;
     const start = (page - 1) * PAGE_SIZE;
     return sortedRows.slice(start, start + PAGE_SIZE);
-  }, [sortedRows, page]);
+  }, [sortedRows, page, paginate]);
 
   const toggleSort = (col) => {
     if (col.sortable === false) return;
