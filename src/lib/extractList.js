@@ -1,9 +1,10 @@
 /**
- * Per SYSTEM_API_GUIDE.md: every envelope's `data` is *always* a list, even
- * for a single record — empty list if there's nothing. Older captures
- * showed a few other shapes (a bare object, or an object with a
- * `profile_data`/`user_array` key), so those are kept as a defensive
- * fallback in case an endpoint hasn't been updated to match the guide.
+ * SYSTEM_API_GUIDE.md claims every envelope's `data` is always a list, but
+ * live testing against the deployed API shows that's not true everywhere —
+ * e.g. /system/user/login's `data` is a bare object, not a one-element
+ * array. So this stays defensive: unwrap whichever shape actually shows up
+ * (a real array, or an object with a `list`/`rows`/`items`/`data`/
+ * `profile_data`/`user_array` key).
  */
 export function extractList(payload) {
   if (Array.isArray(payload)) return payload;
@@ -16,7 +17,13 @@ export function extractList(payload) {
   return [];
 }
 
-/** Same envelope, but for endpoints that return a single record — unwraps data[0]. */
+/**
+ * Same envelope, but for endpoints that return a single record. Handles
+ * both the guide's documented shape (`data` is `[record]`) and what's
+ * actually live for some endpoints (`data` is the record itself, no array).
+ */
 export function extractOne(payload) {
-  return extractList(payload)[0];
+  if (Array.isArray(payload)) return payload[0];
+  if (payload && typeof payload === "object") return payload;
+  return undefined;
 }

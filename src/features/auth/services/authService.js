@@ -7,10 +7,12 @@ import { extractOne } from "../../../lib/extractList";
  * All auth-related network calls live here. Components and hooks never
  * import axios or httpClient directly — they call these functions.
  *
- * Matches SYSTEM_API_GUIDE.md's /system/user/* contract:
+ * Matches the live /system/user/* contract:
  * - login is Basic-auth (app credentials) + JSON body (user credentials)
  * - refresh is Bearer <refresh_token>, no body
- * - both return the shared envelope, `data` always a one-element array
+ * - both return the shared envelope; `data` is confirmed live as a bare
+ *   object here (not the one-element array SYSTEM_API_GUIDE.md documents —
+ *   extractOne() handles both shapes)
  */
 export const authService = {
   async login({ username, password, rememberMe }) {
@@ -34,7 +36,7 @@ export const authService = {
       username: userDetails.username,
       profileId: userDetails.profile_id,
       profileName: userDetails.profile_name,
-      institutionName: userDetails.inst_profile_name,
+      institutionName: userDetails.institution_name,
       isSystem: userDetails.is_system,
       status: userDetails.status,
       authStatus: userDetails.auth_status,
