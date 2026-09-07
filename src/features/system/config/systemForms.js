@@ -27,7 +27,10 @@ export const systemForms = {
       { key: "id", label: "ID", render: (row) => rowValue(row) ?? "—" },
       { key: "username", label: "Username" },
       { key: "profile_name", label: "Profile" },
-      { key: "inst_profile_name", label: "Institution" },
+      // The backend has been observed live flipping between
+      // inst_profile_name (matches the guide) and institution_name across
+      // deploys — read whichever is present.
+      { key: "inst_profile_name", label: "Institution", render: (row) => row.inst_profile_name ?? row.institution_name ?? "—" },
       {
         key: "auth_status",
         label: "Status",

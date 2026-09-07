@@ -7,12 +7,17 @@ import { extractOne } from "../../../lib/extractList";
  * All auth-related network calls live here. Components and hooks never
  * import axios or httpClient directly — they call these functions.
  *
- * Matches the live /system/user/* contract:
+ * Matches /system/user/* per SYSTEM_API_GUIDE.md:
  * - login is Basic-auth (app credentials) + JSON body (user credentials)
  * - refresh is Bearer <refresh_token>, no body
- * - both return the shared envelope; `data` is confirmed live as a bare
- *   object here (not the one-element array SYSTEM_API_GUIDE.md documents —
- *   extractOne() handles both shapes)
+ * - both return the shared envelope
+ *
+ * The backend has been observed live mid-rollout, flipping between two
+ * response shapes across consecutive requests: an older version where
+ * `data` is a bare object and the field is `institution_name`, and a
+ * newer one (matching the guide) where `data` is a one-element array and
+ * the field is `inst_profile_name`. extractOne() handles both `data`
+ * shapes; institutionName below reads whichever field is present.
  */
 export const authService = {
   async login({ username, password, rememberMe }) {
@@ -36,7 +41,7 @@ export const authService = {
       username: userDetails.username,
       profileId: userDetails.profile_id,
       profileName: userDetails.profile_name,
-      institutionName: userDetails.institution_name,
+      institutionName: userDetails.inst_profile_name ?? userDetails.institution_name,
       isSystem: userDetails.is_system,
       status: userDetails.status,
       authStatus: userDetails.auth_status,

@@ -90,6 +90,19 @@ Implements the flow from `SYSTEM_API_GUIDE.md` — a live capture of real reques
 - `POST /system/institution/add` — `language` and `allowed_login_identifiers` are flat arrays (`["en"]`, `["MOBILE","EMAIL"]`), identifier/pin-type values are uppercase (`MOBILE`, `NUMERIC`) — no more `{default, supported}` or `{identifiers:[]}` wrapper objects.
 - `POST /system/institution/module/add` — **batch endpoint**: one call takes `{ inst_profile_id, modules: [{module_id, effective_from?, effective_to?, configuration_status?}, ...] }` and assigns all of them, all-or-nothing server-side. The form supports adding multiple module rows in one submission; response is one row per assigned module.
 
+### ⚠ Live finding (2026-09-07): all `/master/{type}/list` routes are currently 404
+
+Re-verification requested by the backend team ("some list APIs have changed") turned up something bigger: the backend was caught **mid-rollout**, flip-flopping between two response shapes across consecutive requests within the same few seconds — `/system/user/login`'s `data` alternated between a bare object (`institution_name`) and a one-element array (`inst_profile_name`, matching `SYSTEM_API_GUIDE.md`). It has since settled onto the array/`inst_profile_name` shape consistently across ~10 repeated calls, so that's now treated as current.
+
+Once settled, every `/master/{type}/list` route tested came back `404 page not found` — not the SQL-error envelope seen before, an actual missing route:
+- `/master/module/list`, `/master/menu/list`, `/master/menu_action/list`, `/master/action/list`, `/master/institution_type/list`, `/master/language/list` — all 404.
+- Tried plausible replacements (`/master/{type}/getall`, `/master/{type}/get_active`, `/system/master/{type}/list`) — all 404 too. The new path (if any) isn't guessable from what's live; needs confirming with the backend team.
+- Endpoints outside the `/master/*/list` family are unaffected and confirmed still working: `/system/user/login`, `/user/list`, `/user/password_policy/list`, `/institution/profile/get_active`, `/institution/module/get_active`.
+
+**Practical impact right now**: Modules, Menus, Menu Actions (master data CRUD), all Reference Data tables, and any select field sourced from a `/master/{type}/list` call (Institution's type/language pickers, Profile/Menu Actions' menu+action loading) will show "Unable to load data" until the backend team confirms the new path(s). Nothing changed on the frontend for this — there's no code fix possible without knowing where these moved to (or whether they're just temporarily down mid-deploy).
+
+Code was still hardened for what's independently confirmed: `institutionName`/the User table's institution column now read `inst_profile_name` first, falling back to `institution_name`, so the UI works correctly regardless of which of the two observed backend versions answers the request.
+
 ### Known discrepancy: actions are a fixed list, not a backend table
 
 SYSTEM_API_GUIDE.md states: "Actions come from a fixed list: 1 Add, 2 View, 3 Edit, 4 Delete, 5 Authorise, 6 Self." Earlier code wrongly treated `action` as a normal master-data type and fetched it from `/master/action/list`, which is confirmed live-broken (`ERROR: column "action_name" does not exist (SQLSTATE 42703)` — a genuine backend SQL bug, not something fixable from the frontend). Fixed by hardcoding the six actions (`MenuActionsPage.jsx`'s `FIXED_ACTIONS`) and removing `action` from the Reference Data list — there's no live/working table to read it from, and per the guide there doesn't need to be one.
