@@ -13,7 +13,10 @@ const PAGE_SIZE = 10;
 
 function buildColumns(rows) {
   if (rows.length === 0) return [];
-  const keys = Object.keys(rows[0]).filter((k) => !k.startsWith("_"));
+  // status_name is just status's text label ("Active") — redundant with the
+  // Status badge column when both are present on the same row.
+  const dropStatusName = "status" in rows[0] && "status_name" in rows[0];
+  const keys = Object.keys(rows[0]).filter((k) => !k.startsWith("_") && !(dropStatusName && k === "status_name"));
   return keys.map((key) => {
     const isStatus = key === "status";
     return {
