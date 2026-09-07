@@ -34,8 +34,12 @@ function buildColumns(rows) {
  * live: /master/{type} genuinely returns a different slice per `page`, not
  * just the same rows re-sorted). The API's `search` param is a no-op on
  * this deployment (confirmed live), so search instead lazily fetches the
- * whole table once (cached) and filters client-side — same fetch is reused
- * for "View all".
+ * whole table once (cached, capped — fine for now, but not the pattern to
+ * copy for a table that could hold far more rows) and filters client-side.
+ *
+ * "View all" is separate: it hands FullscreenTableModal a `fetchMore` so
+ * the modal loads its own pages independently as the user scrolls, rather
+ * than eagerly fetching everything up front like search does.
  */
 export function MasterListPage() {
   const { entityKey } = useParams();
@@ -48,7 +52,6 @@ export function MasterListPage() {
   const [error, setError] = useState(null);
 
   const [fullRows, setFullRows] = useState(null);
-  const [isLoadingFull, setIsLoadingFull] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [query, setQuery] = useState("");
 
@@ -78,14 +81,9 @@ export function MasterListPage() {
 
   const ensureFullRows = useCallback(async () => {
     if (fullRows) return fullRows;
-    setIsLoadingFull(true);
-    try {
-      const data = await masterDataService.list(entityKey, {}, config?.listPath);
-      setFullRows(data);
-      return data;
-    } finally {
-      setIsLoadingFull(false);
-    }
+    const data = await masterDataService.list(entityKey, {}, config?.listPath);
+    setFullRows(data);
+    return data;
   }, [entityKey, fullRows, config?.listPath]);
 
   useEffect(() => {
@@ -102,11 +100,6 @@ export function MasterListPage() {
     );
   }, [fullRows, q, searchActive]);
 
-  const handleOpenFullscreen = async () => {
-    await ensureFullRows();
-    setIsFullscreen(true);
-  };
-
   if (!config) {
     return <div className="mdp__state">Unknown master data type "{entityKey}".</div>;
   }
@@ -121,7 +114,7 @@ export function MasterListPage() {
           <p className="mdp__subtitle">Reference data — read-only.</p>
         </div>
         <div className="mdp__header-actions">
-          <Button variant="secondary" onClick={handleOpenFullscreen} loading={isLoadingFull} disabled={rows.length === 0}>
+          <Button variant="secondary" onClick={() => setIsFullscreen(true)} disabled={rows.length === 0}>
             ⛶ View all
           </Button>
         </div>
@@ -148,12 +141,24 @@ export function MasterListPage() {
         />
       )}
 
-      {isFullscreen && fullRows && (
+      {isFullscreen && (
         <FullscreenTableModal
           title={config.label}
-          columns={buildColumns(fullRows)}
-          rows={fullRows}
+          columns={columns}
+          rows={rows}
           onClose={() => setIsFullscreen(false)}
+          // The table could hold far more rows than are safe to fetch/render
+          // in one shot (e.g. Countries at 249, or a future much larger
+          // reference table) — load it independently in chunks as the user
+          // scrolls, instead of eagerly fetching everything up front.
+          fetchMore={async (fetchPage, limit) => {
+            const { rows: pageRows, pagination: p } = await masterDataService.listWithPagination(
+              entityKey,
+              { page: fetchPage, limit },
+              config?.listPath
+            );
+            return { rows: pageRows, totalPages: p?.totalPages ?? 1 };
+          }}
         />
       )}
     </div>
