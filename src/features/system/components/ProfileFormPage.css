@@ -93,20 +93,6 @@
   margin: 0;
 }
 
-.pfp__config-only {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12.5px;
-  color: var(--color-text-muted);
-  cursor: pointer;
-}
-
-.pfp__config-only input {
-  width: 14px;
-  height: 14px;
-  accent-color: var(--color-primary);
-}
 
 .pfp__form-actions {
   display: flex;

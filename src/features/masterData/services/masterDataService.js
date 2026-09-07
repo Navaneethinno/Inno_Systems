@@ -1,5 +1,5 @@
 import { httpClient } from "../../../api/httpClient";
-import { extractList } from "../../../lib/extractList";
+import { extractList, extractOne } from "../../../lib/extractList";
 
 /**
  * CRUD for /system/master/{type}/* and /master/{type}/list.
@@ -11,9 +11,8 @@ import { extractList } from "../../../lib/extractList";
  * real route, /system/master/module/list falls through to an unrelated
  * health-check response). Inconsistent, but that's what the live API does.
  *
- * The list response shape itself still isn't documented — extractList
- * tries a few common envelope shapes; adjust it if a real response
- * doesn't match.
+ * Per SYSTEM_API_GUIDE.md, `data` is always a list — a one-element array
+ * for add/edit/delete, unwrapped here via extractOne.
  */
 export const masterDataService = {
   // `path` overrides the default /master/{type}/list route for entities
@@ -25,16 +24,16 @@ export const masterDataService = {
 
   async add(type, payload) {
     const { data: envelope } = await httpClient.post(`/system/master/${type}/add`, payload);
-    return envelope.data;
+    return extractOne(envelope.data);
   },
 
   async edit(type, payload) {
     const { data: envelope } = await httpClient.post(`/system/master/${type}/edit`, payload);
-    return envelope.data;
+    return extractOne(envelope.data);
   },
 
   async remove(type, id) {
     const { data: envelope } = await httpClient.post(`/system/master/${type}/delete`, { id });
-    return envelope.data;
+    return extractOne(envelope.data);
   },
 };

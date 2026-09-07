@@ -1,6 +1,7 @@
 import axios from "axios";
 import { env } from "../config/env";
 import { tokenStore } from "../lib/tokenStore";
+import { extractOne } from "../lib/extractList";
 
 /**
  * Single Axios instance shared by every API module.
@@ -72,7 +73,9 @@ httpClient.interceptors.response.use(
 
         if (isFailStatus(data.status)) throw envelopeError({ data });
 
-        const session = data.data?.user_session_info ?? data.data ?? {};
+        // Per SYSTEM_API_GUIDE.md, refresh's data is [{ jwt_token, refresh_token, ... }] —
+        // a flat record in a one-element array, not wrapped in user_session_info.
+        const session = extractOne(data.data) ?? {};
         tokenStore.updateTokens({ jwtToken: session.jwt_token, refreshToken: session.refresh_token });
 
         pendingQueue.forEach(({ resolve, request }) => resolve(httpClient(request)));

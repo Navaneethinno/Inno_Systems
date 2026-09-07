@@ -65,13 +65,13 @@ function ProfileForm({ onSuccess, onCancel }) {
   const toggleMenu = (menuId, included) => {
     setAssignments((prev) => ({
       ...prev,
-      [menuId]: { included, actionIds: new Set(prev[menuId]?.actionIds), isConfigOnly: prev[menuId]?.isConfigOnly ?? false },
+      [menuId]: { included, actionIds: new Set(prev[menuId]?.actionIds) },
     }));
   };
 
   const toggleAction = (menuId, actionId) => {
     setAssignments((prev) => {
-      const current = prev[menuId] ?? { included: true, actionIds: new Set(), isConfigOnly: false };
+      const current = prev[menuId] ?? { included: true, actionIds: new Set() };
       const nextActionIds = new Set(current.actionIds);
       if (nextActionIds.has(actionId)) {
         nextActionIds.delete(actionId);
@@ -82,24 +82,18 @@ function ProfileForm({ onSuccess, onCancel }) {
     });
   };
 
-  const toggleConfigOnly = (menuId, value) => {
-    setAssignments((prev) => {
-      const current = prev[menuId] ?? { included: true, actionIds: new Set(), isConfigOnly: false };
-      return { ...prev, [menuId]: { ...current, isConfigOnly: value } };
-    });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSaving(true);
     setError(null);
     try {
+      // Per SYSTEM_API_GUIDE.md, menu_info is just { menu_id, actions } —
+      // no is_configuration_only field.
       const menu_info = Object.entries(assignments)
         .filter(([, a]) => a.included)
         .map(([menuId, a]) => ({
           menu_id: Number(menuId),
           actions: [...a.actionIds],
-          is_configuration_only: a.isConfigOnly ? 1 : 0,
         }));
 
       // The real add request omits profile_id entirely (it's only present
@@ -179,14 +173,6 @@ function ProfileForm({ onSuccess, onCancel }) {
                         ))}
                       </div>
                     )}
-                    <label className="pfp__config-only">
-                      <input
-                        type="checkbox"
-                        checked={Boolean(assignment?.isConfigOnly)}
-                        onChange={(e) => toggleConfigOnly(menu.id, e.target.checked)}
-                      />
-                      <span>Configuration only</span>
-                    </label>
                   </div>
                 )}
               </div>
@@ -217,7 +203,11 @@ export function ProfileFormPage() {
       columns={[
         { key: "id", label: "ID", render: (row) => rowValue(row) ?? "—" },
         { key: "name", label: "Name", render: (row) => rowLabel(row) },
-        { key: "institution_name", label: "Institution", render: (row) => row.institution_name ?? "—" },
+        {
+          key: "inst_profile_name",
+          label: "Institution",
+          render: (row) => row.inst_profile_name ?? row.institution_name ?? "—",
+        },
         {
           key: "auth_status",
           label: "Status",

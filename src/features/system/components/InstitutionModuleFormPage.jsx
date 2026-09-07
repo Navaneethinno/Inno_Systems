@@ -18,13 +18,21 @@ import "../../masterData/components/MenuActionsPage.css";
 import "./SystemFormPage.css";
 import "./ProfileFormPage.css";
 
+const emptyModuleRow = () => ({
+  key: Math.random().toString(36).slice(2),
+  moduleId: "",
+  effectiveFrom: "",
+  effectiveTo: "",
+  configurationStatus: "ACTIVE",
+});
+
+// /system/institution/module/add is a batch endpoint — one call assigns N
+// modules to an institution (all-or-nothing server-side), so this form
+// lets you build up several rows instead of one module at a time.
 function InstitutionModuleForm({ institutions, defaultInstProfileId, onSuccess, onCancel }) {
   const [modules, setModules] = useState([]);
   const [instProfileId, setInstProfileId] = useState(defaultInstProfileId);
-  const [moduleId, setModuleId] = useState("");
-  const [effectiveFrom, setEffectiveFrom] = useState("");
-  const [effectiveTo, setEffectiveTo] = useState("");
-  const [configurationStatus, setConfigurationStatus] = useState("ACTIVE");
+  const [rows, setRows] = useState([emptyModuleRow()]);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
 
@@ -38,18 +46,26 @@ function InstitutionModuleForm({ institutions, defaultInstProfileId, onSuccess, 
   );
   const moduleOptions = useMemo(() => modules.map((row) => ({ value: rowValue(row), label: rowLabel(row) })), [modules]);
 
+  const updateRow = (key, field, value) =>
+    setRows((prev) => prev.map((r) => (r.key === key ? { ...r, [field]: value } : r)));
+  const addRow = () => setRows((prev) => [...prev, emptyModuleRow()]);
+  const removeRow = (key) => setRows((prev) => (prev.length > 1 ? prev.filter((r) => r.key !== key) : prev));
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSaving(true);
     setError(null);
     try {
-      await systemService.addInstitutionModule({
-        inst_profile_id: Number(instProfileId),
-        module_id: Number(moduleId),
-        effective_from: effectiveFrom,
-        effective_to: effectiveTo || undefined,
-        configuration_status: configurationStatus,
-      });
+      const modulesPayload = rows
+        .filter((r) => r.moduleId)
+        .map((r) => ({
+          module_id: Number(r.moduleId),
+          ...(r.effectiveFrom ? { effective_from: r.effectiveFrom } : {}),
+          ...(r.effectiveTo ? { effective_to: r.effectiveTo } : {}),
+          ...(r.configurationStatus ? { configuration_status: r.configurationStatus } : {}),
+        }));
+
+      await systemService.addInstitutionModules({ instProfileId: Number(instProfileId), modules: modulesPayload });
       onSuccess(instProfileId);
     } catch (err) {
       setError(err.message);
@@ -62,53 +78,72 @@ function InstitutionModuleForm({ institutions, defaultInstProfileId, onSuccess, 
     <form className="sfp__form ifp__form" onSubmit={handleSubmit}>
       {error && <div className="mdp__error">{error}</div>}
 
-      <div className="ifp__grid">
-        <Select
-          label="Institution"
-          placeholder="Select institution"
-          required
-          options={institutionOptions}
-          value={instProfileId}
-          onChange={(e) => setInstProfileId(e.target.value)}
-        />
-        <Select
-          label="Module"
-          placeholder="Select module"
-          required
-          options={moduleOptions}
-          value={moduleId}
-          onChange={(e) => setModuleId(e.target.value)}
-        />
-        <TextField
-          label="Effective from"
-          type="date"
-          required
-          value={effectiveFrom}
-          onChange={(e) => setEffectiveFrom(e.target.value)}
-        />
-        <TextField
-          label="Effective to"
-          type="date"
-          value={effectiveTo}
-          onChange={(e) => setEffectiveTo(e.target.value)}
-        />
-        <Select
-          label="Configuration status"
-          options={[
-            { value: "ACTIVE", label: "Active" },
-            { value: "INACTIVE", label: "Inactive" },
-          ]}
-          value={configurationStatus}
-          onChange={(e) => setConfigurationStatus(e.target.value)}
-        />
+      <Select
+        label="Institution"
+        placeholder="Select institution"
+        required
+        options={institutionOptions}
+        value={instProfileId}
+        onChange={(e) => setInstProfileId(e.target.value)}
+      />
+
+      <div className="ifp__module-rows">
+        {rows.map((row, i) => (
+          <div key={row.key} className="ifp__module-row">
+            <div className="ifp__module-row-header">
+              <span className="ifp__module-row-label">Module {i + 1}</span>
+              {rows.length > 1 && (
+                <button type="button" className="ifp__module-row-remove" onClick={() => removeRow(row.key)}>
+                  Remove
+                </button>
+              )}
+            </div>
+            <div className="ifp__grid">
+              <Select
+                label="Module"
+                placeholder="Select module"
+                required
+                options={moduleOptions}
+                value={row.moduleId}
+                onChange={(e) => updateRow(row.key, "moduleId", e.target.value)}
+              />
+              <TextField
+                label="Effective from"
+                type="date"
+                value={row.effectiveFrom}
+                onChange={(e) => updateRow(row.key, "effectiveFrom", e.target.value)}
+              />
+              <TextField
+                label="Effective to"
+                type="date"
+                value={row.effectiveTo}
+                onChange={(e) => updateRow(row.key, "effectiveTo", e.target.value)}
+              />
+              <Select
+                label="Configuration status"
+                options={[
+                  { value: "ACTIVE", label: "Active" },
+                  { value: "PENDING", label: "Pending" },
+                  { value: "INACTIVE", label: "Inactive" },
+                ]}
+                value={row.configurationStatus}
+                onChange={(e) => updateRow(row.key, "configurationStatus", e.target.value)}
+              />
+            </div>
+          </div>
+        ))}
       </div>
+
+      <button type="button" className="sfp__expand-toggle" onClick={addRow}>
+        + Add another module
+      </button>
 
       <div className="pfp__form-actions">
         <Button type="button" variant="secondary" onClick={onCancel}>
           Cancel
         </Button>
         <Button type="submit" loading={isSaving}>
-          Create Institution Module
+          Assign Module{rows.length > 1 ? "s" : ""}
         </Button>
       </div>
     </form>
@@ -124,9 +159,11 @@ const columns = [
     key: "configuration_status",
     label: "Configuration",
     narrow: true,
-    render: (row) => (
-      <StatusBadge active={row.configuration_status ? row.configuration_status === "ACTIVE" : Boolean(row.status)} />
-    ),
+    render: (row) => {
+      if (row.configuration_status) return <AuthStatusBadge value={row.configuration_status} />;
+      if ("status" in row) return <StatusBadge active={Boolean(row.status)} />;
+      return "—";
+    },
   },
   {
     key: "auth_status",

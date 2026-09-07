@@ -4,33 +4,30 @@ import { StatusBadge } from "../../../components/ui/StatusBadge";
 import { AuthStatusBadge } from "../../../components/ui/AuthStatusBadge";
 
 /**
- * Field lists mirror the real captured request/response pairs in
- * SYSTEM_API_REQUEST_RESPONSE.md. Any field that references another entity
- * (module, institution, profile) is a `select` resolved by name through the
- * matching list API — the UI never asks for a raw ID directly.
+ * Field lists mirror SYSTEM_API_GUIDE.md, which supersedes the earlier
+ * captured docs where they disagree (user/add in particular is a much
+ * smaller payload than earlier docs implied). Any field that references
+ * another entity (module, institution, profile) is a `select` resolved by
+ * name through the matching list API — the UI never asks for a raw ID
+ * directly.
  *
- * `successIdField` names the key in the response's `data` that identifies
- * the created row (it isn't consistently `id` across endpoints — user/add
- * returns `user_id`, for example).
+ * `successIdField` names the key in the response's `data[0]` that
+ * identifies the created row (defaults to "id").
  */
 export const systemForms = {
   user: {
     label: "User",
     eyebrow: "Directory",
     serviceMethod: "addUser",
-    successIdField: "user_id",
     // Confirmed live via curl: /user/list requires auth ("Please log in
     // again"), i.e. a real route — so this gets the same list+add-modal
     // pattern as profile/institution/institutionModule.
     listMethod: "listUsers",
-    // Real /user/list rows use user_id/username/profile_name/
-    // institution_name — not the user_name/email/mobile field names the
-    // add request uses (confirmed live against a real response).
     columns: [
       { key: "id", label: "ID", render: (row) => rowValue(row) ?? "—" },
       { key: "username", label: "Username" },
       { key: "profile_name", label: "Profile" },
-      { key: "institution_name", label: "Institution" },
+      { key: "inst_profile_name", label: "Institution" },
       {
         key: "auth_status",
         label: "Status",
@@ -42,14 +39,15 @@ export const systemForms = {
         },
       },
     ],
+    // Per the guide: exactly these 5 fields, all required. Earlier docs
+    // showed a much bigger payload (fname/lname/email/mobile/gender/
+    // address/...) — that shape isn't what /system/user/add actually
+    // accepts per this capture.
     fields: [
-      { name: "user_name", label: "Username", type: "text", required: true },
-      { name: "user_pwd", label: "Password", type: "password", required: true },
-      { name: "user_fname", label: "First name", type: "text", required: true },
-      { name: "user_mname", label: "Middle name", type: "text" },
-      { name: "user_lname", label: "Last name", type: "text", required: true },
+      { name: "username", label: "Username", type: "text", required: true },
+      { name: "password_hash", label: "Password", type: "password", required: true },
       {
-        name: "inst_id",
+        name: "inst_profile_id",
         label: "Institution",
         type: "select",
         required: true,
@@ -62,37 +60,19 @@ export const systemForms = {
         required: true,
         source: { kind: "system", method: "listProfiles" },
       },
-      { name: "employee_id", label: "Employee ID", type: "text" },
-      { name: "email", label: "Email", type: "email", required: true },
-      { name: "mobile", label: "Mobile", type: "tel", required: true },
-      {
-        name: "gender",
-        label: "Gender",
-        type: "select",
-        // Casing matches the real captured request ("Male"), not a
-        // documented enum — verify if the backend rejects other values.
-        staticOptions: [
-          { value: "Male", label: "Male" },
-          { value: "Female", label: "Female" },
-          { value: "Other", label: "Other" },
-        ],
-      },
-      { name: "address", label: "Address", type: "textarea" },
-      { name: "alternate_mob", label: "Alternate mobile", type: "tel" },
-      { name: "alternate_email", label: "Alternate email", type: "email" },
       {
         name: "pwd_policy",
         label: "Password policy",
         type: "select",
+        required: true,
         expandableDetails: true,
         source: { kind: "master", type: "password_policy", path: "/user/password_policy/list" },
       },
     ],
   },
 
-  // "institution" and "institutionModule" aren't here — institution's
-  // payload nests language/login-identifiers as objects (InstitutionFormPage),
-  // and institutionModule now gets its own list+add-modal page
-  // (InstitutionModuleFormPage) instead of a bare form, same as profile
-  // and institution.
+  // "profile", "institution", and "institutionModule" aren't here —
+  // profile/institution nest structured payloads (ProfileFormPage /
+  // InstitutionFormPage), and institutionModule is a batch endpoint with
+  // its own multi-row page (InstitutionModuleFormPage).
 };

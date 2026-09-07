@@ -1,15 +1,16 @@
 import { httpClient } from "../../../api/httpClient";
 import { tokenStore } from "../../../lib/tokenStore";
 import { env } from "../../../config/env";
+import { extractOne } from "../../../lib/extractList";
 
 /**
  * All auth-related network calls live here. Components and hooks never
  * import axios or httpClient directly — they call these functions.
  *
- * Matches the /system/user/* contract from handoff.md:
+ * Matches SYSTEM_API_GUIDE.md's /system/user/* contract:
  * - login is Basic-auth (app credentials) + JSON body (user credentials)
  * - refresh is Bearer <refresh_token>, no body
- * - both return the shared ComposeResponseV1 envelope
+ * - both return the shared envelope, `data` always a one-element array
  */
 export const authService = {
   async login({ username, password, rememberMe }) {
@@ -21,18 +22,19 @@ export const authService = {
       { headers: { Authorization: `Basic ${basicAuth}` } }
     );
 
-    const { user_details: userDetails, user_session_info: session, full_access: fullAccess } = envelope.data;
+    const { user_details: userDetails, user_session_info: session, full_access: fullAccess } = extractOne(
+      envelope.data
+    );
 
-    // Real login response (captured live) doesn't carry user_fname/mname/lname
-    // on user_details at all — those only ever showed up in handoff.md's
-    // sample admintabdef.User shape, not an actual response. Map only the
-    // fields that are actually present.
+    // user_details has no user_fname/mname/lname — that's a urmg.user field,
+    // not admintabdef.User (the login response's table). Map only what's
+    // actually present per the guide.
     const user = {
       id: userDetails.id,
       username: userDetails.username,
       profileId: userDetails.profile_id,
       profileName: userDetails.profile_name,
-      institutionName: userDetails.institution_name,
+      institutionName: userDetails.inst_profile_name,
       isSystem: userDetails.is_system,
       status: userDetails.status,
       authStatus: userDetails.auth_status,

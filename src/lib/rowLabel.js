@@ -11,6 +11,7 @@ export function rowLabel(row) {
     row.action_name ??
     row.profile_name ??
     row.inst_name ??
+    row.inst_profile_name ??
     row.institution_name ??
     row.module_name ??
     row.type_name ??

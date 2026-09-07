@@ -11,15 +11,15 @@ import { EntityManagerPage } from "./EntityManagerPage";
 import "./SystemFormPage.css";
 import "./ProfileFormPage.css";
 
-const LOGIN_IDENTIFIERS = ["username", "email", "mobile"];
+// Per SYSTEM_API_GUIDE.md's example, values are uppercase (e.g. "MOBILE").
+const LOGIN_IDENTIFIERS = ["USERNAME", "EMAIL", "MOBILE"];
 
 const initialState = {
   code: "",
   name: "",
   type: "",
   timezone: "",
-  defaultLanguage: "",
-  supportedLanguages: {},
+  languages: {}, // code -> bool, sent as a flat array — no default/supported split anymore
   date_format: "YYYY-MM-DD",
   has_branch: false,
   max_branches_allowed: "",
@@ -27,21 +27,21 @@ const initialState = {
   total_kyc_levels: "",
   allow_downgrade_kyc: false,
   auto_approve_kyc_level: false,
-  identifiers: { username: true, email: true, mobile: true },
-  primary_login_identifier: "username",
+  identifiers: { USERNAME: false, EMAIL: true, MOBILE: true },
+  primary_login_identifier: "MOBILE",
   is_login_pin_enabled: false,
   login_pin_length: 6,
-  login_pin_type: "numeric",
+  login_pin_type: "NUMERIC",
   allow_biometric_login: false,
   is_txn_pin_enabled: false,
   txn_pin_length: 4,
   is_same_login_txn_pin_allowed: false,
 };
 
-function Checkbox({ label, checked, onChange, disabled }) {
+function Checkbox({ label, checked, onChange }) {
   return (
-    <label className={`mdp__checkbox ${disabled ? "mdp__checkbox--disabled" : ""}`}>
-      <input type="checkbox" checked={checked} disabled={disabled} onChange={(e) => onChange(e.target.checked)} />
+    <label className="mdp__checkbox">
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
       <span>{label}</span>
     </label>
   );
@@ -66,18 +66,9 @@ function InstitutionForm({ onSuccess, onCancel }) {
       .then((rows) => {
         if (cancelled) return;
         setLanguages(rows);
-        // Default to English if present, else whatever comes first.
         const codes = rows.map(rowCode);
         const fallback = codes.includes("en") ? "en" : codes[0];
-        if (fallback) {
-          setValues((prev) => ({
-            ...prev,
-            defaultLanguage: prev.defaultLanguage || fallback,
-            supportedLanguages: Object.keys(prev.supportedLanguages).length
-              ? prev.supportedLanguages
-              : { [fallback]: true },
-          }));
-        }
+        if (fallback) setValues((prev) => ({ ...prev, languages: { ...prev.languages, [fallback]: true } }));
       })
       .catch(() => !cancelled && setLanguages([]));
 
@@ -89,41 +80,26 @@ function InstitutionForm({ onSuccess, onCancel }) {
   const set = (name, value) => setValues((prev) => ({ ...prev, [name]: value }));
   const toggleIdentifier = (id, checked) =>
     setValues((prev) => ({ ...prev, identifiers: { ...prev.identifiers, [id]: checked } }));
-
-  // The default language must always be one of the supported languages —
-  // picking a new default auto-checks it and un-checks whichever language
-  // was previously the (auto-checked) default, and it can't be unchecked
-  // while it's still the default.
-  const setDefaultLanguage = (code) =>
-    setValues((prev) => {
-      const nextSupported = { ...prev.supportedLanguages };
-      if (prev.defaultLanguage) nextSupported[prev.defaultLanguage] = false;
-      nextSupported[code] = true;
-      return { ...prev, defaultLanguage: code, supportedLanguages: nextSupported };
-    });
-
-  const toggleSupportedLanguage = (code, checked) => {
-    if (!checked && code === values.defaultLanguage) return;
-    setValues((prev) => ({ ...prev, supportedLanguages: { ...prev.supportedLanguages, [code]: checked } }));
-  };
+  const toggleLanguage = (code, checked) =>
+    setValues((prev) => ({ ...prev, languages: { ...prev.languages, [code]: checked } }));
 
   const selectedIdentifiers = LOGIN_IDENTIFIERS.filter((id) => values.identifiers[id]);
-  const selectedLanguageCodes = Object.keys(values.supportedLanguages).filter((code) => values.supportedLanguages[code]);
+  const selectedLanguageCodes = Object.keys(values.languages).filter((code) => values.languages[code]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSaving(true);
     setError(null);
     try {
+      // Per SYSTEM_API_GUIDE.md: language and allowed_login_identifiers are
+      // flat string arrays, not nested {default, supported} / {identifiers}
+      // objects — and the identifier values are uppercase.
       const payload = {
         code: values.code,
         name: values.name,
         type: Number(values.type) || 0,
         timezone: values.timezone,
-        language: {
-          default: values.defaultLanguage,
-          supported: selectedLanguageCodes,
-        },
+        language: selectedLanguageCodes,
         date_format: values.date_format,
         has_branch: values.has_branch,
         max_branches_allowed: Number(values.max_branches_allowed) || 0,
@@ -131,7 +107,7 @@ function InstitutionForm({ onSuccess, onCancel }) {
         total_kyc_levels: Number(values.total_kyc_levels) || 0,
         allow_downgrade_kyc: values.allow_downgrade_kyc,
         auto_approve_kyc_level: values.auto_approve_kyc_level,
-        allowed_login_identifiers: { identifiers: selectedIdentifiers },
+        allowed_login_identifiers: selectedIdentifiers,
         primary_login_identifier: values.primary_login_identifier,
         is_login_pin_enabled: values.is_login_pin_enabled,
         login_pin_length: Number(values.login_pin_length) || 0,
@@ -174,28 +150,16 @@ function InstitutionForm({ onSuccess, onCancel }) {
         />
       </div>
 
-      <h2 className="pfp__section-title">Language</h2>
-      <div className="ifp__grid">
-        <Select
-          label="Default language"
-          placeholder="Select default language"
-          options={languages.map((row) => ({ value: rowCode(row), label: rowLabel(row) }))}
-          value={values.defaultLanguage}
-          onChange={(e) => setDefaultLanguage(e.target.value)}
-        />
-      </div>
-      <h3 className="ifp__subheading">Supported Languages</h3>
+      <h2 className="pfp__section-title">Languages</h2>
       <div className="ifp__checks">
         {languages.map((row) => {
           const code = rowCode(row);
-          const isDefault = code === values.defaultLanguage;
           return (
             <Checkbox
               key={code}
-              label={rowLabel(row) + (isDefault ? " (default)" : "")}
-              checked={Boolean(values.supportedLanguages[code])}
-              disabled={isDefault}
-              onChange={(v) => toggleSupportedLanguage(code, v)}
+              label={rowLabel(row)}
+              checked={Boolean(values.languages[code])}
+              onChange={(v) => toggleLanguage(code, v)}
             />
           );
         })}
@@ -241,7 +205,7 @@ function InstitutionForm({ onSuccess, onCancel }) {
         {LOGIN_IDENTIFIERS.map((id) => (
           <Checkbox
             key={id}
-            label={id[0].toUpperCase() + id.slice(1)}
+            label={id[0] + id.slice(1).toLowerCase()}
             checked={values.identifiers[id]}
             onChange={(v) => toggleIdentifier(id, v)}
           />
@@ -249,7 +213,7 @@ function InstitutionForm({ onSuccess, onCancel }) {
       </div>
       <Select
         label="Primary login identifier"
-        options={selectedIdentifiers.map((id) => ({ value: id, label: id[0].toUpperCase() + id.slice(1) }))}
+        options={selectedIdentifiers.map((id) => ({ value: id, label: id[0] + id.slice(1).toLowerCase() }))}
         value={values.primary_login_identifier}
         onChange={(e) => set("primary_login_identifier", e.target.value)}
       />
@@ -287,8 +251,8 @@ function InstitutionForm({ onSuccess, onCancel }) {
         <Select
           label="Login PIN type"
           options={[
-            { value: "numeric", label: "Numeric" },
-            { value: "alphanumeric", label: "Alphanumeric" },
+            { value: "NUMERIC", label: "Numeric" },
+            { value: "ALPHANUMERIC", label: "Alphanumeric" },
           ]}
           value={values.login_pin_type}
           onChange={(e) => set("login_pin_type", e.target.value)}
