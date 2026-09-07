@@ -9,6 +9,7 @@ import { Modal } from "../../../components/ui/Modal";
 import { DataTable } from "../../../components/ui/DataTable";
 import { StatusBadge } from "../../../components/ui/StatusBadge";
 import { AuthStatusBadge } from "../../../components/ui/AuthStatusBadge";
+import { renderStatusCell } from "../../../lib/renderStatusCell";
 import { FullscreenTableModal } from "../../../components/ui/FullscreenTableModal";
 import { StatusFilterTabs } from "../../../components/ui/StatusFilterTabs";
 import { TableSearchBar } from "../../../components/ui/TableSearchBar";
@@ -165,12 +166,7 @@ const columns = [
       return "—";
     },
   },
-  {
-    key: "auth_status",
-    label: "Status",
-    narrow: true,
-    render: (row) => (row.auth_status ? <AuthStatusBadge value={row.auth_status} /> : "—"),
-  },
+  { key: "auth_status", label: "Status", narrow: true, render: renderStatusCell },
 ];
 
 export function InstitutionModuleFormPage() {

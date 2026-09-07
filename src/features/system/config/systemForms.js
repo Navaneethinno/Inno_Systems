@@ -1,7 +1,5 @@
-import { createElement } from "react";
 import { rowValue } from "../../../lib/rowLabel";
-import { StatusBadge } from "../../../components/ui/StatusBadge";
-import { AuthStatusBadge } from "../../../components/ui/AuthStatusBadge";
+import { renderStatusCell } from "../../../lib/renderStatusCell";
 
 /**
  * Field lists mirror SYSTEM_API_GUIDE.md, which supersedes the earlier
@@ -31,16 +29,7 @@ export const systemForms = {
       // inst_profile_name (matches the guide) and institution_name across
       // deploys — read whichever is present.
       { key: "inst_profile_name", label: "Institution", render: (row) => row.inst_profile_name ?? row.institution_name ?? "—" },
-      {
-        key: "auth_status",
-        label: "Status",
-        narrow: true,
-        render: (row) => {
-          if (row.auth_status) return createElement(AuthStatusBadge, { value: row.auth_status });
-          if ("status" in row) return createElement(StatusBadge, { active: Boolean(row.status) });
-          return "—";
-        },
-      },
+      { key: "auth_status", label: "Status", narrow: true, render: renderStatusCell },
     ],
     // Per the guide: exactly these 5 fields, all required. Earlier docs
     // showed a much bigger payload (fname/lname/email/mobile/gender/
