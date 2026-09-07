@@ -44,6 +44,11 @@ export const systemService = {
 
   // Dropdown sources for institution/profile pickers. Not documented in
   // SYSTEM_API_GUIDE.md, confirmed live by curl — no /system prefix.
+  //
+  // Confirmed live: /user/list and /user/profile/list paginate at
+  // limit=10 by default like every /master/{type} call, silently
+  // truncating any list past 10 records — pass a high limit so these
+  // dropdown/table sources always return everything.
   async listActiveInstitutions() {
     const { data: envelope } = await httpClient.post("/institution/profile/get_active", { view: "dropdown" });
     return extractList(envelope.data);
@@ -52,7 +57,7 @@ export const systemService = {
   // /profile/getall 404s as of the 2026-09-07 backend redeploy — confirmed
   // live replacement is /user/profile/list.
   async listProfiles() {
-    const { data: envelope } = await httpClient.post("/user/profile/list", { view: "dropdown" });
+    const { data: envelope } = await httpClient.post("/user/profile/list", { view: "dropdown", limit: 1000 });
     return extractList(envelope.data);
   },
 
@@ -75,7 +80,7 @@ export const systemService = {
   // Confirmed live via curl: /user/list requires auth ("Please log in
   // again"), i.e. a real route.
   async listUsers() {
-    const { data: envelope } = await httpClient.post("/user/list", { view: "dropdown" });
+    const { data: envelope } = await httpClient.post("/user/list", { view: "dropdown", limit: 1000 });
     return extractList(envelope.data);
   },
 };

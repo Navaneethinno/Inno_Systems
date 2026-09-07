@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { masterEntities } from "../config/masterEntities";
 import { masterDataService } from "../services/masterDataService";
@@ -28,6 +28,7 @@ export function MasterListPage() {
   const config = masterEntities[entityKey];
 
   const [rows, setRows] = useState([]);
+  const [pagination, setPagination] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -38,8 +39,12 @@ export function MasterListPage() {
     setIsLoading(true);
     setError(null);
     masterDataService
-      .list(entityKey, {}, config?.listPath)
-      .then((data) => !cancelled && setRows(data))
+      .listWithPagination(entityKey, {}, config?.listPath)
+      .then(({ rows: data, pagination: p }) => {
+        if (cancelled) return;
+        setRows(data);
+        setPagination(p);
+      })
       .catch((err) => !cancelled && setError(err.message))
       .finally(() => !cancelled && setIsLoading(false));
     return () => {
@@ -47,17 +52,19 @@ export function MasterListPage() {
     };
   }, [entityKey, config?.listPath]);
 
+  const q = query.trim().toLowerCase();
+  const filteredRows = useMemo(() => {
+    if (!q) return rows;
+    return rows.filter((row) =>
+      Object.values(row).some((v) => v != null && typeof v !== "object" && String(v).toLowerCase().includes(q))
+    );
+  }, [rows, q]);
+
   if (!config) {
     return <div className="mdp__state">Unknown master data type "{entityKey}".</div>;
   }
 
   const columns = buildColumns(rows);
-  const q = query.trim().toLowerCase();
-  const filteredRows = q
-    ? rows.filter((row) =>
-        Object.values(row).some((v) => v != null && typeof v !== "object" && String(v).toLowerCase().includes(q))
-      )
-    : rows;
 
   return (
     <div className="mdp">
@@ -81,7 +88,14 @@ export function MasterListPage() {
 
       {error && <div className="mdp__error">{error}</div>}
 
-      <DataTable columns={columns} rows={filteredRows} isLoading={isLoading} />
+      <DataTable
+        columns={columns}
+        rows={filteredRows}
+        isLoading={isLoading}
+        // Only show the server's total while unfiltered — a search narrows
+        // filteredRows below the API's whole-table count.
+        pagination={q ? undefined : pagination}
+      />
 
       {isFullscreen && (
         <FullscreenTableModal

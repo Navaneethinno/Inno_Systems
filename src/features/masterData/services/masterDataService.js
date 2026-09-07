@@ -16,12 +16,27 @@ import { extractList, extractOne } from "../../../lib/extractList";
  * `data` is a list for these endpoints — a one-element array for
  * add/edit/delete, unwrapped here via extractOne.
  */
+// The backend paginates every /master/{type} (and /user/list-shaped) call
+// at limit=10 by default — silently truncating any caller that expects the
+// whole table (a dropdown source, or a page that does its own client-side
+// paging via DataTable). Request a limit well above any known table's size
+// so the full list always comes back in one call.
+const FULL_LIST_LIMIT = 1000;
+
 export const masterDataService = {
   // `path` overrides the default /master/{type} route for entities that
   // live elsewhere (e.g. password_policy is under /user/, not /master/).
   async list(type, filters = {}, path) {
-    const { data: envelope } = await httpClient.post(path ?? `/master/${type}`, filters);
+    const { data: envelope } = await httpClient.post(path ?? `/master/${type}`, { limit: FULL_LIST_LIMIT, ...filters });
     return extractList(envelope.data);
+  },
+
+  // Same as list(), but also returns the API's own pagination envelope
+  // ({ totalRecords, totalPages, currentPage, limit }) for pages that want
+  // to show the server's real record count via DataTable's `pagination` prop.
+  async listWithPagination(type, filters = {}, path) {
+    const { data: envelope } = await httpClient.post(path ?? `/master/${type}`, { limit: FULL_LIST_LIMIT, ...filters });
+    return { rows: extractList(envelope.data), pagination: envelope.pagination };
   },
 
   async add(type, payload) {

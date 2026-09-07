@@ -26,6 +26,7 @@ export function MasterCrudPage() {
   const config = masterEntities[entityKey];
 
   const [rows, setRows] = useState([]);
+  const [pagination, setPagination] = useState(null);
   const [optionSets, setOptionSets] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -42,8 +43,9 @@ export function MasterCrudPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await masterDataService.list(entityKey);
+      const { rows: data, pagination: p } = await masterDataService.listWithPagination(entityKey);
       setRows(data);
+      setPagination(p);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -191,6 +193,9 @@ export function MasterCrudPage() {
         columns={columns}
         rows={filteredRows}
         isLoading={isLoading}
+        // Only show the server's total while unfiltered — the search box
+        // and status tabs narrow filteredRows below the API's whole-table count.
+        pagination={filter === "all" && !query.trim() ? pagination : undefined}
         actions={(row) => (
           <>
             <button className="dt__icon-btn" onClick={() => openEdit(row)} aria-label="Edit">
