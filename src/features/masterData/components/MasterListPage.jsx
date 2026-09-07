@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { masterEntities } from "../config/masterEntities";
 import { masterDataService } from "../services/masterDataService";
@@ -8,6 +8,8 @@ import { Button } from "../../../components/ui/Button";
 import { FullscreenTableModal } from "../../../components/ui/FullscreenTableModal";
 import { TableSearchBar } from "../../../components/ui/TableSearchBar";
 import "./MasterDataPage.css";
+
+const PAGE_SIZE = 10;
 
 function buildColumns(rows) {
   if (rows.length === 0) return [];
@@ -23,23 +25,42 @@ function buildColumns(rows) {
   });
 }
 
+/**
+ * Browsing (no search) uses real server-side pagination — one page of 10
+ * fetched per click, matching the API's actual paging contract (confirmed
+ * live: /master/{type} genuinely returns a different slice per `page`, not
+ * just the same rows re-sorted). The API's `search` param is a no-op on
+ * this deployment (confirmed live), so search instead lazily fetches the
+ * whole table once (cached) and filters client-side — same fetch is reused
+ * for "View all".
+ */
 export function MasterListPage() {
   const { entityKey } = useParams();
   const config = masterEntities[entityKey];
 
+  const [page, setPage] = useState(1);
   const [rows, setRows] = useState([]);
   const [pagination, setPagination] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const [fullRows, setFullRows] = useState(null);
+  const [isLoadingFull, setIsLoadingFull] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [query, setQuery] = useState("");
+
+  useEffect(() => {
+    setPage(1);
+    setFullRows(null);
+    setQuery("");
+  }, [entityKey]);
 
   useEffect(() => {
     let cancelled = false;
     setIsLoading(true);
     setError(null);
     masterDataService
-      .listWithPagination(entityKey, {}, config?.listPath)
+      .listWithPagination(entityKey, { page, limit: PAGE_SIZE }, config?.listPath)
       .then(({ rows: data, pagination: p }) => {
         if (cancelled) return;
         setRows(data);
@@ -50,21 +71,44 @@ export function MasterListPage() {
     return () => {
       cancelled = true;
     };
-  }, [entityKey, config?.listPath]);
+  }, [entityKey, page, config?.listPath]);
+
+  const ensureFullRows = useCallback(async () => {
+    if (fullRows) return fullRows;
+    setIsLoadingFull(true);
+    try {
+      const data = await masterDataService.list(entityKey, {}, config?.listPath);
+      setFullRows(data);
+      return data;
+    } finally {
+      setIsLoadingFull(false);
+    }
+  }, [entityKey, fullRows, config?.listPath]);
+
+  useEffect(() => {
+    if (query.trim()) ensureFullRows();
+  }, [query, ensureFullRows]);
 
   const q = query.trim().toLowerCase();
+  const searchActive = Boolean(q);
+
   const filteredRows = useMemo(() => {
-    if (!q) return rows;
-    return rows.filter((row) =>
+    if (!searchActive || !fullRows) return null;
+    return fullRows.filter((row) =>
       Object.values(row).some((v) => v != null && typeof v !== "object" && String(v).toLowerCase().includes(q))
     );
-  }, [rows, q]);
+  }, [fullRows, q, searchActive]);
+
+  const handleOpenFullscreen = async () => {
+    await ensureFullRows();
+    setIsFullscreen(true);
+  };
 
   if (!config) {
     return <div className="mdp__state">Unknown master data type "{entityKey}".</div>;
   }
 
-  const columns = buildColumns(rows);
+  const columns = buildColumns(searchActive ? fullRows ?? [] : rows);
 
   return (
     <div className="mdp">
@@ -74,7 +118,7 @@ export function MasterListPage() {
           <p className="mdp__subtitle">Reference data — read-only.</p>
         </div>
         <div className="mdp__header-actions">
-          <Button variant="secondary" onClick={() => setIsFullscreen(true)} disabled={rows.length === 0}>
+          <Button variant="secondary" onClick={handleOpenFullscreen} loading={isLoadingFull} disabled={rows.length === 0}>
             ⛶ View all
           </Button>
         </div>
@@ -88,20 +132,24 @@ export function MasterListPage() {
 
       {error && <div className="mdp__error">{error}</div>}
 
-      <DataTable
-        columns={columns}
-        rows={filteredRows}
-        isLoading={isLoading}
-        // Only show the server's total while unfiltered — a search narrows
-        // filteredRows below the API's whole-table count.
-        pagination={q ? undefined : pagination}
-      />
+      {searchActive ? (
+        <DataTable columns={columns} rows={filteredRows ?? []} isLoading={filteredRows === null} emptyMessage="No matching records." />
+      ) : (
+        <DataTable
+          columns={columns}
+          rows={rows}
+          isLoading={isLoading}
+          pagination={pagination}
+          page={page}
+          onPageChange={setPage}
+        />
+      )}
 
-      {isFullscreen && (
+      {isFullscreen && fullRows && (
         <FullscreenTableModal
           title={config.label}
-          columns={columns}
-          rows={filteredRows}
+          columns={buildColumns(fullRows)}
+          rows={fullRows}
           onClose={() => setIsFullscreen(false)}
         />
       )}

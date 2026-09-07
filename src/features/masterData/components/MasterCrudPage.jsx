@@ -26,7 +26,6 @@ export function MasterCrudPage() {
   const config = masterEntities[entityKey];
 
   const [rows, setRows] = useState([]);
-  const [pagination, setPagination] = useState(null);
   const [optionSets, setOptionSets] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -39,13 +38,17 @@ export function MasterCrudPage() {
   const { filter, setFilter, query, setQuery, filteredRows, hasAuthStatus, activeCount, pendingCount, totalCount } =
     useAuthStatusFilter(rows);
 
+  // These tables (Modules, Menus, Menu Actions) are small — fetched in full
+  // (masterDataService.list() requests a high limit to avoid the backend's
+  // default limit=10 truncation) rather than server-paged, since the search
+  // box and status filter tabs below need the whole dataset in memory to
+  // filter correctly. Real server-side paging (see MasterListPage) is worth
+  // it for the large reference tables (Countries, Currencies); not here.
   const loadRows = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const { rows: data, pagination: p } = await masterDataService.listWithPagination(entityKey);
-      setRows(data);
-      setPagination(p);
+      setRows(await masterDataService.list(entityKey));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -193,9 +196,6 @@ export function MasterCrudPage() {
         columns={columns}
         rows={filteredRows}
         isLoading={isLoading}
-        // Only show the server's total while unfiltered — the search box
-        // and status tabs narrow filteredRows below the API's whole-table count.
-        pagination={filter === "all" && !query.trim() ? pagination : undefined}
         actions={(row) => (
           <>
             <button className="dt__icon-btn" onClick={() => openEdit(row)} aria-label="Edit">

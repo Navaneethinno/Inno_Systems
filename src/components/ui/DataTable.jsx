@@ -19,13 +19,21 @@ function compareValues(a, b) {
  * Every column is sortable by its underlying row[col.key] value (click the
  * header to toggle asc/desc) — pass `sortable: false` on a column to opt out.
  *
- * Paginates 10 rows at a time by default. `pagination` (optional) is the
- * API's own `{ totalRecords, totalPages, currentPage, limit }` envelope
- * field — when given, its `totalRecords` is shown instead of `rows.length`
- * (the two only differ if a caller passed a partial/pre-paged `rows`
- * array). Pass `paginate={false}` to render every row on one page instead —
- * used by the "View all" fullscreen modal, whose whole point is showing
- * everything at once.
+ * Paginates 10 rows at a time by default, in one of two modes:
+ *
+ * - **Client mode** (default): `rows` holds the whole dataset and DataTable
+ *   slices it into pages of 10 itself.
+ * - **Server mode**: pass `page` (the current page number) and `onPageChange`
+ *   — `rows` is then treated as just that one page's worth (already fetched
+ *   from the API), `pagination` (the API's own
+ *   `{ totalRecords, totalPages, currentPage, limit }` envelope field) drives
+ *   the page count, and Previous/Next call `onPageChange(nextPage)` instead
+ *   of paging in place. This is the real pattern for a large backend-paged
+ *   list (e.g. Countries/Currencies) instead of fetching everything up front.
+ *
+ * Pass `paginate={false}` to render every row on one page instead — used by
+ * the "View all" fullscreen modal, whose whole point is showing everything
+ * at once.
  */
 export function DataTable({
   columns,
@@ -35,9 +43,13 @@ export function DataTable({
   emptyMessage = "No records found.",
   pagination,
   paginate = true,
+  page: controlledPage,
+  onPageChange,
 }) {
   const [sort, setSort] = useState(null); // { key, dir: 1 | -1 }
-  const [page, setPage] = useState(1);
+  const [internalPage, setInternalPage] = useState(1);
+  const isServerPaged = typeof onPageChange === "function";
+  const page = isServerPaged ? controlledPage : internalPage;
 
   const sortedRows = useMemo(() => {
     if (!sort || !rows) return rows;
@@ -45,18 +57,28 @@ export function DataTable({
   }, [rows, sort]);
 
   const totalRecords = pagination?.totalRecords ?? rows?.length ?? 0;
-  const totalPages = paginate ? Math.max(1, Math.ceil((sortedRows?.length ?? 0) / PAGE_SIZE)) : 1;
+  const totalPages = !paginate
+    ? 1
+    : isServerPaged
+      ? Math.max(1, pagination?.totalPages ?? 1)
+      : Math.max(1, Math.ceil((sortedRows?.length ?? 0) / PAGE_SIZE));
 
   useEffect(() => {
-    setPage(1);
-  }, [rows]);
+    if (!isServerPaged) setInternalPage(1);
+  }, [rows, isServerPaged]);
 
   const pageRows = useMemo(() => {
     if (!sortedRows) return sortedRows;
-    if (!paginate) return sortedRows;
+    if (!paginate || isServerPaged) return sortedRows; // already just this page's rows
     const start = (page - 1) * PAGE_SIZE;
     return sortedRows.slice(start, start + PAGE_SIZE);
-  }, [sortedRows, page, paginate]);
+  }, [sortedRows, page, paginate, isServerPaged]);
+
+  const goToPage = (next) => {
+    const clamped = Math.min(totalPages, Math.max(1, next));
+    if (isServerPaged) onPageChange(clamped);
+    else setInternalPage(clamped);
+  };
 
   const toggleSort = (col) => {
     if (col.sortable === false) return;
@@ -150,7 +172,7 @@ export function DataTable({
               type="button"
               className="dt__pagination-btn"
               disabled={page <= 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              onClick={() => goToPage(page - 1)}
             >
               Previous
             </button>
@@ -158,7 +180,7 @@ export function DataTable({
               type="button"
               className="dt__pagination-btn dt__pagination-btn--primary"
               disabled={page >= totalPages}
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              onClick={() => goToPage(page + 1)}
             >
               Next
             </button>
