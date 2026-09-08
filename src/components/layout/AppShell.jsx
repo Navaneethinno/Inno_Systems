@@ -56,14 +56,18 @@ export function AppShell() {
           )}
 
           <div className="shell__section-label">System</div>
-          <NavLink to="/system/profile" className={({ isActive }) => `shell__link ${isActive ? "shell__link--active" : ""}`}>
-            Add Profile
-          </NavLink>
+          {/* Ordered to match the real setup workflow: an institution needs
+              modules before it's usable, and a profile needs to exist before
+              a user can be assigned one — see the README's
+              "Setting up a new institution, start to finish" walkthrough. */}
           <NavLink to="/system/institution" className={({ isActive }) => `shell__link ${isActive ? "shell__link--active" : ""}`}>
-            Add Institution
+            Create Institution
           </NavLink>
           <NavLink to="/system/institutionModule" className={({ isActive }) => `shell__link ${isActive ? "shell__link--active" : ""}`}>
-            Add Institution Module
+            Assign Institution Module
+          </NavLink>
+          <NavLink to="/system/profile" className={({ isActive }) => `shell__link ${isActive ? "shell__link--active" : ""}`}>
+            Create Profile
           </NavLink>
           {Object.keys(systemForms).map((key) => (
             <NavLink
@@ -71,7 +75,7 @@ export function AppShell() {
               to={`/system/${key}`}
               className={({ isActive }) => `shell__link ${isActive ? "shell__link--active" : ""}`}
             >
-              Add {systemForms[key].label}
+              Create {systemForms[key].label}
             </NavLink>
           ))}
         </nav>
