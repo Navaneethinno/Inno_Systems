@@ -17,8 +17,8 @@ function ProfileForm({ row, onSuccess, onCancel }) {
   const [instProfileId, setInstProfileId] = useState(isEdit ? String(row.inst_profile_id ?? "") : "");
   const [institutions, setInstitutions] = useState([]);
   const [menus, setMenus] = useState([]);
-  const [actionsByMenu, setActionsByMenu] = useState({}); // menu_id -> [{id, name}]
-  const [assignments, setAssignments] = useState({}); // menu_id -> { included, actionIds: Set, isConfigOnly }
+  const [actions, setActions] = useState([]); // the full /master/action catalog — same list offered on every menu
+  const [assignments, setAssignments] = useState({}); // menu_id -> { included, actionIds: Set }
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -32,26 +32,23 @@ function ProfileForm({ row, onSuccess, onCancel }) {
         // a separate fetch of the one profile's current assignments to
         // prefill from — otherwise submitting the edit with an empty
         // menu_info would wipe out every existing permission.
-        const [instRows, menuRows, actionRows, menuActionRows, profileDetail] = await Promise.all([
+        //
+        // Actions offered per menu come straight from /master/action (all
+        // 6: Add, View, Edit, Delete, Authorise, Self) rather than being
+        // filtered down to whatever's been linked via Menu Actions master
+        // data — a permission a menu doesn't have a matching Menu Action
+        // row for yet should still be assignable here.
+        const [instRows, menuRows, actionRows, profileDetail] = await Promise.all([
           systemService.listActiveInstitutions(),
           masterDataService.list("menu"),
           masterDataService.list("action"),
-          masterDataService.list("menu_action"),
           isEdit ? systemService.getProfile(rowValue(row)) : Promise.resolve(null),
         ]);
         if (cancelled) return;
 
         setInstitutions(instRows);
         setMenus(menuRows);
-
-        const actionsById = Object.fromEntries(actionRows.map((action) => [String(rowValue(action)), action]));
-        const grouped = {};
-        menuActionRows.forEach((ma) => {
-          const action = actionsById[String(ma.action_id)];
-          if (!action) return;
-          (grouped[String(ma.menu_id)] ??= []).push(action);
-        });
-        setActionsByMenu(grouped);
+        setActions(actionRows);
 
         if (profileDetail?.menu_actions) {
           const seeded = Object.fromEntries(
@@ -97,6 +94,16 @@ function ProfileForm({ row, onSuccess, onCancel }) {
         nextActionIds.add(actionId);
       }
       return { ...prev, [menuId]: { ...current, actionIds: nextActionIds } };
+    });
+  };
+
+  const toggleAllActions = (menuId, allActionIds, selectAll) => {
+    setAssignments((prev) => {
+      const current = prev[menuId] ?? { included: true, actionIds: new Set() };
+      return {
+        ...prev,
+        [menuId]: { ...current, actionIds: new Set(selectAll ? allActionIds : []) },
+      };
     });
   };
 
@@ -167,7 +174,8 @@ function ProfileForm({ row, onSuccess, onCancel }) {
             const menuId = rowValue(menu);
             const assignment = assignments[menuId];
             const included = Boolean(assignment?.included);
-            const menuActions = actionsByMenu[String(menuId)] ?? [];
+            const allActionIds = actions.map(rowValue);
+            const allSelected = allActionIds.length > 0 && allActionIds.every((id) => assignment?.actionIds?.has(id));
 
             return (
               <div key={menuId} className={`pfp__menu-card ${included ? "pfp__menu-card--active" : ""}`}>
@@ -178,21 +186,31 @@ function ProfileForm({ row, onSuccess, onCancel }) {
 
                 {included && (
                   <div className="pfp__menu-body">
-                    {menuActions.length === 0 ? (
-                      <p className="pfp__no-actions">No actions configured for this menu.</p>
+                    {actions.length === 0 ? (
+                      <p className="pfp__no-actions">No actions available.</p>
                     ) : (
-                      <div className="pfp__actions">
-                        {menuActions.map((action) => (
-                          <label key={rowValue(action)} className="pfp__action">
-                            <input
-                              type="checkbox"
-                              checked={Boolean(assignment?.actionIds?.has(rowValue(action)))}
-                              onChange={() => toggleAction(menuId, rowValue(action))}
-                            />
-                            <span>{rowLabel(action)}</span>
-                          </label>
-                        ))}
-                      </div>
+                      <>
+                        <label className="pfp__action pfp__action--select-all">
+                          <input
+                            type="checkbox"
+                            checked={allSelected}
+                            onChange={(e) => toggleAllActions(menuId, allActionIds, e.target.checked)}
+                          />
+                          <span>Select all</span>
+                        </label>
+                        <div className="pfp__actions">
+                          {actions.map((action) => (
+                            <label key={rowValue(action)} className="pfp__action">
+                              <input
+                                type="checkbox"
+                                checked={Boolean(assignment?.actionIds?.has(rowValue(action)))}
+                                onChange={() => toggleAction(menuId, rowValue(action))}
+                              />
+                              <span>{rowLabel(action)}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </>
                     )}
                   </div>
                 )}
