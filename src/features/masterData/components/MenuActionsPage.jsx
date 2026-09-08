@@ -257,7 +257,10 @@ export function MenuActionsPage() {
                                 min={1}
                                 className="map__priority-input"
                                 value={draft.get(action.id)}
-                                onChange={(e) => setPriority(action.id, Number(e.target.value) || 1)}
+                                onKeyDown={(e) => {
+                                  if (["-", "+", "e", "E"].includes(e.key)) e.preventDefault();
+                                }}
+                                onChange={(e) => setPriority(action.id, Math.max(1, Number(e.target.value) || 1))}
                               />
                             ) : (
                               <span className="map__priority-empty">—</span>

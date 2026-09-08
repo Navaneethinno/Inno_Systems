@@ -1,11 +1,26 @@
 import { forwardRef, useState } from "react";
 import "./TextField.css";
 
+// Every number field in this app (branch counts, KYC levels, PIN lengths,
+// priorities, ...) is a non-negative count — none of them have a legitimate
+// negative value. `min` alone stops the spinner arrows going below it but
+// not typing/pasting "-1" directly, so also block "-", "+" and "e" (minus,
+// plus, exponent) at the keystroke level.
+function blockNegativeKeys(e) {
+  if (["-", "+", "e", "E"].includes(e.key)) e.preventDefault();
+}
+
+function blockNegativePaste(e) {
+  const pasted = e.clipboardData.getData("text");
+  if (/[-+eE]/.test(pasted)) e.preventDefault();
+}
+
 export const TextField = forwardRef(
   ({ label, error, icon, type = "text", ...rest }, ref) => {
     const [showPassword, setShowPassword] = useState(false);
     const isPassword = type === "password";
     const resolvedType = isPassword && showPassword ? "text" : type;
+    const isNumber = type === "number";
 
     return (
       <div className={`tf ${error ? "tf--error" : ""}`}>
@@ -35,7 +50,15 @@ export const TextField = forwardRef(
               <path d="M6.5 9V6.5a3.5 3.5 0 0 1 7 0V9" stroke="currentColor" strokeWidth="1.5" />
             </svg>
           )}
-          <input ref={ref} type={resolvedType} className="tf__input" {...rest} />
+          <input
+            ref={ref}
+            type={resolvedType}
+            className="tf__input"
+            min={isNumber ? 0 : undefined}
+            onKeyDown={isNumber ? blockNegativeKeys : undefined}
+            onPaste={isNumber ? blockNegativePaste : undefined}
+            {...rest}
+          />
           {isPassword && (
             <button
               type="button"

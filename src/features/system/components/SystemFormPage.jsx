@@ -63,7 +63,7 @@ function GenericForm({ config, onSuccess, onCancel }) {
     const payload = {};
     config.fields.forEach((field) => {
       const raw = values[field.name];
-      if (field.type === "number") payload[field.name] = raw === "" ? undefined : Number(raw);
+      if (field.type === "number") payload[field.name] = raw === "" ? undefined : Math.max(0, Number(raw) || 0);
       else if (field.type === "boolean") payload[field.name] = Boolean(raw);
       else if (field.type === "select") payload[field.name] = raw === "" ? undefined : Number(raw) || raw;
       else if (field.type === "text-list")
