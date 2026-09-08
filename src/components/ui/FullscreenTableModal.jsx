@@ -35,7 +35,6 @@ export function FullscreenTableModal({ title, columns, rows, actions, onClose, f
   const scrollRef = useRef(null);
 
   const [infiniteRows, setInfiniteRows] = useState([]);
-  const [infinitePage, setInfinitePage] = useState(0);
   const [infiniteHasMore, setInfiniteHasMore] = useState(true);
   const [infiniteLoading, setInfiniteLoading] = useState(false);
   const [infiniteError, setInfiniteError] = useState(null);
@@ -52,7 +51,6 @@ export function FullscreenTableModal({ title, columns, rows, actions, onClose, f
       .then((result) => {
         setInfiniteRows((current) => [...current, ...(result.rows ?? [])]);
         infinitePageRef.current = nextPage;
-        setInfinitePage(nextPage);
         setInfiniteHasMore(nextPage < (result.totalPages ?? nextPage));
       })
       .catch((err) => setInfiniteError(err.message || "Unable to load more records."))
