@@ -22,9 +22,9 @@
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.04em;
-  color: #16a34a;
-  background: #ecfdf3;
-  border: 1px solid #b8f0cc;
+  color: var(--color-success-text);
+  background: var(--color-success-bg);
+  border: 1px solid var(--color-success-border);
   padding: 6px 14px;
   border-radius: 999px;
   margin-bottom: 22px;

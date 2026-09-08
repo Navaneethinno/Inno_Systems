@@ -4,6 +4,7 @@
   --color-accent: #26ffff;
   --color-navy: #050b2e;
   --color-navy-soft: #0b1650;
+  --color-navy-deep: #030716;
   --color-slate: #495255;
   --color-gray-light: #dedfdf;
   --color-surface: #ffffff;
@@ -11,9 +12,29 @@
   --color-table-head: #f9fafb;
   --color-text: #101828;
   --color-text-muted: #667085;
+  --color-placeholder: #a0a7b4;
   --color-danger: #e0342f;
+  --color-danger-dark: #b8241f;
   --color-border: #e4e7ec;
   --color-input-bg: #fbfcfe;
+  --color-white: #ffffff;
+  --color-primary-tint: #f5f8ff;
+
+  /* Semantic tone triples (background/border/text) — every success, danger
+     and warning surface in the app (alert banners, status pills, badges)
+     reads from these instead of its own hardcoded hex, so retinting any of
+     them is a one-line change here instead of a hunt across CSS files. */
+  --color-success-bg: #ecfdf3;
+  --color-success-border: #b8f0cc;
+  --color-success-text: #15803d;
+
+  --color-warning-bg: #fff7e6;
+  --color-warning-border: #fde3a7;
+  --color-warning-text: #a15c07;
+
+  --color-danger-bg: #fdecec;
+  --color-danger-border: #f6c4c2;
+  --color-danger-text: #9c2b27;
 
   --radius-sm: 8px;
   --radius-md: 14px;
@@ -36,6 +57,19 @@
   --color-input-bg: #171b2e;
   --color-gray-light: #2a3050;
   --shadow-card: 0 24px 60px -20px rgba(0, 0, 0, 0.6);
+  --color-primary-tint: #182035;
+
+  --color-success-bg: rgba(21, 128, 61, 0.18);
+  --color-success-border: rgba(74, 222, 128, 0.35);
+  --color-success-text: #4ade80;
+
+  --color-warning-bg: rgba(161, 92, 7, 0.2);
+  --color-warning-border: rgba(251, 191, 36, 0.35);
+  --color-warning-text: #fbbf24;
+
+  --color-danger-bg: rgba(156, 43, 39, 0.22);
+  --color-danger-border: rgba(248, 113, 113, 0.35);
+  --color-danger-text: #f87171;
 }
 
 * {

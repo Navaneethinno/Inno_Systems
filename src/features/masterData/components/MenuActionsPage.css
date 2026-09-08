@@ -91,7 +91,7 @@
 
 .map__menu-card--active {
   border-color: var(--color-primary);
-  background: #f5f8ff;
+  background: var(--color-primary-tint);
 }
 
 .map__menu-dot {
@@ -162,7 +162,7 @@
 }
 
 .map__action-row:hover {
-  background: #fafbff;
+  background: var(--color-table-head);
 }
 
 .map__action-name {

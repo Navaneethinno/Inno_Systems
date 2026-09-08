@@ -53,6 +53,6 @@
 }
 
 .sft__count--pending {
-  background: #fde3a7;
-  color: #a15c07;
+  background: var(--color-warning-border);
+  color: var(--color-warning-text);
 }

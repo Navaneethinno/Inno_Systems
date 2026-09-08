@@ -7,7 +7,7 @@
 
 .shell__sidebar {
   background: var(--color-navy);
-  color: #fff;
+  color: var(--color-white);
   padding: 22px 16px;
   display: flex;
   flex-direction: column;
@@ -88,12 +88,12 @@
 
 .shell__link:hover {
   background: rgba(255, 255, 255, 0.06);
-  color: #fff;
+  color: var(--color-white);
 }
 
 .shell__link--active {
   background: linear-gradient(135deg, rgba(34, 102, 238, 0.35), rgba(38, 255, 255, 0.12));
-  color: #fff;
+  color: var(--color-white);
 }
 
 .shell__link--sub {
@@ -247,7 +247,7 @@
 
 .shell__logout:hover {
   border-color: var(--color-danger);
-  background: #fdecec;
+  background: var(--color-danger-bg);
   color: var(--color-danger);
 }
 

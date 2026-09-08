@@ -114,13 +114,13 @@
 .dt__icon-btn:hover {
   border-color: var(--color-primary);
   color: var(--color-primary);
-  background: #f5f8ff;
+  background: var(--color-primary-tint);
 }
 
 .dt__icon-btn--danger:hover {
   border-color: var(--color-danger);
   color: var(--color-danger);
-  background: #fdecec;
+  background: var(--color-danger-bg);
 }
 
 .dt__state {
@@ -155,21 +155,21 @@
 }
 
 .dt__status--active {
-  color: #15803d;
-  background: #ecfdf3;
-  border-color: #b8f0cc;
+  color: var(--color-success-text);
+  background: var(--color-success-bg);
+  border-color: var(--color-success-border);
 }
 
 .dt__status--pending {
-  color: #a15c07;
-  background: #fff7e6;
-  border-color: #fde3a7;
+  color: var(--color-warning-text);
+  background: var(--color-warning-bg);
+  border-color: var(--color-warning-border);
 }
 
 .dt__status--rejected {
-  color: #b91c1c;
-  background: #fef2f2;
-  border-color: #fecaca;
+  color: var(--color-danger-text);
+  background: var(--color-danger-bg);
+  border-color: var(--color-danger-border);
 }
 
 .dt__status--inactive {
@@ -218,12 +218,12 @@
 .dt__pagination-btn--primary {
   background: var(--color-primary);
   border-color: var(--color-primary);
-  color: #fff;
+  color: var(--color-white);
 }
 
 .dt__pagination-btn--primary:hover:not(:disabled) {
   opacity: 0.92;
-  color: #fff;
+  color: var(--color-white);
 }
 
 .dt__pagination-btn:disabled {
