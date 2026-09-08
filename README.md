@@ -12,19 +12,28 @@ React + JavaScript (JSX) + Vite frontend, with a layered architecture (API clien
 npm install
 ```
 
-The app defaults to the live API (`https://innoverse-api.innovitegra.in`) and the
-documented Basic-auth app credentials, so it runs with no `.env` file. To point
-at a different backend, create a `.env` file:
+Copy `.env.example` to `.env` and fill in the three variables — the app throws
+a clear startup error naming whichever one is missing rather than silently
+falling back to a hardcoded URL or credential baked into the bundle:
+
+```bash
+cp .env.example .env
+```
 
 ```bash
 VITE_API_BASE_URL=https://innoverse-api.innovitegra.in
 
 # POST /system/user/login requires a fixed Basic-auth header on top of the
 # user's own username/password. These identify the client app, not the
-# person logging in.
+# person logging in — ask whoever owns the target environment for the real
+# values (they may differ between dev/staging/prod).
 VITE_SYSTEM_BASIC_USER=system
 VITE_SYSTEM_BASIC_PASSWORD=123456
 ```
+
+`.env` (and `.env.local`) are gitignored — never commit real credentials.
+For a Vercel deployment, set the same three variables under the project's
+Environment Variables settings so the build has them at deploy time.
 
 ## Start the app
 
