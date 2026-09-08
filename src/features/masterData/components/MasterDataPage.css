@@ -14,6 +14,21 @@
   flex-wrap: wrap;
 }
 
+.mdp__header-actions .btn {
+  padding: 9px 13px;
+  border-radius: 7px;
+  font-size: 13px;
+  gap: 6px;
+}
+
+.mdp__header-actions .btn--primary {
+  box-shadow: 0 5px 14px -8px rgba(34, 102, 238, 0.55);
+}
+
+.mdp__header-actions .btn--primary:hover:not(:disabled) {
+  box-shadow: 0 8px 18px -8px rgba(34, 102, 238, 0.6);
+}
+
 .mdp__toolbar {
   display: flex;
   align-items: center;

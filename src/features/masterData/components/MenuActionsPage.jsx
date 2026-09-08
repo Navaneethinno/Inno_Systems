@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { masterDataService } from "../services/masterDataService";
 import { saveMenuActions } from "../services/menuActionService";
-import { rowLabel } from "../../../lib/rowLabel";
+import { rowLabel, rowValue } from "../../../lib/rowLabel";
 import { Select } from "../../../components/ui/Select";
 import { Button } from "../../../components/ui/Button";
 import { StatusBadge } from "../../../components/ui/StatusBadge";
@@ -67,7 +67,7 @@ export function MenuActionsPage() {
   );
 
   const selectedMenu = useMemo(
-    () => menusForModule.find((menu) => String(menu.id) === String(selectedMenuId)),
+    () => menusForModule.find((menu) => String(rowValue(menu)) === String(selectedMenuId)),
     [menusForModule, selectedMenuId]
   );
 
@@ -163,7 +163,7 @@ export function MenuActionsPage() {
         <span className="map__module-label">Module</span>
         <Select
           placeholder={isLoading ? "Loading modules…" : "Select Module"}
-          options={modules.map((m) => ({ value: m.id, label: rowLabel(m) }))}
+          options={modules.map((module) => ({ value: rowValue(module), label: rowLabel(module) }))}
           value={selectedModuleId}
           disabled={isLoading}
           onChange={(e) => handleModuleChange(e.target.value)}
@@ -188,16 +188,17 @@ export function MenuActionsPage() {
             ) : (
               <div className="map__menu-list">
                 {menusForModule.map((menu) => {
+                  const menuId = rowValue(menu);
                   const assignedCount = menuActionRows.filter(
-                    (row) => String(row.menu_id) === String(menu.id)
+                    (row) => String(row.menu_id) === String(menuId)
                   ).length;
-                  const isActive = String(menu.id) === String(selectedMenuId);
+                  const isActive = String(menuId) === String(selectedMenuId);
                   return (
                     <button
                       type="button"
-                      key={menu.id}
+                      key={menuId}
                       className={`map__menu-card ${isActive ? "map__menu-card--active" : ""}`}
-                      onClick={() => handleMenuSelect(menu.id)}
+                      onClick={() => handleMenuSelect(menuId)}
                     >
                       <span className="map__menu-dot" aria-hidden="true" />
                       <span className="map__menu-info">
@@ -239,14 +240,15 @@ export function MenuActionsPage() {
                       <span>Status</span>
                     </div>
                     {actions.map((action, index) => {
-                      const checked = draft.has(action.id);
+                      const actionId = rowValue(action);
+                      const checked = draft.has(actionId);
                       return (
-                        <label key={action.id} className="map__action-row">
+                        <label key={actionId} className="map__action-row">
                           <span className="map__action-name">
                             <input
                               type="checkbox"
                               checked={checked}
-                              onChange={() => toggleAction(action.id, index)}
+                              onChange={() => toggleAction(actionId, index)}
                             />
                             {rowLabel(action)}
                           </span>
@@ -256,11 +258,11 @@ export function MenuActionsPage() {
                                 type="number"
                                 min={1}
                                 className="map__priority-input"
-                                value={draft.get(action.id)}
+                                value={draft.get(actionId)}
                                 onKeyDown={(e) => {
                                   if (["-", "+", "e", "E"].includes(e.key)) e.preventDefault();
                                 }}
-                                onChange={(e) => setPriority(action.id, Math.max(1, Number(e.target.value) || 1))}
+                                onChange={(e) => setPriority(actionId, Math.max(1, Number(e.target.value) || 1))}
                               />
                             ) : (
                               <span className="map__priority-empty">—</span>

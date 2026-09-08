@@ -37,12 +37,12 @@ function ProfileForm({ onSuccess, onCancel }) {
         setInstitutions(instRows);
         setMenus(menuRows);
 
-        const actionsById = Object.fromEntries(actionRows.map((a) => [a.id, a]));
+        const actionsById = Object.fromEntries(actionRows.map((action) => [String(rowValue(action)), action]));
         const grouped = {};
         menuActionRows.forEach((ma) => {
-          const action = actionsById[ma.action_id];
+          const action = actionsById[String(ma.action_id)];
           if (!action) return;
-          (grouped[ma.menu_id] ??= []).push(action);
+          (grouped[String(ma.menu_id)] ??= []).push(action);
         });
         setActionsByMenu(grouped);
       } catch (err) {
@@ -143,14 +143,15 @@ function ProfileForm({ onSuccess, onCancel }) {
       ) : (
         <div className="pfp__menu-list">
           {menus.map((menu) => {
-            const assignment = assignments[menu.id];
+            const menuId = rowValue(menu);
+            const assignment = assignments[menuId];
             const included = Boolean(assignment?.included);
-            const menuActions = actionsByMenu[menu.id] ?? [];
+            const menuActions = actionsByMenu[String(menuId)] ?? [];
 
             return (
-              <div key={menu.id} className={`pfp__menu-card ${included ? "pfp__menu-card--active" : ""}`}>
+              <div key={menuId} className={`pfp__menu-card ${included ? "pfp__menu-card--active" : ""}`}>
                 <label className="pfp__menu-header">
-                  <input type="checkbox" checked={included} onChange={(e) => toggleMenu(menu.id, e.target.checked)} />
+                  <input type="checkbox" checked={included} onChange={(e) => toggleMenu(menuId, e.target.checked)} />
                   <span>{rowLabel(menu)}</span>
                 </label>
 
@@ -161,11 +162,11 @@ function ProfileForm({ onSuccess, onCancel }) {
                     ) : (
                       <div className="pfp__actions">
                         {menuActions.map((action) => (
-                          <label key={action.id} className="pfp__action">
+                          <label key={rowValue(action)} className="pfp__action">
                             <input
                               type="checkbox"
-                              checked={Boolean(assignment?.actionIds?.has(action.id))}
-                              onChange={() => toggleAction(menu.id, action.id)}
+                              checked={Boolean(assignment?.actionIds?.has(rowValue(action)))}
+                              onChange={() => toggleAction(menuId, rowValue(action))}
                             />
                             <span>{rowLabel(action)}</span>
                           </label>

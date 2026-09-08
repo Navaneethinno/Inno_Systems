@@ -100,3 +100,8 @@
 :root[data-theme="dark"] .tf__select {
   color-scheme: dark;
 }
+
+:root[data-theme="dark"] .tf__select option {
+  background: var(--color-surface);
+  color: var(--color-text);
+}

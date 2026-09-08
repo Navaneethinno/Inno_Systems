@@ -26,7 +26,17 @@ export function rowLabel(row) {
 }
 
 export function rowValue(row) {
-  return row.id ?? row.profile_id ?? row.inst_profile_id ?? row.menu_id ?? row.action_id ?? row.user_id;
+  return (
+    row.id ??
+    row.profile_id ??
+    row.inst_profile_id ??
+    row.institution_id ??
+    row.module_id ??
+    row.menu_id ??
+    row.action_id ??
+    row.user_id ??
+    row.password_policy_id
+  );
 }
 
 /**

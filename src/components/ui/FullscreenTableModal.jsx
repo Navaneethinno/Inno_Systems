@@ -39,20 +39,27 @@ export function FullscreenTableModal({ title, columns, rows, actions, onClose, f
   const [infiniteHasMore, setInfiniteHasMore] = useState(true);
   const [infiniteLoading, setInfiniteLoading] = useState(false);
   const [infiniteError, setInfiniteError] = useState(null);
+  const infinitePageRef = useRef(0);
+  const infiniteLoadingRef = useRef(false);
 
   const loadMore = () => {
-    if (!isInfinite || infiniteLoading || !infiniteHasMore) return;
-    const nextPage = infinitePage + 1;
+    if (!isInfinite || infiniteLoadingRef.current || !infiniteHasMore) return;
+    const nextPage = infinitePageRef.current + 1;
+    infiniteLoadingRef.current = true;
     setInfiniteLoading(true);
     setInfiniteError(null);
     fetchMore(nextPage, INFINITE_PAGE_SIZE)
       .then((result) => {
         setInfiniteRows((current) => [...current, ...(result.rows ?? [])]);
+        infinitePageRef.current = nextPage;
         setInfinitePage(nextPage);
         setInfiniteHasMore(nextPage < (result.totalPages ?? nextPage));
       })
       .catch((err) => setInfiniteError(err.message || "Unable to load more records."))
-      .finally(() => setInfiniteLoading(false));
+      .finally(() => {
+        infiniteLoadingRef.current = false;
+        setInfiniteLoading(false);
+      });
   };
 
   // Always-current ref so the mount effect below can call the latest
