@@ -5,6 +5,7 @@ import { rowLabel, rowValue, rowCode } from "../../../lib/rowLabel";
 import { TextField } from "../../../components/ui/TextField";
 import { Select } from "../../../components/ui/Select";
 import { Button } from "../../../components/ui/Button";
+import { Modal } from "../../../components/ui/Modal";
 import { renderStatusCell } from "../../../lib/renderStatusCell";
 import { EntityManagerPage } from "./EntityManagerPage";
 import "./SystemFormPage.css";
@@ -46,8 +47,42 @@ function Checkbox({ label, checked, onChange }) {
   );
 }
 
-function InstitutionForm({ onSuccess, onCancel }) {
-  const [values, setValues] = useState(initialState);
+// Maps a full institution record (from listInstitutions/institution/profile/
+// list) back into the form's state shape — language/allowed_login_identifiers
+// come back as flat arrays, converted to the {code: true} maps the checkboxes
+// use. Defensive against the one legacy bootstrap row that stores these as
+// a bare {} instead of an array.
+function stateFromRow(row) {
+  const toMap = (arr) => Object.fromEntries((Array.isArray(arr) ? arr : []).map((v) => [v, true]));
+  return {
+    ...initialState,
+    code: row.code ?? "",
+    name: row.name ?? "",
+    type: row.type ?? "",
+    timezone: row.timezone ?? "",
+    languages: toMap(row.language),
+    date_format: row.date_format ?? "YYYY-MM-DD",
+    has_branch: Boolean(row.has_branch),
+    max_branches_allowed: row.max_branches_allowed ?? "",
+    kyc_enabled: Boolean(row.kyc_enabled),
+    total_kyc_levels: row.total_kyc_levels ?? "",
+    allow_downgrade_kyc: Boolean(row.allow_downgrade_kyc),
+    auto_approve_kyc_level: Boolean(row.auto_approve_kyc_level),
+    identifiers: { USERNAME: false, EMAIL: false, MOBILE: false, ...toMap(row.allowed_login_identifiers) },
+    primary_login_identifier: row.primary_login_identifier ?? "MOBILE",
+    is_login_pin_enabled: Boolean(row.is_login_pin_enabled),
+    login_pin_length: row.login_pin_length ?? 0,
+    login_pin_type: row.login_pin_type || "NUMERIC",
+    allow_biometric_login: Boolean(row.allow_biometric_login),
+    is_txn_pin_enabled: Boolean(row.is_txn_pin_enabled),
+    txn_pin_length: row.txn_pin_length ?? 0,
+    is_same_login_txn_pin_allowed: Boolean(row.is_same_login_txn_pin_allowed),
+  };
+}
+
+function InstitutionForm({ row, onSuccess, onCancel }) {
+  const isEdit = Boolean(row);
+  const [values, setValues] = useState(() => (isEdit ? stateFromRow(row) : initialState));
   const [institutionTypes, setInstitutionTypes] = useState([]);
   const [languages, setLanguages] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -65,6 +100,9 @@ function InstitutionForm({ onSuccess, onCancel }) {
       .then((rows) => {
         if (cancelled) return;
         setLanguages(rows);
+        // Only default-select a language when adding — editing should show
+        // exactly what the institution already has, not force English on.
+        if (isEdit) return;
         const codes = rows.map(rowCode);
         const fallback = codes.includes("en") ? "en" : codes[0];
         if (fallback) setValues((prev) => ({ ...prev, languages: { ...prev.languages, [fallback]: true } }));
@@ -74,7 +112,9 @@ function InstitutionForm({ onSuccess, onCancel }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+    // isEdit is fixed for this component instance's lifetime (a new modal
+    // mounts per row), so this still only runs once.
+  }, [isEdit]);
 
   const set = (name, value) => setValues((prev) => ({ ...prev, [name]: value }));
   const toggleIdentifier = (id, checked) =>
@@ -117,7 +157,11 @@ function InstitutionForm({ onSuccess, onCancel }) {
         is_same_login_txn_pin_allowed: values.is_same_login_txn_pin_allowed,
       };
 
-      await systemService.addInstitution(payload);
+      if (isEdit) {
+        await systemService.editInstitution({ id: rowValue(row), ...payload });
+      } else {
+        await systemService.addInstitution(payload);
+      }
       onSuccess();
     } catch (err) {
       setError(err.message);
@@ -269,7 +313,7 @@ function InstitutionForm({ onSuccess, onCancel }) {
           Cancel
         </Button>
         <Button type="submit" loading={isSaving}>
-          Create Institution
+          {isEdit ? "Save Changes" : "Create Institution"}
         </Button>
       </div>
     </form>
@@ -277,19 +321,90 @@ function InstitutionForm({ onSuccess, onCancel }) {
 }
 
 export function InstitutionFormPage() {
+  const [editTarget, setEditTarget] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const bumpRefresh = () => setRefreshKey((k) => k + 1);
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      await systemService.deleteInstitution({ id: rowValue(deleteTarget) });
+      setDeleteTarget(null);
+      bumpRefresh();
+    } catch (err) {
+      setDeleteError(err.message);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
-    <EntityManagerPage
-      title="Institutions"
-      eyebrow="Registry"
-      subtitle="Institutions created via the system API."
-      addLabel="Add Institution"
-      columns={[
-        { key: "id", label: "ID", render: (row) => rowValue(row) ?? "—" },
-        { key: "name", label: "Name", render: (row) => rowLabel(row) },
-        { key: "auth_status", label: "Status", narrow: true, render: renderStatusCell },
-      ]}
-      loadRows={() => systemService.listActiveInstitutions()}
-      renderForm={({ onSuccess, onCancel }) => <InstitutionForm onSuccess={onSuccess} onCancel={onCancel} />}
-    />
+    <>
+      <EntityManagerPage
+        key={refreshKey}
+        title="Institutions"
+        eyebrow="Registry"
+        subtitle="Institutions created via the system API."
+        addLabel="Add Institution"
+        columns={[
+          { key: "id", label: "ID", render: (row) => rowValue(row) ?? "—" },
+          { key: "name", label: "Name", render: (row) => rowLabel(row) },
+          { key: "auth_status", label: "Status", narrow: true, render: renderStatusCell },
+        ]}
+        loadRows={() => systemService.listInstitutions()}
+        renderForm={({ onSuccess, onCancel }) => <InstitutionForm onSuccess={onSuccess} onCancel={onCancel} />}
+        actions={(row) => (
+          <>
+            <button className="dt__icon-btn" onClick={() => setEditTarget(row)} aria-label="Edit">
+              ✎
+            </button>
+            <button className="dt__icon-btn dt__icon-btn--danger" onClick={() => setDeleteTarget(row)} aria-label="Delete">
+              🗑
+            </button>
+          </>
+        )}
+      />
+
+      {editTarget && (
+        <Modal title="Edit Institution" onClose={() => setEditTarget(null)} width={780}>
+          <InstitutionForm
+            row={editTarget}
+            onSuccess={() => {
+              setEditTarget(null);
+              bumpRefresh();
+            }}
+            onCancel={() => setEditTarget(null)}
+          />
+        </Modal>
+      )}
+
+      {deleteTarget && (
+        <Modal
+          title="Delete Institution"
+          onClose={() => setDeleteTarget(null)}
+          width={400}
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setDeleteTarget(null)}>
+                Cancel
+              </Button>
+              <Button variant="danger" onClick={handleDelete} loading={isDeleting}>
+                Delete
+              </Button>
+            </>
+          }
+        >
+          {deleteError && <div className="mdp__error">{deleteError}</div>}
+          <p>
+            Are you sure you want to delete <strong>{rowLabel(deleteTarget)}</strong>?
+          </p>
+        </Modal>
+      )}
+    </>
   );
 }

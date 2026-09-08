@@ -14,8 +14,15 @@ import "./SystemFormPage.css";
  * (fetched via the entity's dropdown/list source) plus a "+ Add" button
  * that opens the create form in a modal instead of a bare standalone page —
  * so you can actually see what you've created.
+ *
+ * `actions(row)` is optional (edit/delete icon buttons) and passed straight
+ * through to DataTable/FullscreenTableModal — this component doesn't own
+ * edit/delete state itself. The calling page manages its own edit/delete
+ * modals and forces a refetch by remounting with a changed `key` prop after
+ * a successful edit/delete (see InstitutionFormPage/SystemFormPage for the
+ * pattern), rather than this component exposing an imperative refresh.
  */
-export function EntityManagerPage({ title, subtitle, eyebrow, addLabel, columns, loadRows, renderForm, note }) {
+export function EntityManagerPage({ title, subtitle, eyebrow, addLabel, columns, loadRows, renderForm, note, actions }) {
   const [rows, setRows] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -80,7 +87,7 @@ export function EntityManagerPage({ title, subtitle, eyebrow, addLabel, columns,
       {note && <div className="sfp__success">{note}</div>}
       {error && <div className="mdp__error">{error}</div>}
 
-      <DataTable columns={columns} rows={filteredRows} isLoading={isLoading} />
+      <DataTable columns={columns} rows={filteredRows} isLoading={isLoading} actions={actions} />
 
       {isModalOpen && (
         <Modal title={addLabel} onClose={() => setIsModalOpen(false)} width={640}>
@@ -93,6 +100,7 @@ export function EntityManagerPage({ title, subtitle, eyebrow, addLabel, columns,
           title={title}
           columns={columns}
           rows={filteredRows}
+          actions={actions}
           onClose={() => setIsFullscreen(false)}
         />
       )}

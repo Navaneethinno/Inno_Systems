@@ -10,13 +10,20 @@ import { renderStatusCell } from "../../../lib/renderStatusCell";
  * directly.
  *
  * `successIdField` names the key in the response's `data[0]` that
- * identifies the created row (defaults to "id").
+ * identifies the created row (defaults to "id"). `idField` is the key
+ * SystemFormPage.jsx sends the row's identifier under when editing/deleting
+ * (per System_API_Requests.md, edit/delete use `user_id` — different from
+ * the add response's `id`).
  */
 export const systemForms = {
   user: {
     label: "User",
     eyebrow: "Directory",
     serviceMethod: "addUser",
+    editServiceMethod: "editUser",
+    deleteServiceMethod: "deleteUser",
+    idField: "user_id",
+    buildDeletePayload: (row) => ({ userId: rowValue(row) }),
     // Confirmed live via curl: /user/list requires auth ("Please log in
     // again"), i.e. a real route — so this gets the same list+add-modal
     // pattern as profile/institution/institutionModule.

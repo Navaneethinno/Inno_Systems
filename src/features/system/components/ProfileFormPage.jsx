@@ -5,14 +5,16 @@ import { rowLabel, rowValue } from "../../../lib/rowLabel";
 import { TextField } from "../../../components/ui/TextField";
 import { Select } from "../../../components/ui/Select";
 import { Button } from "../../../components/ui/Button";
+import { Modal } from "../../../components/ui/Modal";
 import { renderStatusCell } from "../../../lib/renderStatusCell";
 import { EntityManagerPage } from "./EntityManagerPage";
 import "./SystemFormPage.css";
 import "./ProfileFormPage.css";
 
-function ProfileForm({ onSuccess, onCancel }) {
-  const [profileName, setProfileName] = useState("");
-  const [instProfileId, setInstProfileId] = useState("");
+function ProfileForm({ row, onSuccess, onCancel }) {
+  const isEdit = Boolean(row);
+  const [profileName, setProfileName] = useState(isEdit ? row.profile_name ?? "" : "");
+  const [instProfileId, setInstProfileId] = useState(isEdit ? String(row.inst_profile_id ?? "") : "");
   const [institutions, setInstitutions] = useState([]);
   const [menus, setMenus] = useState([]);
   const [actionsByMenu, setActionsByMenu] = useState({}); // menu_id -> [{id, name}]
@@ -26,11 +28,16 @@ function ProfileForm({ onSuccess, onCancel }) {
     (async () => {
       setIsLoading(true);
       try {
-        const [instRows, menuRows, actionRows, menuActionRows] = await Promise.all([
+        // The list endpoint doesn't include menu_actions, so editing needs
+        // a separate fetch of the one profile's current assignments to
+        // prefill from — otherwise submitting the edit with an empty
+        // menu_info would wipe out every existing permission.
+        const [instRows, menuRows, actionRows, menuActionRows, profileDetail] = await Promise.all([
           systemService.listActiveInstitutions(),
           masterDataService.list("menu"),
           masterDataService.list("action"),
           masterDataService.list("menu_action"),
+          isEdit ? systemService.getProfile(rowValue(row)) : Promise.resolve(null),
         ]);
         if (cancelled) return;
 
@@ -45,6 +52,16 @@ function ProfileForm({ onSuccess, onCancel }) {
           (grouped[String(ma.menu_id)] ??= []).push(action);
         });
         setActionsByMenu(grouped);
+
+        if (profileDetail?.menu_actions) {
+          const seeded = Object.fromEntries(
+            profileDetail.menu_actions.map((ma) => [
+              String(ma.menu_id),
+              { included: true, actionIds: new Set(ma.actions ?? []) },
+            ])
+          );
+          setAssignments(seeded);
+        }
       } catch (err) {
         if (!cancelled) setError(err.message);
       } finally {
@@ -54,7 +71,9 @@ function ProfileForm({ onSuccess, onCancel }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+    // isEdit/row are fixed for this component instance's lifetime (a new
+    // modal mounts per row), so this still only runs once.
+  }, [isEdit, row]);
 
   const institutionOptions = useMemo(
     () => institutions.map((row) => ({ value: rowValue(row), label: rowLabel(row) })),
@@ -99,13 +118,15 @@ function ProfileForm({ onSuccess, onCancel }) {
       // when editing an existing profile) — sending 0 is not the same thing.
       const payload = {
         profile_info: {
+          ...(isEdit ? { profile_id: rowValue(row) } : {}),
           profile_name: profileName,
           inst_profile_id: Number(instProfileId),
         },
         menu_info,
       };
 
-      await systemService.addProfile(payload);
+      if (isEdit) await systemService.editProfile(payload);
+      else await systemService.addProfile(payload);
       onSuccess();
     } catch (err) {
       setError(err.message);
@@ -186,7 +207,7 @@ function ProfileForm({ onSuccess, onCancel }) {
           Cancel
         </Button>
         <Button type="submit" loading={isSaving}>
-          Create Profile
+          {isEdit ? "Save Changes" : "Create Profile"}
         </Button>
       </div>
     </form>
@@ -194,24 +215,98 @@ function ProfileForm({ onSuccess, onCancel }) {
 }
 
 export function ProfileFormPage() {
+  const [editTarget, setEditTarget] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const bumpRefresh = () => setRefreshKey((k) => k + 1);
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      await systemService.deleteProfile({
+        profileId: rowValue(deleteTarget),
+        instProfileId: deleteTarget.inst_profile_id,
+      });
+      setDeleteTarget(null);
+      bumpRefresh();
+    } catch (err) {
+      setDeleteError(err.message);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
-    <EntityManagerPage
-      title="Profiles"
-      eyebrow="Access Control"
-      subtitle="Profiles created via the system API, with their menu/action access."
-      addLabel="Add Profile"
-      columns={[
-        { key: "id", label: "ID", render: (row) => rowValue(row) ?? "—" },
-        { key: "name", label: "Name", render: (row) => rowLabel(row) },
-        {
-          key: "inst_profile_name",
-          label: "Institution",
-          render: (row) => row.inst_profile_name ?? row.institution_name ?? "—",
-        },
-        { key: "auth_status", label: "Status", narrow: true, render: renderStatusCell },
-      ]}
-      loadRows={() => systemService.listProfiles()}
-      renderForm={({ onSuccess, onCancel }) => <ProfileForm onSuccess={onSuccess} onCancel={onCancel} />}
-    />
+    <>
+      <EntityManagerPage
+        key={refreshKey}
+        title="Profiles"
+        eyebrow="Access Control"
+        subtitle="Profiles created via the system API, with their menu/action access."
+        addLabel="Add Profile"
+        columns={[
+          { key: "id", label: "ID", render: (row) => rowValue(row) ?? "—" },
+          { key: "name", label: "Name", render: (row) => rowLabel(row) },
+          {
+            key: "inst_profile_name",
+            label: "Institution",
+            render: (row) => row.inst_profile_name ?? row.institution_name ?? "—",
+          },
+          { key: "auth_status", label: "Status", narrow: true, render: renderStatusCell },
+        ]}
+        loadRows={() => systemService.listProfiles()}
+        renderForm={({ onSuccess, onCancel }) => <ProfileForm onSuccess={onSuccess} onCancel={onCancel} />}
+        actions={(row) => (
+          <>
+            <button className="dt__icon-btn" onClick={() => setEditTarget(row)} aria-label="Edit">
+              ✎
+            </button>
+            <button className="dt__icon-btn dt__icon-btn--danger" onClick={() => setDeleteTarget(row)} aria-label="Delete">
+              🗑
+            </button>
+          </>
+        )}
+      />
+
+      {editTarget && (
+        <Modal title="Edit Profile" onClose={() => setEditTarget(null)} width={720}>
+          <ProfileForm
+            row={editTarget}
+            onSuccess={() => {
+              setEditTarget(null);
+              bumpRefresh();
+            }}
+            onCancel={() => setEditTarget(null)}
+          />
+        </Modal>
+      )}
+
+      {deleteTarget && (
+        <Modal
+          title="Delete Profile"
+          onClose={() => setDeleteTarget(null)}
+          width={400}
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setDeleteTarget(null)}>
+                Cancel
+              </Button>
+              <Button variant="danger" onClick={handleDelete} loading={isDeleting}>
+                Delete
+              </Button>
+            </>
+          }
+        >
+          {deleteError && <div className="mdp__error">{deleteError}</div>}
+          <p>
+            Are you sure you want to delete <strong>{rowLabel(deleteTarget)}</strong>?
+          </p>
+        </Modal>
+      )}
+    </>
   );
 }

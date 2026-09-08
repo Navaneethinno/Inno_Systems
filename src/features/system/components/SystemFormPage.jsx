@@ -7,6 +7,7 @@ import { rowLabel, rowValue } from "../../../lib/rowLabel";
 import { TextField } from "../../../components/ui/TextField";
 import { Select } from "../../../components/ui/Select";
 import { Button } from "../../../components/ui/Button";
+import { Modal } from "../../../components/ui/Modal";
 import { EntityManagerPage } from "./EntityManagerPage";
 import "./SystemFormPage.css";
 
@@ -18,6 +19,12 @@ function defaultValue(field) {
 
 const emptyValues = (fields) => Object.fromEntries(fields.map((f) => [f.name, defaultValue(f)]));
 
+// Edit mode seeds from the row instead of blank defaults, and a password
+// field is optional there — leaving it blank keeps the current password
+// instead of forcing a new one on every edit.
+const editValues = (fields, row) =>
+  Object.fromEntries(fields.map((f) => [f.name, f.type === "password" ? "" : row[f.name] ?? defaultValue(f)]));
+
 async function loadOptionRows(field) {
   if (!field.source) return [];
   return field.source.kind === "master"
@@ -25,8 +32,9 @@ async function loadOptionRows(field) {
     : await systemService[field.source.method]();
 }
 
-function GenericForm({ config, onSuccess, onCancel }) {
-  const [values, setValues] = useState(() => emptyValues(config.fields));
+function GenericForm({ config, row, onSuccess, onCancel }) {
+  const isEdit = Boolean(row);
+  const [values, setValues] = useState(() => (isEdit ? editValues(config.fields, row) : emptyValues(config.fields)));
   const [optionRows, setOptionRows] = useState({});
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -63,6 +71,8 @@ function GenericForm({ config, onSuccess, onCancel }) {
     const payload = {};
     config.fields.forEach((field) => {
       const raw = values[field.name];
+      // Editing: a blank password means "leave it unchanged" — never send it.
+      if (isEdit && field.type === "password" && raw === "") return;
       if (field.type === "number") payload[field.name] = raw === "" ? undefined : Math.max(0, Number(raw) || 0);
       else if (field.type === "boolean") payload[field.name] = Boolean(raw);
       else if (field.type === "select") payload[field.name] = raw === "" ? undefined : Number(raw) || raw;
@@ -73,6 +83,7 @@ function GenericForm({ config, onSuccess, onCancel }) {
           .filter(Boolean);
       else payload[field.name] = raw === "" ? undefined : raw;
     });
+    if (isEdit) payload[config.idField] = rowValue(row);
     return payload;
   };
 
@@ -81,7 +92,8 @@ function GenericForm({ config, onSuccess, onCancel }) {
     setIsSaving(true);
     setError(null);
     try {
-      await systemService[config.serviceMethod](buildPayload());
+      const method = isEdit ? config.editServiceMethod : config.serviceMethod;
+      await systemService[method](buildPayload());
       onSuccess();
     } catch (err) {
       setError(err.message);
@@ -143,7 +155,8 @@ function GenericForm({ config, onSuccess, onCancel }) {
             label={field.label}
             type={field.type === "text-list" ? "text" : field.type}
             icon={field.type === "password" ? "lock" : undefined}
-            required={field.required}
+            placeholder={isEdit && field.type === "password" ? "Leave blank to keep current password" : undefined}
+            required={isEdit && field.type === "password" ? false : field.required}
             value={values[field.name] ?? ""}
             onChange={(e) => handleChange(field.name, e.target.value)}
           />
@@ -155,7 +168,7 @@ function GenericForm({ config, onSuccess, onCancel }) {
           Cancel
         </Button>
         <Button type="submit" loading={isSaving}>
-          Create {config.label}
+          {isEdit ? "Save Changes" : `Create ${config.label}`}
         </Button>
       </div>
     </form>
@@ -166,21 +179,108 @@ export function SystemFormPage() {
   const { formKey } = useParams();
   const config = systemForms[formKey];
 
+  const [editTarget, setEditTarget] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
   if (!config) {
     return <div className="mdp__state">Unknown form "{formKey}".</div>;
   }
 
+  const bumpRefresh = () => setRefreshKey((k) => k + 1);
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      await systemService[config.deleteServiceMethod](
+        config.buildDeletePayload ? config.buildDeletePayload(deleteTarget) : { id: rowValue(deleteTarget) }
+      );
+      setDeleteTarget(null);
+      bumpRefresh();
+    } catch (err) {
+      setDeleteError(err.message);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
-    <EntityManagerPage
-      title={`${config.label}s`}
-      eyebrow={config.eyebrow}
-      subtitle={`Records created via the system API.`}
-      addLabel={`Add ${config.label}`}
-      columns={config.columns}
-      loadRows={() => systemService[config.listMethod]()}
-      renderForm={({ onSuccess, onCancel }) => (
-        <GenericForm config={config} onSuccess={onSuccess} onCancel={onCancel} />
+    <>
+      <EntityManagerPage
+        key={refreshKey}
+        title={`${config.label}s`}
+        eyebrow={config.eyebrow}
+        subtitle={`Records created via the system API.`}
+        addLabel={`Add ${config.label}`}
+        columns={config.columns}
+        loadRows={() => systemService[config.listMethod]()}
+        renderForm={({ onSuccess, onCancel }) => (
+          <GenericForm config={config} onSuccess={onSuccess} onCancel={onCancel} />
+        )}
+        actions={
+          config.editServiceMethod || config.deleteServiceMethod
+            ? (row) => (
+                <>
+                  {config.editServiceMethod && (
+                    <button className="dt__icon-btn" onClick={() => setEditTarget(row)} aria-label="Edit">
+                      ✎
+                    </button>
+                  )}
+                  {config.deleteServiceMethod && (
+                    <button
+                      className="dt__icon-btn dt__icon-btn--danger"
+                      onClick={() => setDeleteTarget(row)}
+                      aria-label="Delete"
+                    >
+                      🗑
+                    </button>
+                  )}
+                </>
+              )
+            : undefined
+        }
+      />
+
+      {editTarget && (
+        <Modal title={`Edit ${config.label}`} onClose={() => setEditTarget(null)} width={640}>
+          <GenericForm
+            config={config}
+            row={editTarget}
+            onSuccess={() => {
+              setEditTarget(null);
+              bumpRefresh();
+            }}
+            onCancel={() => setEditTarget(null)}
+          />
+        </Modal>
       )}
-    />
+
+      {deleteTarget && (
+        <Modal
+          title={`Delete ${config.label}`}
+          onClose={() => setDeleteTarget(null)}
+          width={400}
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setDeleteTarget(null)}>
+                Cancel
+              </Button>
+              <Button variant="danger" onClick={handleDelete} loading={isDeleting}>
+                Delete
+              </Button>
+            </>
+          }
+        >
+          {deleteError && <div className="mdp__error">{deleteError}</div>}
+          <p>
+            Are you sure you want to delete <strong>{rowLabel(deleteTarget)}</strong>? This sets its status to
+            inactive.
+          </p>
+        </Modal>
+      )}
+    </>
   );
 }

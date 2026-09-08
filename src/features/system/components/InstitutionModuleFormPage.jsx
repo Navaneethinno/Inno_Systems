@@ -151,6 +151,66 @@ function InstitutionModuleForm({ institutions, defaultInstProfileId, onSuccess, 
   );
 }
 
+// Single-row edit for one existing institution-module assignment.
+// Confirmed live: /system/institution/module/edit silently zeroes
+// module_id if it's omitted from the payload instead of keeping the
+// stored value — always send it, not just the fields that changed.
+function InstitutionModuleEditForm({ row, onSuccess, onCancel }) {
+  const [effectiveFrom, setEffectiveFrom] = useState(row.effective_from ?? "");
+  const [effectiveTo, setEffectiveTo] = useState(row.effective_to ?? "");
+  const [configurationStatus, setConfigurationStatus] = useState(row.configuration_status ?? "ACTIVE");
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSaving(true);
+    setError(null);
+    try {
+      await systemService.editInstitutionModule({
+        id: rowValue(row),
+        module_id: row.module_id,
+        ...(effectiveFrom ? { effective_from: effectiveFrom } : {}),
+        ...(effectiveTo ? { effective_to: effectiveTo } : {}),
+        configuration_status: configurationStatus,
+      });
+      onSuccess();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <form className="sfp__form ifp__form" onSubmit={handleSubmit}>
+      {error && <div className="mdp__error">{error}</div>}
+      <div className="ifp__grid">
+        <TextField label="Effective from" type="date" value={effectiveFrom} onChange={(e) => setEffectiveFrom(e.target.value)} />
+        <TextField label="Effective to" type="date" value={effectiveTo} onChange={(e) => setEffectiveTo(e.target.value)} />
+        <Select
+          label="Configuration status"
+          options={[
+            { value: "ACTIVE", label: "Active" },
+            { value: "PENDING", label: "Pending" },
+            { value: "INACTIVE", label: "Inactive" },
+          ]}
+          value={configurationStatus}
+          onChange={(e) => setConfigurationStatus(e.target.value)}
+        />
+      </div>
+      <div className="pfp__form-actions">
+        <Button type="button" variant="secondary" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="submit" loading={isSaving}>
+          Save Changes
+        </Button>
+      </div>
+    </form>
+  );
+}
+
 const columns = [
   { key: "id", label: "ID", render: (row) => rowValue(row) ?? "—" },
   { key: "module_name", label: "Module", render: (row) => row.module_name ?? rowLabel(row) },
@@ -178,6 +238,10 @@ export function InstitutionModuleFormPage() {
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [editTarget, setEditTarget] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
 
   const { filter, setFilter, query, setQuery, filteredRows, hasAuthStatus, activeCount, pendingCount, totalCount } =
     useAuthStatusFilter(rows);
@@ -216,6 +280,20 @@ export function InstitutionModuleFormPage() {
       setInstProfileId(String(createdInstProfileId));
     } else {
       loadModulesFor(instProfileId);
+    }
+  };
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      await systemService.deleteInstitutionModule({ id: rowValue(deleteTarget) });
+      setDeleteTarget(null);
+      loadModulesFor(instProfileId);
+    } catch (err) {
+      setDeleteError(err.message);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -266,7 +344,21 @@ export function InstitutionModuleFormPage() {
       {!instProfileId ? (
         <div className="mdp__state">Select an institution to view its assigned modules.</div>
       ) : (
-        <DataTable columns={columns} rows={filteredRows} isLoading={isLoadingModules} />
+        <DataTable
+          columns={columns}
+          rows={filteredRows}
+          isLoading={isLoadingModules}
+          actions={(row) => (
+            <>
+              <button className="dt__icon-btn" onClick={() => setEditTarget(row)} aria-label="Edit">
+                ✎
+              </button>
+              <button className="dt__icon-btn dt__icon-btn--danger" onClick={() => setDeleteTarget(row)} aria-label="Delete">
+                🗑
+              </button>
+            </>
+          )}
+        />
       )}
 
       {isModalOpen && (
@@ -277,6 +369,42 @@ export function InstitutionModuleFormPage() {
             onSuccess={handleCreated}
             onCancel={() => setIsModalOpen(false)}
           />
+        </Modal>
+      )}
+
+      {editTarget && (
+        <Modal title="Edit Institution Module" onClose={() => setEditTarget(null)} width={640}>
+          <InstitutionModuleEditForm
+            row={editTarget}
+            onSuccess={() => {
+              setEditTarget(null);
+              loadModulesFor(instProfileId);
+            }}
+            onCancel={() => setEditTarget(null)}
+          />
+        </Modal>
+      )}
+
+      {deleteTarget && (
+        <Modal
+          title="Delete Institution Module"
+          onClose={() => setDeleteTarget(null)}
+          width={400}
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setDeleteTarget(null)}>
+                Cancel
+              </Button>
+              <Button variant="danger" onClick={handleDelete} loading={isDeleting}>
+                Delete
+              </Button>
+            </>
+          }
+        >
+          {deleteError && <div className="mdp__error">{deleteError}</div>}
+          <p>
+            Are you sure you want to delete <strong>{rowLabel(deleteTarget)}</strong>?
+          </p>
         </Modal>
       )}
 
