@@ -222,6 +222,7 @@ const columns = [
     narrow: true,
     render: (row) => {
       if (row.configuration_status) return <AuthStatusBadge value={row.configuration_status} />;
+      if (row.status_name) return <AuthStatusBadge value={row.status_name} />;
       if ("status" in row) return <StatusBadge active={Boolean(row.status)} />;
       return "—";
     },

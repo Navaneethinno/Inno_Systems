@@ -3,18 +3,18 @@ import { useParams } from "react-router-dom";
 import { masterEntities } from "../config/masterEntities";
 import { masterDataService } from "../services/masterDataService";
 import { DataTable } from "../../../components/ui/DataTable";
-import { StatusBadge } from "../../../components/ui/StatusBadge";
 import { Button } from "../../../components/ui/Button";
 import { FullscreenTableModal } from "../../../components/ui/FullscreenTableModal";
 import { TableSearchBar } from "../../../components/ui/TableSearchBar";
+import { renderStatusCell } from "../../../lib/renderStatusCell";
 import "./MasterDataPage.css";
 
 const PAGE_SIZE = 10;
 
 function buildColumns(rows) {
   if (rows.length === 0) return [];
-  // status_name is just status's text label ("Active") — redundant with the
-  // Status badge column when both are present on the same row.
+  // status_name is just status's text label ("Active"/"Inactive") — redundant
+  // with the Status badge column when both are present on the same row.
   const dropStatusName = "status" in rows[0] && "status_name" in rows[0];
   const keys = Object.keys(rows[0]).filter((k) => !k.startsWith("_") && !(dropStatusName && k === "status_name"));
   return keys.map((key) => {
@@ -23,7 +23,10 @@ function buildColumns(rows) {
       key,
       label: key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
       narrow: isStatus,
-      render: isStatus ? (row) => <StatusBadge active={Boolean(row[key])} /> : undefined,
+      // `status` is a numeric code (1 = Active, 13 = Inactive, ...), not a
+      // 0/1 boolean — treating it as one showed every non-zero code as
+      // "Active". renderStatusCell reads status_name (the real label) first.
+      render: isStatus ? renderStatusCell : undefined,
     };
   });
 }

@@ -7,7 +7,7 @@ import { Button } from "../../../components/ui/Button";
 import { Modal } from "../../../components/ui/Modal";
 import { TextField } from "../../../components/ui/TextField";
 import { Select } from "../../../components/ui/Select";
-import { StatusBadge } from "../../../components/ui/StatusBadge";
+import { renderStatusCell } from "../../../lib/renderStatusCell";
 import { FullscreenTableModal } from "../../../components/ui/FullscreenTableModal";
 import { StatusFilterTabs } from "../../../components/ui/StatusFilterTabs";
 import { TableSearchBar } from "../../../components/ui/TableSearchBar";
@@ -150,7 +150,10 @@ export function MasterCrudPage() {
 
   const columns = config.columns.map((col) => {
     if (col.status) {
-      return { ...col, render: (row) => <StatusBadge active={Boolean(row[col.key])} /> };
+      // `status` is a numeric code (1 = Active, 7 = Deleted, ...), not a
+      // 0/1 boolean — renderStatusCell reads status_name (the real label)
+      // first instead of just checking whether the code is non-zero.
+      return { ...col, render: renderStatusCell };
     }
     if (col.lookup) {
       return {
