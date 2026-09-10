@@ -146,7 +146,6 @@ function InstitutionModuleForm({ institutions, defaultInstProfileId, onSuccess, 
 function InstitutionModuleEditForm({ row, onSuccess, onCancel }) {
   const [effectiveFrom, setEffectiveFrom] = useState(row.effective_from ?? "");
   const [effectiveTo, setEffectiveTo] = useState(row.effective_to ?? "");
-  const [configurationStatus, setConfigurationStatus] = useState(row.configuration_status ?? "ACTIVE");
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
 
@@ -160,7 +159,6 @@ function InstitutionModuleEditForm({ row, onSuccess, onCancel }) {
         module_id: row.module_id,
         ...(effectiveFrom ? { effective_from: effectiveFrom } : {}),
         ...(effectiveTo ? { effective_to: effectiveTo } : {}),
-        configuration_status: configurationStatus,
       });
       onSuccess();
     } catch (err) {
@@ -176,16 +174,6 @@ function InstitutionModuleEditForm({ row, onSuccess, onCancel }) {
       <div className="ifp__grid">
         <TextField label="Effective from" type="date" value={effectiveFrom} onChange={(e) => setEffectiveFrom(e.target.value)} />
         <TextField label="Effective to" type="date" value={effectiveTo} onChange={(e) => setEffectiveTo(e.target.value)} />
-        <Select
-          label="Configuration status"
-          options={[
-            { value: "ACTIVE", label: "Active" },
-            { value: "PENDING", label: "Pending" },
-            { value: "INACTIVE", label: "Inactive" },
-          ]}
-          value={configurationStatus}
-          onChange={(e) => setConfigurationStatus(e.target.value)}
-        />
       </div>
       <div className="pfp__form-actions">
         <Button type="button" variant="secondary" onClick={onCancel}>
