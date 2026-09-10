@@ -24,7 +24,6 @@ const emptyModuleRow = () => ({
   moduleId: "",
   effectiveFrom: "",
   effectiveTo: "",
-  configurationStatus: "ACTIVE",
 });
 
 // /system/institution/module/add is a batch endpoint — one call assigns N
@@ -63,7 +62,6 @@ function InstitutionModuleForm({ institutions, defaultInstProfileId, onSuccess, 
           module_id: Number(r.moduleId),
           ...(r.effectiveFrom ? { effective_from: r.effectiveFrom } : {}),
           ...(r.effectiveTo ? { effective_to: r.effectiveTo } : {}),
-          ...(r.configurationStatus ? { configuration_status: r.configurationStatus } : {}),
         }));
 
       await systemService.addInstitutionModules({ instProfileId: Number(instProfileId), modules: modulesPayload });
@@ -119,16 +117,6 @@ function InstitutionModuleForm({ institutions, defaultInstProfileId, onSuccess, 
                 type="date"
                 value={row.effectiveTo}
                 onChange={(e) => updateRow(row.key, "effectiveTo", e.target.value)}
-              />
-              <Select
-                label="Configuration status"
-                options={[
-                  { value: "ACTIVE", label: "Active" },
-                  { value: "PENDING", label: "Pending" },
-                  { value: "INACTIVE", label: "Inactive" },
-                ]}
-                value={row.configurationStatus}
-                onChange={(e) => updateRow(row.key, "configurationStatus", e.target.value)}
               />
             </div>
           </div>
