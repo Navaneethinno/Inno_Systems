@@ -110,6 +110,15 @@ export function MenuActionsPage() {
     });
   };
 
+  const allActionsSelected = actions.length > 0 && actions.every((action) => draft.has(rowValue(action)));
+
+  const toggleAllActions = (selectAll) => {
+    setSaveSuccess(null);
+    setDraft(
+      selectAll ? new Map(actions.map((action, index) => [rowValue(action), index + 1])) : new Map()
+    );
+  };
+
   const hasChanges = useMemo(() => {
     if (!selectedMenuId) return false;
     const existing = new Map(rowsForSelectedMenu.map((row) => [row.action_id, row.priority]));
@@ -235,7 +244,16 @@ export function MenuActionsPage() {
                 ) : (
                   <div className="map__action-table">
                     <div className="map__action-head">
-                      <span>Action</span>
+                      <span className="map__action-select-all">
+                        <label>
+                          <input
+                            type="checkbox"
+                            checked={allActionsSelected}
+                            onChange={(e) => toggleAllActions(e.target.checked)}
+                          />
+                          Action
+                        </label>
+                      </span>
                       <span>Priority</span>
                       <span>Status</span>
                     </div>
