@@ -65,21 +65,24 @@
 }
 
 /* The menu list can run much taller than the actions panel (a module with
-   20 menus vs. 6 fixed actions) — without this, picking a menu near the
-   bottom leaves its "Actions for: ..." result scrolled off the top of the
-   screen, forcing a scroll back up just to see what you clicked. Sticky
-   keeps the actions panel in view as you scroll through a long menu list. */
-.map__actions {
-  position: sticky;
-  top: 20px;
-  max-height: calc(100vh - 40px);
-  overflow-y: auto;
-}
-
+   20 menus vs. 6 fixed actions) — picking a menu near the bottom used to
+   leave its "Actions for: ..." result scrolled off the top of the screen,
+   forcing a scroll back up just to see what you clicked. `position: sticky`
+   on .map__actions alone doesn't reliably fix this here — the page's
+   scrolling happens inside .shell__content (an ancestor made a scroll
+   container by its own overflow-x: hidden — see AppShell.css), and a
+   sticky element pinned to an ancestor scroll box that isn't actually
+   the one scrolling just scrolls off along with it. Capping the menu
+   list's own height instead means the row never grows past the viewport
+   in the first place, so the actions panel is never off-screen to begin
+   with — no scroll-context guessing required. */
 .map__menu-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  max-height: calc(100vh - 260px);
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .map__menu-card {
@@ -257,10 +260,5 @@
 @media (max-width: 860px) {
   .map__layout {
     grid-template-columns: 1fr;
-  }
-
-  .map__actions {
-    position: static;
-    max-height: none;
   }
 }
