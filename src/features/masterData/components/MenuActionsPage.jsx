@@ -5,6 +5,7 @@ import { rowLabel, rowValue } from "../../../lib/rowLabel";
 import { Select } from "../../../components/ui/Select";
 import { Button } from "../../../components/ui/Button";
 import { StatusBadge } from "../../../components/ui/StatusBadge";
+import { useLiveList } from "../../../hooks/useLiveList";
 import "./MasterDataPage.css";
 import "./MenuActionsPage.css";
 
@@ -31,8 +32,11 @@ export function MenuActionsPage() {
   const [saveError, setSaveError] = useState(null);
   const [saveSuccess, setSaveSuccess] = useState(null);
 
-  const loadAll = async () => {
-    setIsLoading(true);
+  // `silent` skips the loading state — used for live-update refetches so an
+  // in-progress edit (selected menu, draft checkboxes) isn't interrupted by
+  // a skeleton flash every time someone else touches these tables.
+  const loadAll = async ({ silent = false } = {}) => {
+    if (!silent) setIsLoading(true);
     setError(null);
     try {
       const [moduleRows, menuRows, actionRows, menuActionData] = await Promise.all([
@@ -48,13 +52,22 @@ export function MenuActionsPage() {
     } catch (err) {
       setError(err.message);
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   };
 
   useEffect(() => {
     loadAll();
   }, []);
+
+  // Modules, menus, actions, and their assignments can all be edited from
+  // other pages/tabs/users — keep this configurator in sync with each. See
+  // the Live Menu Updates via WebSocket handoff doc.
+  const refreshSilently = () => loadAll({ silent: true });
+  useLiveList("master/module", refreshSilently);
+  useLiveList("master/menu", refreshSilently);
+  useLiveList("master/action", refreshSilently);
+  useLiveList("master/menu_action", refreshSilently);
 
   const menusForModule = useMemo(
     () => menus.filter((menu) => selectedModuleId && String(menu.module_id) === String(selectedModuleId)),

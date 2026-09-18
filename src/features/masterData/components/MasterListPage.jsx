@@ -7,6 +7,7 @@ import { Button } from "../../../components/ui/Button";
 import { FullscreenTableModal } from "../../../components/ui/FullscreenTableModal";
 import { TableSearchBar } from "../../../components/ui/TableSearchBar";
 import { renderStatusCell } from "../../../lib/renderStatusCell";
+import { useLiveList } from "../../../hooks/useLiveList";
 import "./MasterDataPage.css";
 
 const PAGE_SIZE = 10;
@@ -57,6 +58,7 @@ export function MasterListPage() {
   const [fullRows, setFullRows] = useState(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [query, setQuery] = useState("");
+  const [liveTick, setLiveTick] = useState(0);
 
   useEffect(() => {
     setPage(1);
@@ -80,7 +82,7 @@ export function MasterListPage() {
     return () => {
       cancelled = true;
     };
-  }, [entityKey, page, config?.listPath]);
+  }, [entityKey, page, config?.listPath, liveTick]);
 
   const ensureFullRows = useCallback(async () => {
     if (fullRows) return fullRows;
@@ -92,6 +94,15 @@ export function MasterListPage() {
   useEffect(() => {
     if (query.trim()) ensureFullRows();
   }, [query, ensureFullRows]);
+
+  // Reference tables (Countries, Currencies, ...) are shared across the
+  // whole system, not just this app — refetch when another client changes
+  // them. See the Live Menu Updates via WebSocket handoff doc.
+  const livePath = (config?.listPath ?? `/master/${entityKey}`).replace(/^\/+/, "");
+  useLiveList(livePath, () => {
+    setFullRows(null);
+    setLiveTick((t) => t + 1);
+  });
 
   const q = query.trim().toLowerCase();
   const searchActive = Boolean(q);

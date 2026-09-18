@@ -6,6 +6,7 @@ import { FullscreenTableModal } from "../../../components/ui/FullscreenTableModa
 import { StatusFilterTabs } from "../../../components/ui/StatusFilterTabs";
 import { TableSearchBar } from "../../../components/ui/TableSearchBar";
 import { useAuthStatusFilter } from "../../../hooks/useAuthStatusFilter";
+import { useLiveList } from "../../../hooks/useLiveList";
 import "../../masterData/components/MasterDataPage.css";
 import "./SystemFormPage.css";
 
@@ -21,8 +22,24 @@ import "./SystemFormPage.css";
  * modals and forces a refetch by remounting with a changed `key` prop after
  * a successful edit/delete (see InstitutionFormPage/SystemFormPage for the
  * pattern), rather than this component exposing an imperative refresh.
+ *
+ * `livePath` (optional) subscribes to that resource's WebSocket live-update
+ * channel (e.g. "user", "user/profile", "institution/profile") and silently
+ * refetches when another user/tab changes it — see the Live Menu Updates
+ * via WebSocket handoff doc.
  */
-export function EntityManagerPage({ title, subtitle, eyebrow, addLabel, columns, loadRows, renderForm, note, actions }) {
+export function EntityManagerPage({
+  title,
+  subtitle,
+  eyebrow,
+  addLabel,
+  columns,
+  loadRows,
+  renderForm,
+  note,
+  actions,
+  livePath,
+}) {
   const [rows, setRows] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -32,21 +49,26 @@ export function EntityManagerPage({ title, subtitle, eyebrow, addLabel, columns,
   const { filter, setFilter, query, setQuery, filteredRows, hasAuthStatus, activeCount, pendingCount, totalCount } =
     useAuthStatusFilter(rows);
 
-  const refresh = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      setRows(await loadRows());
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [loadRows]);
+  const refresh = useCallback(
+    async ({ silent = false } = {}) => {
+      if (!silent) setIsLoading(true);
+      setError(null);
+      try {
+        setRows(await loadRows());
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        if (!silent) setIsLoading(false);
+      }
+    },
+    [loadRows]
+  );
 
   useEffect(() => {
     refresh();
   }, [refresh]);
+
+  useLiveList(livePath, () => refresh({ silent: true }));
 
   const handleCreated = () => {
     setIsModalOpen(false);

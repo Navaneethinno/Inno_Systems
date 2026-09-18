@@ -277,6 +277,7 @@ export function ProfileFormPage() {
           { key: "auth_status", label: "Status", narrow: true, render: renderStatusCell },
         ]}
         loadRows={() => systemService.listProfiles()}
+        livePath="user/profile"
         renderForm={({ onSuccess, onCancel }) => <ProfileForm onSuccess={onSuccess} onCancel={onCancel} />}
         actions={(row) => (
           <>

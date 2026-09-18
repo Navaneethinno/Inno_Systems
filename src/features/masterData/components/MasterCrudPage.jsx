@@ -12,6 +12,7 @@ import { FullscreenTableModal } from "../../../components/ui/FullscreenTableModa
 import { StatusFilterTabs } from "../../../components/ui/StatusFilterTabs";
 import { TableSearchBar } from "../../../components/ui/TableSearchBar";
 import { useAuthStatusFilter } from "../../../hooks/useAuthStatusFilter";
+import { useLiveList } from "../../../hooks/useLiveList";
 import "./MasterDataPage.css";
 
 function rowLabel(row) {
@@ -59,6 +60,10 @@ export function MasterCrudPage() {
   useEffect(() => {
     loadRows();
   }, [loadRows]);
+
+  // Keeps this table in sync when another user (or tab) adds/edits/deletes
+  // a row — see the Live Menu Updates via WebSocket handoff doc.
+  useLiveList(config ? `master/${entityKey}` : null, loadRows);
 
   const selectSources = useMemo(
     () => [...new Set((config?.fields ?? []).filter((f) => f.type === "select").map((f) => f.optionsFrom))],

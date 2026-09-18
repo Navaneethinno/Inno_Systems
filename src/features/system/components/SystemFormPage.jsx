@@ -217,6 +217,7 @@ export function SystemFormPage() {
         addLabel={`Add ${config.label}`}
         columns={config.columns}
         loadRows={() => systemService[config.listMethod]()}
+        livePath={config.livePath}
         renderForm={({ onSuccess, onCancel }) => (
           <GenericForm config={config} onSuccess={onSuccess} onCancel={onCancel} />
         )}

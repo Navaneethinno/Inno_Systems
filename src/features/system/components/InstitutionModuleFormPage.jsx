@@ -14,6 +14,7 @@ import { FullscreenTableModal } from "../../../components/ui/FullscreenTableModa
 import { StatusFilterTabs } from "../../../components/ui/StatusFilterTabs";
 import { TableSearchBar } from "../../../components/ui/TableSearchBar";
 import { useAuthStatusFilter } from "../../../hooks/useAuthStatusFilter";
+import { useLiveList } from "../../../hooks/useLiveList";
 import "../../masterData/components/MasterDataPage.css";
 import "../../masterData/components/MenuActionsPage.css";
 import "./SystemFormPage.css";
@@ -223,32 +224,47 @@ export function InstitutionModuleFormPage() {
   const { filter, setFilter, query, setQuery, filteredRows, hasAuthStatus, activeCount, pendingCount, totalCount } =
     useAuthStatusFilter(rows);
 
-  useEffect(() => {
-    systemService
+  const loadInstitutions = useCallback(({ silent = false } = {}) => {
+    if (!silent) setIsLoadingInstitutions(true);
+    return systemService
       .listActiveInstitutions()
       .then(setInstitutions)
-      .finally(() => setIsLoadingInstitutions(false));
+      .finally(() => {
+        if (!silent) setIsLoadingInstitutions(false);
+      });
   }, []);
 
-  const loadModulesFor = useCallback(async (id) => {
+  useEffect(() => {
+    loadInstitutions();
+    // Only needs to run once on mount — live updates below handle refreshes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const loadModulesFor = useCallback(async (id, { silent = false } = {}) => {
     if (!id) {
       setRows([]);
       return;
     }
-    setIsLoadingModules(true);
+    if (!silent) setIsLoadingModules(true);
     setError(null);
     try {
       setRows(await systemService.listInstitutionModules(Number(id)));
     } catch (err) {
       setError(err.message);
     } finally {
-      setIsLoadingModules(false);
+      if (!silent) setIsLoadingModules(false);
     }
   }, []);
 
   useEffect(() => {
     loadModulesFor(instProfileId);
   }, [instProfileId, loadModulesFor]);
+
+  // See the Live Menu Updates via WebSocket handoff doc: refetch the
+  // institution list and the selected institution's modules whenever
+  // another user/tab changes either.
+  useLiveList("institution/profile", () => loadInstitutions({ silent: true }));
+  useLiveList("institution/module", () => loadModulesFor(instProfileId, { silent: true }));
 
   const handleCreated = (createdInstProfileId) => {
     setIsModalOpen(false);

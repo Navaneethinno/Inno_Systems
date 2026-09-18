@@ -28,6 +28,9 @@ export const systemForms = {
     // again"), i.e. a real route — so this gets the same list+add-modal
     // pattern as profile/institution/institutionModule.
     listMethod: "listUsers",
+    // Mirrors the /user/* REST paths above — see the Live Menu Updates via
+    // WebSocket handoff doc ("<resource-path>/live" is generic).
+    livePath: "user",
     columns: [
       { key: "id", label: "ID", render: (row) => rowValue(row) ?? "—" },
       { key: "username", label: "Username" },

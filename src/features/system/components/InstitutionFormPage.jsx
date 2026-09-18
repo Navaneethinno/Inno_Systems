@@ -357,6 +357,7 @@ export function InstitutionFormPage() {
           { key: "auth_status", label: "Status", narrow: true, render: renderStatusCell },
         ]}
         loadRows={() => systemService.listInstitutions()}
+        livePath="institution/profile"
         renderForm={({ onSuccess, onCancel }) => <InstitutionForm onSuccess={onSuccess} onCancel={onCancel} />}
         actions={(row) => (
           <>
