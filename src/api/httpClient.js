@@ -26,7 +26,17 @@ export const httpClient = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
+// Every route except /master/* lives under /config on the backend. Services
+// keep writing the bare paths (/system/user/login, /user/list, …); the prefix
+// is added here, once. Guarded so a retried request isn't prefixed twice.
+const CONFIG_PREFIX = "/config";
+function withConfigPrefix(url = "") {
+  if (url.startsWith("/master") || url.startsWith(CONFIG_PREFIX)) return url;
+  return `${CONFIG_PREFIX}${url}`;
+}
+
 httpClient.interceptors.request.use((config) => {
+  config.url = withConfigPrefix(config.url);
   // /system/user/login carries its own Basic auth header — never overwrite it.
   if (!config.headers.Authorization) {
     const token = tokenStore.getAccessToken();
@@ -66,7 +76,7 @@ httpClient.interceptors.response.use(
         if (!refreshToken) throw error;
 
         const { data } = await axios.post(
-          `${env.apiBaseUrl}/system/user/refresh_token`,
+          `${env.apiBaseUrl}${withConfigPrefix("/system/user/refresh_token")}`,
           undefined,
           { headers: { Authorization: `Bearer ${refreshToken}` } }
         );

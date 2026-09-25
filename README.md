@@ -21,7 +21,7 @@ cp .env.example .env
 ```
 
 ```bash
-VITE_API_BASE_URL=https://innoverse-api.innovitegra.in
+VITE_API_BASE_URL=https://etakuapi.innovitegrasuite.com
 
 # POST /system/user/login requires a fixed Basic-auth header on top of the
 # user's own username/password. These identify the client app, not the
@@ -142,4 +142,4 @@ Applied across every `DataTable`-backed page (Master Data, Reference Data, and t
 
 ### Flag: login credentials in the reference doc don't work against the deployed API
 
-`SYSTEM_API_REQUEST_RESPONSE.md` was captured against `http://localhost:15003` (a local dev server), not `https://innoverse-api.innovitegra.in` (what this app is configured to use). Testing the documented `System`/`123456` login against the deployed API returns `"User not found"` — that seed user doesn't exist in this environment. The endpoint paths and payload/response *shapes* were still cross-checked against the deployed API where possible (e.g. the `/system/master/*` vs `/master/*/list` prefix split) and match; only the specific test data differs by environment. You'll need real credentials for whichever environment `VITE_API_BASE_URL` points at.
+`SYSTEM_API_REQUEST_RESPONSE.md` was captured against `http://localhost:15003` (a local dev server), not `https://etakuapi.innovitegrasuite.com` (what this app is configured to use). Testing the documented `System`/`123456` login against the deployed API returns `"User not found"` — that seed user doesn't exist in this environment. The endpoint paths and payload/response *shapes* were still cross-checked against the deployed API where possible (e.g. the `/system/master/*` vs `/master/*/list` prefix split) and match; only the specific test data differs by environment. You'll need real credentials for whichever environment `VITE_API_BASE_URL` points at.
