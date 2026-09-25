@@ -9,5 +9,8 @@ import { env } from "../config/env";
  */
 export function liveChannelUrl(path) {
   const base = env.apiBaseUrl.replace(/^http/, "ws").replace(/\/+$/, "");
-  return `${base}/${path.replace(/^\/+/, "")}/live`;
+  const clean = path.replace(/^\/+/, "");
+  // Same routing rule as REST: everything but master/* sits under /config.
+  const routed = clean.startsWith("master") || clean.startsWith("config") ? clean : `config/${clean}`;
+  return `${base}/${routed}/live`;
 }
