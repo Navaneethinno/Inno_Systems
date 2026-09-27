@@ -41,6 +41,15 @@ export const amlService = {
     return envelope.data;
   },
 
+  // 02_System_AML_Try_A_Name.md: screen a name against the switched-on
+  // platform lists. Nothing is stored; institutions' own lists aren't
+  // searched. Only `name` is required. Returns { subject, score, took_ms,
+  // searched, matches }.
+  async screenTest(payload) {
+    const { data: envelope } = await httpClient.post("/aml/system/screen/test", payload);
+    return Array.isArray(envelope.data) ? envelope.data[0] : envelope.data;
+  },
+
   async listRescreenRuns(limit = 20) {
     const { data: envelope } = await httpClient.post("/aml/system/rescreen/runs", { limit });
     return extractList(envelope.data);

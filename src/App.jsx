@@ -14,6 +14,7 @@ import { InstitutionFormPage } from "./features/system/components/InstitutionFor
 import { InstitutionModuleFormPage } from "./features/system/components/InstitutionModuleFormPage";
 import { WatchlistsPage } from "./features/aml/components/WatchlistsPage";
 import { BackgroundJobsPage } from "./features/aml/components/BackgroundJobsPage";
+import { TryNamePage } from "./features/aml/components/TryNamePage";
 
 function App() {
   return (
@@ -47,6 +48,7 @@ function App() {
               <Route path="/system/:formKey" element={<SystemFormPage />} />
               <Route path="/aml/watchlists" element={<WatchlistsPage />} />
               <Route path="/aml/jobs" element={<BackgroundJobsPage />} />
+              <Route path="/aml/try-name" element={<TryNamePage />} />
             </Route>
           </Routes>
         </AuthProvider>

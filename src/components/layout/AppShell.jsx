@@ -86,6 +86,9 @@ export function AppShell() {
           <NavLink to="/aml/jobs" className={({ isActive }) => `shell__link ${isActive ? "shell__link--active" : ""}`}>
             Background Jobs
           </NavLink>
+          <NavLink to="/aml/try-name" className={({ isActive }) => `shell__link ${isActive ? "shell__link--active" : ""}`}>
+            Try a Name
+          </NavLink>
         </nav>
       </aside>
 
