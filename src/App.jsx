@@ -12,6 +12,8 @@ import { SystemFormPage } from "./features/system/components/SystemFormPage";
 import { ProfileFormPage } from "./features/system/components/ProfileFormPage";
 import { InstitutionFormPage } from "./features/system/components/InstitutionFormPage";
 import { InstitutionModuleFormPage } from "./features/system/components/InstitutionModuleFormPage";
+import { WatchlistsPage } from "./features/aml/components/WatchlistsPage";
+import { BackgroundJobsPage } from "./features/aml/components/BackgroundJobsPage";
 
 function App() {
   return (
@@ -43,6 +45,8 @@ function App() {
               <Route path="/system/institution" element={<InstitutionFormPage />} />
               <Route path="/system/institutionModule" element={<InstitutionModuleFormPage />} />
               <Route path="/system/:formKey" element={<SystemFormPage />} />
+              <Route path="/aml/watchlists" element={<WatchlistsPage />} />
+              <Route path="/aml/jobs" element={<BackgroundJobsPage />} />
             </Route>
           </Routes>
         </AuthProvider>

@@ -1,0 +1,118 @@
+.aml__name {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.aml__sub {
+  display: block;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.aml__row-error {
+  display: block;
+  font-size: 12px;
+  color: var(--color-danger-text);
+  margin-top: 4px;
+  max-width: 320px;
+  white-space: normal;
+}
+
+.aml__section-title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 28px 0 12px;
+}
+
+.aml__switch-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.aml__switch {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 999px;
+  background: var(--color-gray-light);
+  cursor: pointer;
+  transition: background 0.15s;
+  padding: 0;
+}
+
+.aml__switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-white);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: transform 0.15s;
+}
+
+.aml__switch--on {
+  background: var(--color-primary);
+}
+
+.aml__switch--on::after {
+  transform: translateX(16px);
+}
+
+.aml__switch:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.aml__licence {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  cursor: help;
+  border-bottom: 1px dotted currentColor;
+}
+
+.aml__text-btn {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12.5px;
+  color: var(--color-text);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.aml__text-btn:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.aml__text-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.aml__stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.aml__note {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.aml__mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+}

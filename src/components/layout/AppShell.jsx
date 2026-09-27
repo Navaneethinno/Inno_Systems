@@ -78,6 +78,14 @@ export function AppShell() {
               Create {systemForms[key].label}
             </NavLink>
           ))}
+
+          <div className="shell__section-label">AML</div>
+          <NavLink to="/aml/watchlists" className={({ isActive }) => `shell__link ${isActive ? "shell__link--active" : ""}`}>
+            Watchlists
+          </NavLink>
+          <NavLink to="/aml/jobs" className={({ isActive }) => `shell__link ${isActive ? "shell__link--active" : ""}`}>
+            Background Jobs
+          </NavLink>
         </nav>
       </aside>
 

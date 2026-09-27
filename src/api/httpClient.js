@@ -26,12 +26,12 @@ export const httpClient = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// Every route except /master/* lives under /config on the backend. Services
+// Every route except /master/* and /aml/* lives under /config on the backend. Services
 // keep writing the bare paths (/system/user/login, /user/list, …); the prefix
 // is added here, once. Guarded so a retried request isn't prefixed twice.
 const CONFIG_PREFIX = "/config";
 function withConfigPrefix(url = "") {
-  if (url.startsWith("/master") || url.startsWith(CONFIG_PREFIX)) return url;
+  if (url.startsWith("/master") || url.startsWith("/aml") || url.startsWith(CONFIG_PREFIX)) return url;
   return `${CONFIG_PREFIX}${url}`;
 }
 
@@ -107,10 +107,17 @@ httpClient.interceptors.response.use(
   }
 );
 
+// AML replies put the user-facing (already translated) text in `message` and
+// developer detail in `remark`, the reverse of the config routes' habit.
+function isAmlUrl(url = "") {
+  return url.startsWith("/aml");
+}
+
 function envelopeError(response) {
   const body = response.data ?? {};
+  const preferred = isAmlUrl(response.config?.url) ? body.message || body.remark : body.remark || body.message;
   return {
-    message: body.remark || body.message || "Something went wrong. Please try again.",
+    message: preferred || "Something went wrong. Please try again.",
     status: response.status,
     code: body.code,
   };
@@ -118,8 +125,9 @@ function envelopeError(response) {
 
 function normalizeError(error) {
   const data = error.response?.data;
+  const preferred = isAmlUrl(error.config?.url) ? data?.message || data?.remark : data?.remark || data?.message;
   return {
-    message: data?.remark || data?.message || error.message || "Something went wrong. Please try again.",
+    message: preferred || error.message || "Something went wrong. Please try again.",
     status: error.response?.status,
     code: data?.code,
   };
