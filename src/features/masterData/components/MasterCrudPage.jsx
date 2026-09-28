@@ -121,7 +121,11 @@ export function MasterCrudPage() {
         // Every number field here is a non-negative count (priority, etc.) —
         // clamp defensively even though the input itself already blocks
         // typing/pasting a minus sign.
-        if (f.type === "number") payload[f.name] = Math.max(0, Number(payload[f.name]) || 0);
+        // `omitIfEmpty`: the server picks a default when the field is left
+        // out (e.g. a new module's priority goes after every existing one).
+        if (f.type === "number" && f.omitIfEmpty && (payload[f.name] === "" || payload[f.name] == null)) {
+          delete payload[f.name];
+        } else if (f.type === "number") payload[f.name] = Math.max(0, Number(payload[f.name]) || 0);
         if (f.type === "status") payload[f.name] = payload[f.name] ? 1 : 0;
       });
 

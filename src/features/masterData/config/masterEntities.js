@@ -12,11 +12,15 @@ export const masterEntities = {
     writable: true,
     fields: [
       { name: "name", label: "Name", type: "text", required: true },
+      // Lower first; decides module order in the admin portal's sidebar.
+      // Left empty on add, the server puts the module after every other one.
+      { name: "priority", label: "Priority", type: "number", omitIfEmpty: true },
       { name: "status", label: "Active", type: "status" },
     ],
     columns: [
       { key: "id", label: "ID" },
       { key: "name", label: "Name" },
+      { key: "priority", label: "Priority", narrow: true },
       { key: "status", label: "Status", status: true, narrow: true },
     ],
   },
