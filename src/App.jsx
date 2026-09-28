@@ -3,6 +3,7 @@ import { AuthProvider } from "./store/AuthContext";
 import { ThemeProvider } from "./store/ThemeContext";
 import { ProtectedRoute, PublicOnlyRoute } from "./routes/ProtectedRoute";
 import { AppShell } from "./components/layout/AppShell";
+import { ErrorToaster } from "./components/ui/ErrorToaster";
 import { LoginPage } from "./features/auth/components/LoginPage";
 import { DashboardPage } from "./pages/dashboard/DashboardPage";
 import { MasterCrudPage } from "./features/masterData/components/MasterCrudPage";
@@ -21,6 +22,7 @@ function App() {
     <ThemeProvider>
       <BrowserRouter>
         <AuthProvider>
+          <ErrorToaster />
           <Routes>
             <Route
               path="/login"

@@ -3,6 +3,8 @@ import { env } from "../config/env";
 import { tokenStore } from "../lib/tokenStore";
 import { extractOne } from "../lib/extractList";
 
+export const API_ERROR_EVENT = "api-error";
+
 /**
  * Single Axios instance shared by every API module.
  * Feature services never call axios directly — they go through this client
@@ -107,28 +109,29 @@ httpClient.interceptors.response.use(
   }
 );
 
-// AML replies put the user-facing (already translated) text in `message` and
-// developer detail in `remark`, the reverse of the config routes' habit.
-function isAmlUrl(url = "") {
-  return url.startsWith("/aml");
+// Every error shows the envelope's `message` (user-facing, already
+// translated by x-api-lang); `remark` is developer detail and only a
+// fallback. Each failure is also announced as an on-screen popup — see
+// ErrorToaster.jsx.
+function announce(err) {
+  window.dispatchEvent(new CustomEvent(API_ERROR_EVENT, { detail: err }));
+  return err;
 }
 
 function envelopeError(response) {
   const body = response.data ?? {};
-  const preferred = isAmlUrl(response.config?.url) ? body.message || body.remark : body.remark || body.message;
-  return {
-    message: preferred || "Something went wrong. Please try again.",
+  return announce({
+    message: body.message || body.remark || "Something went wrong. Please try again.",
     status: response.status,
     code: body.code,
-  };
+  });
 }
 
 function normalizeError(error) {
   const data = error.response?.data;
-  const preferred = isAmlUrl(error.config?.url) ? data?.message || data?.remark : data?.remark || data?.message;
-  return {
-    message: preferred || error.message || "Something went wrong. Please try again.",
+  return announce({
+    message: data?.message || data?.remark || error.message || "Something went wrong. Please try again.",
     status: error.response?.status,
     code: data?.code,
-  };
+  });
 }
