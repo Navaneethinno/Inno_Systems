@@ -29,7 +29,7 @@ export const authService = {
       { headers: { Authorization: `Basic ${basicAuth}` } }
     );
 
-    const { user_details: userDetails, user_session_info: session, full_access: fullAccess } = extractOne(
+    const { user_details: userDetails, user_session_info: session, full_access: fullAccess, scope } = extractOne(
       envelope.data
     );
 
@@ -46,6 +46,10 @@ export const authService = {
       status: userDetails.status,
       authStatus: userDetails.auth_status,
       fullAccess: fullAccess,
+      // "SYSTEM" (institution scope handoff): sees and acts on every
+      // institution, the system one included; nothing is filled in for it,
+      // so every institution-owned add names its inst_profile_id.
+      scope: scope ?? null,
       lastLogin: session.last_login,
     };
 
