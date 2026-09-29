@@ -74,7 +74,7 @@ export function LoginPage() {
           </div>
         </div>
 
-        <div className="login__footer-note">© {new Date().getFullYear()} Innovitegra Solutions. All rights reserved.</div>
+        <div className="login__footer-note">© 2026 Innovitegra Solutions Private Limited</div>
       </div>
 
       <div className="login__form-panel">
