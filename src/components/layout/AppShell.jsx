@@ -89,6 +89,11 @@ export function AppShell() {
           <NavLink to="/aml/try-name" className={({ isActive }) => `shell__link ${isActive ? "shell__link--active" : ""}`}>
             Try a Name
           </NavLink>
+
+          <div className="shell__section-label">Security</div>
+          <NavLink to="/security/keys" className={({ isActive }) => `shell__link ${isActive ? "shell__link--active" : ""}`}>
+            Encryption Keys
+          </NavLink>
         </nav>
       </aside>
 

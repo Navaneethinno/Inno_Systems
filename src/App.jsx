@@ -16,6 +16,7 @@ import { InstitutionModuleFormPage } from "./features/system/components/Institut
 import { WatchlistsPage } from "./features/aml/components/WatchlistsPage";
 import { BackgroundJobsPage } from "./features/aml/components/BackgroundJobsPage";
 import { TryNamePage } from "./features/aml/components/TryNamePage";
+import { EncryptionKeysPage } from "./features/keys/components/EncryptionKeysPage";
 
 function App() {
   return (
@@ -51,6 +52,7 @@ function App() {
               <Route path="/aml/watchlists" element={<WatchlistsPage />} />
               <Route path="/aml/jobs" element={<BackgroundJobsPage />} />
               <Route path="/aml/try-name" element={<TryNamePage />} />
+              <Route path="/security/keys" element={<EncryptionKeysPage />} />
             </Route>
           </Routes>
         </AuthProvider>

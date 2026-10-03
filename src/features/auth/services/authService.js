@@ -1,3 +1,4 @@
+import axios from "axios";
 import { httpClient } from "../../../api/httpClient";
 import { tokenStore } from "../../../lib/tokenStore";
 import { env } from "../../../config/env";
@@ -63,7 +64,17 @@ export const authService = {
     return user;
   },
 
-  logout() {
+  // Ends every session of the System user on every device; every token
+  // issued until now is refused from here on. Sent outside httpClient so a
+  // session that has already ended neither tries a refresh nor pops up an
+  // error: whatever the reply, it signs out here.
+  async logout() {
+    const token = tokenStore.getAccessToken();
+    if (token) {
+      await axios
+        .post(`${env.apiBaseUrl}/config/system/user/logout`, {}, { headers: { Authorization: `Bearer ${token}` }, timeout: 10000 })
+        .catch(() => {});
+    }
     tokenStore.clear();
   },
 

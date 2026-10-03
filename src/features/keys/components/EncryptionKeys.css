@@ -1,0 +1,70 @@
+/* Encryption Keys: the status card, the key-part entry and the replies. */
+.keys__card {
+  padding: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface, transparent);
+  margin: 0 0 20px;
+}
+
+.keys__entry {
+  margin-top: 20px;
+}
+
+.keys__card-title {
+  margin: 0 0 4px;
+}
+
+.keys__status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 32px;
+}
+
+.keys__status > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.keys__label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.keys__kcv {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.keys__missing {
+  color: var(--color-danger-text);
+}
+
+.keys__count {
+  display: block;
+  margin-top: 4px;
+  text-align: right;
+}
+
+.keys__result {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-success-border);
+  border-radius: 10px;
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.keys__notice {
+  margin-bottom: 16px;
+}

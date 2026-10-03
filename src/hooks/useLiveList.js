@@ -5,6 +5,7 @@ import { tokenStore } from "../lib/tokenStore";
 const INITIAL_BACKOFF_MS = 1000;
 const MAX_BACKOFF_MS = 30000;
 const PING_INTERVAL_MS = 25000;
+const DEBOUNCE_MS = 500;
 
 /**
  * Subscribes to a backend "live update" channel (see the Live Menu Updates
@@ -16,8 +17,14 @@ const PING_INTERVAL_MS = 25000;
  * "master/menu", no leading slash) — pass `null`/`undefined` to skip
  * connecting (e.g. while the entity key isn't known yet).
  *
- * This is a pure "refetch on signal" subscription — the `changed` event
- * never carries the updated data itself, so `onChanged` must re-fetch.
+ * This is a pure "refetch on signal" subscription: `changed` may carry only
+ * ids and status (a change made elsewhere), so `onChanged` re-fetches. Any
+ * action name may come, so none is filtered; one change can arrive twice,
+ * so pushes within half a second make one call.
+ *
+ * `auth_error` (an ended session, or no permission for this screen) stops
+ * without reconnecting on the same token. `session_ended` (logged out on
+ * any device, expired, or the permission removed) signs out here.
  */
 export function useLiveList(path, onChanged) {
   const onChangedRef = useRef(onChanged);
@@ -34,10 +41,17 @@ export function useLiveList(path, onChanged) {
     let backoff = INITIAL_BACKOFF_MS;
     let stopped = false;
     let hasConnectedBefore = false;
+    let debounceTimer;
+
+    const notify = () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => onChangedRef.current?.(), DEBOUNCE_MS);
+    };
 
     const clearTimers = () => {
       clearTimeout(reconnectTimer);
       clearInterval(pingTimer);
+      clearTimeout(debounceTimer);
     };
 
     const scheduleReconnect = () => {
@@ -76,17 +90,25 @@ export function useLiveList(path, onChanged) {
           backoff = INITIAL_BACKOFF_MS;
           // Reconnecting after a drop can miss events — do one unconditional
           // refetch to cover anything missed while disconnected.
-          if (hasConnectedBefore) onChangedRef.current?.();
+          if (hasConnectedBefore) notify();
           hasConnectedBefore = true;
           clearInterval(pingTimer);
           pingTimer = setInterval(() => {
             if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: "ping" }));
           }, PING_INTERVAL_MS);
         } else if (message.type === "changed") {
-          onChangedRef.current?.();
+          notify();
+        } else if (message.type === "auth_error") {
+          stopped = true;
+          clearTimers();
+          socket.close();
+        } else if (message.type === "session_ended") {
+          stopped = true;
+          clearTimers();
+          socket.close();
+          tokenStore.clear();
+          window.location.href = "/login";
         }
-        // auth_error: the server closes the socket right after — onclose
-        // below handles the reconnect.
       };
 
       socket.onclose = () => {
