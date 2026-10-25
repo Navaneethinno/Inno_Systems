@@ -94,6 +94,9 @@ export function AppShell() {
           <NavLink to="/security/keys" className={({ isActive }) => `shell__link ${isActive ? "shell__link--active" : ""}`}>
             Encryption Keys
           </NavLink>
+          <NavLink to="/security/events" className={({ isActive }) => `shell__link ${isActive ? "shell__link--active" : ""}`}>
+            Security Events
+          </NavLink>
         </nav>
       </aside>
 
