@@ -68,3 +68,44 @@
 .keys__notice {
   margin-bottom: 16px;
 }
+
+/* Key Custody: tabs, warnings, slots. */
+.keys__actions {
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+.keys__locked {
+  font-weight: 700;
+}
+
+.keys__warning {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.keys__slots {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.keys__custodian {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.keys__badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}

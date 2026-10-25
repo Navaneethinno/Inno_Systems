@@ -92,15 +92,17 @@ function ComponentEntry({ waiting, onDone }) {
   );
 }
 
-function RotateModal({ purpose, onClose, onRotated }) {
+// A confirmation for an action that cannot be taken back lightly; `run`
+// makes the call and resolves to its message.
+export function ConfirmModal({ title, children, confirmLabel, run, onClose, onDone }) {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
 
-  const rotate = async () => {
+  const confirm = async () => {
     setIsSaving(true);
     setError(null);
     try {
-      onRotated(await keysService.rotate(purpose));
+      onDone(await run());
     } catch (err) {
       setError(err.message);
       setIsSaving(false);
@@ -108,19 +110,16 @@ function RotateModal({ purpose, onClose, onRotated }) {
   };
 
   return (
-    <Modal title={`Rotate the ${purpose} key`} onClose={onClose}>
+    <Modal title={title} onClose={onClose}>
       <div className="aml__stack">
         {error && <div className="mdp__error">{error}</div>}
-        <p className="aml__note">
-          A new version of the {purpose} key becomes active for everything protected from now on. Older versions keep working for what
-          they already protect.
-        </p>
+        {children}
         <div className="mdp__header-actions" style={{ justifyContent: "flex-end" }}>
           <Button type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="button" variant="danger" loading={isSaving} onClick={rotate}>
-            Rotate
+          <Button type="button" variant="danger" loading={isSaving} onClick={confirm}>
+            {confirmLabel}
           </Button>
         </div>
       </div>
@@ -128,10 +127,13 @@ function RotateModal({ purpose, onClose, onRotated }) {
   );
 }
 
-export function EncryptionKeysPage() {
+// Key Custody › Keys: the master key and data keys (check values only),
+// lock / destroy the storage key file, and the key-part entry (UAT, where
+// a file opens the keys; production custodians use the admin portal).
+export function KeysTab() {
   const [state, setState] = useState(null);
   const [error, setError] = useState(null);
-  const [rotating, setRotating] = useState(null);
+  const [confirming, setConfirming] = useState(null);
   const [notice, setNotice] = useState(null);
 
   const load = useCallback(async () => {
@@ -159,21 +161,28 @@ export function EncryptionKeysPage() {
   ];
 
   return (
-    <div className="mdp">
-      <div className="mdp__header">
-        <div>
-          <span className="mdp__eyebrow">Security</span>
-          <h1 className="mdp__title">Encryption Keys</h1>
-          <p className="mdp__subtitle">The keys that protect PINs, card numbers and card security codes. A key is never shown, only its check value.</p>
-        </div>
-        <div className="mdp__header-actions">
-          <Button variant="secondary" onClick={load}>
-            Reload
+    <>
+      <div className="mdp__header-actions keys__actions">
+        <Button variant="secondary" onClick={load}>
+          Reload
+        </Button>
+        {state?.ready && !state.locked && (
+          <Button variant="danger" onClick={() => setConfirming("lock")}>
+            Lock keys
           </Button>
-        </div>
+        )}
       </div>
 
       {error && <div className="mdp__error">{error}</div>}
+      {state?.locked && <div className="mdp__error keys__locked">Keys locked: waiting for custodians. Payments, PINs and cards are refused until two custodians unlock them.</div>}
+      {state?.storage_key_left && (
+        <div className="keys__card keys__warning">
+          <span>The old storage key file is still on the server. Destroy it once the custodians hold the keys.</span>
+          <Button variant="danger" onClick={() => setConfirming("destroy")}>
+            Destroy storage key file
+          </Button>
+        </div>
+      )}
       {notice && <div className="keys__result keys__notice">{notice}</div>}
 
       {state && (
@@ -190,6 +199,16 @@ export function EncryptionKeysPage() {
             <span className="keys__label">Created</span>
             <span>{formatDateTime(state.created)}</span>
           </div>
+          <div>
+            <span className="keys__label">Opened by</span>
+            <span>{state.custody === "custodian" ? "Custodians (admin portal)" : state.custody === "file" ? "A key file on the server" : "—"}</span>
+          </div>
+          {state.unlock_waiting && (
+            <div>
+              <span className="keys__label">Unlock</span>
+              <StatusPill status="RUNNING" label="One custodian is in: the other slot has 15 minutes" />
+            </div>
+          )}
           {state.component_waiting && (
             <div>
               <span className="keys__label">Key ceremony</span>
@@ -212,26 +231,52 @@ export function EncryptionKeysPage() {
         emptyMessage="No keys yet: enter both key parts to create them."
         actions={(k) =>
           k.active && (
-            <button type="button" className="aml__text-btn" onClick={() => setRotating(k.purpose)}>
+            <button type="button" className="aml__text-btn" onClick={() => setConfirming(k.purpose)}>
               Rotate
             </button>
           )
         }
       />
 
-      <ComponentEntry waiting={Boolean(state?.component_waiting)} onDone={load} />
+      {/* Under custodian custody the components are entered in the admin portal. */}
+      {state && state.custody !== "custodian" && <ComponentEntry waiting={Boolean(state.component_waiting)} onDone={load} />}
 
-      {rotating && (
-        <RotateModal
-          purpose={rotating}
-          onClose={() => setRotating(null)}
-          onRotated={({ message }) => {
-            setRotating(null);
+      {confirming && (
+        <ConfirmModal
+          {...confirmOf(confirming)}
+          onClose={() => setConfirming(null)}
+          onDone={({ message }) => {
+            setConfirming(null);
             setNotice(message);
             load();
           }}
         />
       )}
-    </div>
+    </>
+  );
+}
+
+// What each confirmed action says and does: lock, destroy, or a key's purpose (rotate).
+function confirmOf(what) {
+  if (what === "lock") {
+    return { title: "Lock the keys", confirmLabel: "Lock keys", run: keysService.lock, children: <p className="aml__note">Payments stop until two custodians unlock. Continue?</p> };
+  }
+  if (what === "destroy") {
+    return {
+      title: "Destroy the storage key file",
+      confirmLabel: "Destroy",
+      run: keysService.destroyStorageKey,
+      children: <p className="aml__note">This cannot be undone: afterwards only the custodians can open the keys.</p>,
+    };
+  }
+  return { title: `Rotate the ${what} key`, confirmLabel: "Rotate", run: () => keysService.rotate(what), children: <RotateNote purpose={what} /> };
+}
+
+export function RotateNote({ purpose }) {
+  return (
+    <p className="aml__note">
+      A new version of the {purpose} key becomes active for everything protected from now on. Older versions keep working for what they already protect.
+      {["CVK", "PVK"].includes(purpose) && " New cards get CVVs or PIN offsets under the new key; existing cards keep working."}
+    </p>
   );
 }

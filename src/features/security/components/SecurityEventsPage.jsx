@@ -23,9 +23,13 @@ const KINDS = [
   ["UNSIGNED_CONTROL", "A stop / debug-level message without a valid signature"],
   ["RATE_LIMITED", "A client went over its rate limit"],
   ["LOGIN_BURST", "Many failed sign-ins"],
-  ["KEY_CEREMONY", "A master key component was entered"],
+  ["KEY_CEREMONY", "A key ceremony step, custodian or rotation change"],
   ["KEY_ROTATED", "A data key rotated"],
   ["BASELINE_TAKEN", "The watch started watching"],
+  ["KEYS_LOCKED", "The keys are locked; the custodians are emailed"],
+  ["KEYS_UNLOCKED", "Two custodians unlocked the keys"],
+  ["UNLOCK_REFUSED", "An unlock component was refused: watch for repeats"],
+  ["KEY_ROTATION_DUE", "A key is past its rotation period"],
 ];
 const MEANING = Object.fromEntries(KINDS);
 const EMPTY = { kind: "", severity: "", search: "", from: "", to: "" };

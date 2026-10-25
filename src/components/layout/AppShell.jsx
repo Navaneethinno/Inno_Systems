@@ -79,6 +79,10 @@ export function AppShell() {
             </NavLink>
           ))}
 
+          <NavLink to="/system/key-custody" className={({ isActive }) => `shell__link ${isActive ? "shell__link--active" : ""}`}>
+            Key Custody
+          </NavLink>
+
           <div className="shell__section-label">AML</div>
           <NavLink to="/aml/watchlists" className={({ isActive }) => `shell__link ${isActive ? "shell__link--active" : ""}`}>
             Watchlists
@@ -91,9 +95,6 @@ export function AppShell() {
           </NavLink>
 
           <div className="shell__section-label">Security</div>
-          <NavLink to="/security/keys" className={({ isActive }) => `shell__link ${isActive ? "shell__link--active" : ""}`}>
-            Encryption Keys
-          </NavLink>
           <NavLink to="/security/events" className={({ isActive }) => `shell__link ${isActive ? "shell__link--active" : ""}`}>
             Security Events
           </NavLink>
