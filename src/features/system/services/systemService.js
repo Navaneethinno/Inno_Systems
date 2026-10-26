@@ -145,9 +145,12 @@ export const systemService = {
   },
 
   async listInstitutionModules(instProfileId) {
-    const { data: envelope } = await httpClient.post("/institution/module/get_active", {
-      view: "dropdown",
+    // The full records (dates, module_id, statuses): the dropdown view has
+    // only id and name. An institution has a handful of modules.
+    const { data: envelope } = await httpClient.post("/institution/module/list", {
       inst_profile_id: instProfileId,
+      page: 1,
+      limit: 200,
     });
     return extractList(envelope.data);
   },
