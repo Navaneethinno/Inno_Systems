@@ -2,6 +2,7 @@ import axios from "axios";
 import { env } from "../config/env";
 import { tokenStore } from "../lib/tokenStore";
 import { extractOne } from "../lib/extractList";
+import { envelopeRefused, sealFields } from "../lib/credentialSeal";
 
 export const API_ERROR_EVENT = "api-error";
 
@@ -37,8 +38,12 @@ function withConfigPrefix(url = "") {
   return `${CONFIG_PREFIX}${url}`;
 }
 
-httpClient.interceptors.request.use((config) => {
+httpClient.interceptors.request.use(async (config) => {
   config.url = withConfigPrefix(config.url);
+  // Credentials are sealed afresh on every send, a retry included, so the
+  // plain body is kept aside on the request config.
+  if (config._plain === undefined) config._plain = config.data;
+  config.data = await sealFields(config._plain);
   // /system/user/login carries its own Basic auth header — never overwrite it.
   if (!config.headers.Authorization) {
     const token = tokenStore.getAccessToken();
@@ -55,12 +60,14 @@ let pendingQueue = [];
 httpClient.interceptors.response.use(
   (response) => {
     if (response.data && isFailStatus(response.data.status)) {
-      return Promise.reject(envelopeError(response));
+      return retrySealed(response.config, response.data) ?? Promise.reject(envelopeError(response));
     }
     return response;
   },
   async (error) => {
     const originalRequest = error.config;
+    const sealedRetry = retrySealed(originalRequest, error.response?.data);
+    if (sealedRetry) return sealedRetry;
     const isLoginCall = originalRequest?.url?.includes("/system/user/login");
 
     if (error.response?.status === 401 && originalRequest && !originalRequest._retry && !isLoginCall) {
@@ -116,6 +123,14 @@ httpClient.interceptors.response.use(
 function announce(err) {
   window.dispatchEvent(new CustomEvent(API_ERROR_EVENT, { detail: err }));
   return err;
+}
+
+// A refused credential envelope (key changed, or expired by the clock) is
+// sealed again and sent once more.
+function retrySealed(config, body) {
+  if (!config || config._sealRetry || !envelopeRefused(body?.error_code, body?.server_time)) return null;
+  config._sealRetry = true;
+  return httpClient(config);
 }
 
 function envelopeError(response) {
