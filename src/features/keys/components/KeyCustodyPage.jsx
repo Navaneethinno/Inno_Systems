@@ -135,12 +135,17 @@ function AddCustodianModal({ slot, onClose, onDone }) {
   const [form, setForm] = useState({ user_id: "", role: "PRIMARY", narration: "" });
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [search, setSearch] = useState("");
+  // Searched on the server: the first 100 matches.
   useEffect(() => {
-    keysService
-      .listStaffUsers()
-      .then(setUsers)
-      .catch((err) => setError(err.message));
-  }, []);
+    const timer = setTimeout(() => {
+      keysService
+        .listStaffUsers(search.trim())
+        .then(setUsers)
+        .catch((err) => setError(err.message));
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
   const save = async (e) => {
     e.preventDefault();
@@ -157,12 +162,13 @@ function AddCustodianModal({ slot, onClose, onDone }) {
     <Modal title={`Add a slot ${slot} custodian`} onClose={onClose}>
       <form className="aml__stack" onSubmit={save}>
         {error && <div className="mdp__error">{error}</div>}
+        <TextField label="Find a user" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Username" />
         <Select
           label="Staff user"
           placeholder="Choose a user"
           value={form.user_id}
           onChange={set("user_id")}
-          options={users.map((u) => ({ value: String(u.id ?? u.user_id), label: [u.user_name ?? u.username ?? u.name, u.inst_profile_name].filter(Boolean).join(" · ") }))}
+          options={users.map((u) => ({ value: String(u.user_id), label: [u.username, u.inst_profile_name].filter(Boolean).join(" · ") }))}
         />
         <Select label="Role" value={form.role} onChange={set("role")} options={[{ value: "PRIMARY", label: "Primary" }, { value: "BACKUP", label: "Backup" }]} />
         <TextField label="Note (optional)" value={form.narration} onChange={set("narration")} placeholder="Treasury head" />

@@ -61,10 +61,12 @@ export const keysService = {
     return { message: envelope.message };
   },
 
-  // The staff users a custodian is picked from.
-  async listStaffUsers() {
-    const { data: envelope } = await httpClient.post("/system/user/list", { limit: 1000 });
-    return extractList(envelope.data);
+  // The staff users a custodian is picked from, across every institution:
+  // [{ user_id, username, inst_profile_name, is_system }]. The System user
+  // itself can't be a custodian.
+  async listStaffUsers(search = "") {
+    const { data: envelope } = await httpClient.post("/user/list", { tab: "active", limit: 100, search });
+    return extractList(envelope.data).filter((u) => !u.is_system);
   },
 
   // Rotation policies: [{ purpose, description, rotate_days, auto_rotate,
