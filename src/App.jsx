@@ -18,6 +18,7 @@ import { BackgroundJobsPage } from "./features/aml/components/BackgroundJobsPage
 import { TryNamePage } from "./features/aml/components/TryNamePage";
 import { KeyCustodyPage } from "./features/keys/components/KeyCustodyPage";
 import { SecurityEventsPage } from "./features/security/components/SecurityEventsPage";
+import { ExpiringDocumentsPage } from "./features/expiry/components/ExpiringDocumentsPage";
 
 function App() {
   return (
@@ -55,6 +56,7 @@ function App() {
               <Route path="/aml/try-name" element={<TryNamePage />} />
               <Route path="/system/key-custody" element={<KeyCustodyPage />} />
               <Route path="/security/events" element={<SecurityEventsPage />} />
+              <Route path="/expiry/documents" element={<ExpiringDocumentsPage />} />
             </Route>
           </Routes>
         </AuthProvider>

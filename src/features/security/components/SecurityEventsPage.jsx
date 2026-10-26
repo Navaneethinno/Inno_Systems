@@ -30,6 +30,9 @@ const KINDS = [
   ["KEYS_UNLOCKED", "Two custodians unlocked the keys"],
   ["UNLOCK_REFUSED", "An unlock component was refused: watch for repeats"],
   ["KEY_ROTATION_DUE", "A key is past its rotation period"],
+  ["MODULE_EXPIRING", "A module subscription ends soon, has ended and is in grace, or was renewed"],
+  ["MODULE_CUT_OFF", "A module subscription is past its end and its grace: the module has stopped"],
+  ["LICENCE_EXPIRING", "An institution's licence or the platform licence expires soon (repeats daily)"],
 ];
 const MEANING = Object.fromEntries(KINDS);
 const EMPTY = { kind: "", severity: "", search: "", from: "", to: "" };

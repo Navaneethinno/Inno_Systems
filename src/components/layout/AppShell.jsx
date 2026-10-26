@@ -98,6 +98,11 @@ export function AppShell() {
           <NavLink to="/security/events" className={({ isActive }) => `shell__link ${isActive ? "shell__link--active" : ""}`}>
             Security Events
           </NavLink>
+
+          <div className="shell__section-label">Expiry</div>
+          <NavLink to="/expiry/documents" className={({ isActive }) => `shell__link ${isActive ? "shell__link--active" : ""}`}>
+            Expiring Documents
+          </NavLink>
         </nav>
       </aside>
 

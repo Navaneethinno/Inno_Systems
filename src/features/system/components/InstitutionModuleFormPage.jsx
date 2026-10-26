@@ -19,6 +19,7 @@ import "../../masterData/components/MasterDataPage.css";
 import "../../masterData/components/MenuActionsPage.css";
 import "./SystemFormPage.css";
 import "./ProfileFormPage.css";
+import "../../aml/components/Aml.css";
 
 const emptyModuleRow = () => ({
   key: Math.random().toString(36).slice(2),
@@ -192,7 +193,7 @@ const columns = [
   { key: "id", label: "ID", render: (row) => rowValue(row) ?? "—" },
   { key: "module_name", label: "Module", render: (row) => row.module_name ?? rowLabel(row) },
   { key: "effective_from", label: "Effective From", narrow: true },
-  { key: "effective_to", label: "Effective To", narrow: true },
+  { key: "effective_to", label: "Effective To", narrow: true, render: (row, grace) => <EndDate value={row.effective_to} grace={grace} /> },
   {
     key: "configuration_status",
     label: "Configuration",
@@ -207,6 +208,110 @@ const columns = [
   { key: "auth_status", label: "Status", narrow: true, render: renderStatusCell },
 ];
 
+// The last day a module works is its end date plus the grace; it stops the
+// day after ("Stops on end + grace + 1").
+function stopsOn(end, grace) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(end ?? ""));
+  if (!match || grace == null) return null;
+  const day = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]) + Number(grace) + 1));
+  return day.toISOString().slice(0, 10);
+}
+function EndDate({ value, grace }) {
+  if (!value) return "—";
+  const stops = stopsOn(value, grace);
+  return (
+    <span>
+      {String(value).slice(0, 10)}
+      {stops && <span className="aml__note" style={{ display: "block" }}>Stops on {stops}</span>}
+    </span>
+  );
+}
+
+// The institution's module grace, which only the System user sets.
+function ModuleGrace({ instProfileId, onChange }) {
+  const [rules, setRules] = useState(null);
+  const [editing, setEditing] = useState(false);
+  const [days, setDays] = useState("");
+  const [error, setError] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const load = useCallback(() => {
+    systemService
+      .getExpiryRules(Number(instProfileId))
+      .then((view) => {
+        const list = view?.setup?.rules ?? [];
+        setRules(list);
+        onChange(list.find((r) => r.kind === "MODULE_SUBSCRIPTION")?.grace_days ?? null);
+      })
+      .catch((err) => {
+        setError(err.message);
+        onChange(null);
+      });
+  }, [instProfileId, onChange]);
+  useEffect(() => {
+    load();
+  }, [load]);
+  const grace = rules?.find((r) => r.kind === "MODULE_SUBSCRIPTION")?.grace_days;
+  const save = async (e) => {
+    e.preventDefault();
+    setIsSaving(true);
+    setError(null);
+    try {
+      await systemService.setModuleGrace(Number(instProfileId), rules, Number(days));
+      setEditing(false);
+      load();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+  const valid = days !== "" && Number(days) >= 0 && Number(days) <= 365;
+  return (
+    <>
+      <div className="mdp__state" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, textAlign: "left" }}>
+        <span>
+          {grace == null ? (
+            (error ?? "Loading the module grace…")
+          ) : (
+            <>
+              After its end date a module keeps working for <b>{grace} days</b> of grace, then stops. Renewing means extending Effective To.
+            </>
+          )}
+        </span>
+        {grace != null && (
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setDays(String(grace));
+              setError(null);
+              setEditing(true);
+            }}
+          >
+            Change grace
+          </Button>
+        )}
+      </div>
+      {editing && (
+        <Modal title="Module grace" onClose={() => setEditing(false)} width={460}>
+          <form className="aml__stack" onSubmit={save}>
+            {error && <div className="mdp__error">{error}</div>}
+            <TextField label="Grace (days after the end date, 0 to 365)" type="number" min={0} max={365} value={days} onChange={(e) => setDays(e.target.value)} />
+            <p className="aml__note">Applies at once to every module of this institution.</p>
+            <div className="mdp__header-actions" style={{ justifyContent: "flex-end" }}>
+              <Button type="button" variant="secondary" onClick={() => setEditing(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" loading={isSaving} disabled={!valid}>
+                Save
+              </Button>
+            </div>
+          </form>
+        </Modal>
+      )}
+    </>
+  );
+}
+
 export function InstitutionModuleFormPage() {
   const [institutions, setInstitutions] = useState([]);
   const [instProfileId, setInstProfileId] = useState("");
@@ -220,6 +325,9 @@ export function InstitutionModuleFormPage() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
+  // The module grace (days), for each end date's "Stops on".
+  const [grace, setGrace] = useState(null);
+  const shownColumns = useMemo(() => columns.map((c) => (c.key === "effective_to" ? { ...c, render: (row) => c.render(row, grace) } : c)), [grace]);
 
   const { filter, setFilter, query, setQuery, filteredRows, hasAuthStatus, activeCount, pendingCount, totalCount } =
     useAuthStatusFilter(rows);
@@ -333,12 +441,13 @@ export function InstitutionModuleFormPage() {
       )}
 
       {error && <div className="mdp__error">{error}</div>}
+      {instProfileId && <ModuleGrace key={instProfileId} instProfileId={instProfileId} onChange={setGrace} />}
 
       {!instProfileId ? (
         <div className="mdp__state">Select an institution to view its assigned modules.</div>
       ) : (
         <DataTable
-          columns={columns}
+          columns={shownColumns}
           rows={filteredRows}
           isLoading={isLoadingModules}
           actions={(row) => (
@@ -404,7 +513,7 @@ export function InstitutionModuleFormPage() {
       {isFullscreen && (
         <FullscreenTableModal
           title="Institution Modules"
-          columns={columns}
+          columns={shownColumns}
           rows={filteredRows}
           onClose={() => setIsFullscreen(false)}
         />

@@ -131,6 +131,19 @@ export const systemService = {
   // requires `inst_profile_id` in the request (confirmed live: omitting it
   // returns "Field 'inst_profile_id' is required in request") — it lists
   // modules for one institution, not all institutions' modules at once.
+  // An institution's expiry rules (one settings document): the System user
+  // sets only the module subscriptions' grace (days a module keeps working
+  // after its end date). Self applies at once.
+  async getExpiryRules(instProfileId) {
+    const { data: envelope } = await httpClient.post("/global/expiry_rule/get", { inst_profile_id: instProfileId });
+    return extractOne(envelope.data);
+  },
+  async setModuleGrace(instProfileId, rules, graceDays) {
+    const next = rules.map((r) => (r.kind === "MODULE_SUBSCRIPTION" ? { ...r, grace_days: graceDays } : r));
+    const { data: envelope } = await httpClient.post("/global/expiry_rule/edit", { inst_profile_id: instProfileId, rules: next });
+    return { message: envelope.message };
+  },
+
   async listInstitutionModules(instProfileId) {
     const { data: envelope } = await httpClient.post("/institution/module/get_active", {
       view: "dropdown",
