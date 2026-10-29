@@ -1,4 +1,5 @@
 import { httpClient } from "../../../api/httpClient";
+import { API } from "../../../api/endpoints";
 import { extractList, extractOne } from "../../../lib/extractList";
 
 /**
@@ -27,7 +28,7 @@ export const masterDataService = {
   // `path` overrides the default /master/{type} route for entities that
   // live elsewhere (e.g. password_policy is under /user/, not /master/).
   async list(type, filters = {}, path) {
-    const { data: envelope } = await httpClient.post(path ?? `/master/${type}`, { limit: FULL_LIST_LIMIT, ...filters });
+    const { data: envelope } = await httpClient.post(path ?? API.MASTER.list(type), { limit: FULL_LIST_LIMIT, ...filters });
     return extractList(envelope.data);
   },
 
@@ -37,22 +38,22 @@ export const masterDataService = {
   // ({ totalRecords, totalPages, currentPage, limit }) alongside just that
   // page's rows, for DataTable's server-paged mode (`page`/`onPageChange`).
   async listWithPagination(type, { page = 1, limit = 10 } = {}, path) {
-    const { data: envelope } = await httpClient.post(path ?? `/master/${type}`, { page, limit });
+    const { data: envelope } = await httpClient.post(path ?? API.MASTER.list(type), { page, limit });
     return { rows: extractList(envelope.data), pagination: envelope.pagination };
   },
 
   async add(type, payload) {
-    const { data: envelope } = await httpClient.post(`/system/master/${type}/add`, payload);
+    const { data: envelope } = await httpClient.post(API.MASTER.add(type), payload);
     return extractOne(envelope.data);
   },
 
   async edit(type, payload) {
-    const { data: envelope } = await httpClient.post(`/system/master/${type}/edit`, payload);
+    const { data: envelope } = await httpClient.post(API.MASTER.edit(type), payload);
     return extractOne(envelope.data);
   },
 
   async remove(type, id) {
-    const { data: envelope } = await httpClient.post(`/system/master/${type}/delete`, { id });
+    const { data: envelope } = await httpClient.post(API.MASTER.remove(type), { id });
     return extractOne(envelope.data);
   },
 };

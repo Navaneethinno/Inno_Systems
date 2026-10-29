@@ -1,3 +1,5 @@
+import { version } from "../../package.json";
+
 // Fail loudly at startup rather than silently falling back to a hardcoded
 // URL/credential baked into the bundle — every deployment (local, preview,
 // prod) must supply its own via .env / the host's env var settings.
@@ -12,6 +14,7 @@ function requireEnv(key) {
 export const env = {
   apiBaseUrl: requireEnv("VITE_API_BASE_URL"),
   appName: "Innovitegra Solutions",
+  appVersion: version,
   tokenStorageKey: "innovitegra_access_token",
   refreshStorageKey: "innovitegra_refresh_token",
   userStorageKey: "innovitegra_user",

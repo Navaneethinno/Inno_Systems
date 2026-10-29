@@ -4,10 +4,10 @@ import { Button } from "../../../components/ui/Button";
 import { Modal } from "../../../components/ui/Modal";
 import { TextField } from "../../../components/ui/TextField";
 import { DataTable } from "../../../components/ui/DataTable";
+import { PageHeader } from "../../../components/ui/PageHeader";
+import { Alert } from "../../../components/ui/Alert";
 import { formatDateTime, formatNumber } from "./formatAml";
 import { StatusPill } from "./StatusPill";
-import "../../masterData/components/MasterDataPage.css";
-import "./Aml.css";
 
 // Jobs flip `running` and re-screening runs finish on their own — while
 // anything is in flight, re-read both tables every few seconds.
@@ -46,8 +46,8 @@ function IntervalModal({ job, onSaved, onClose }) {
 
   return (
     <Modal title={`Interval — ${job.name}`} onClose={onClose}>
-      <form className="aml__stack" onSubmit={handleSubmit}>
-        {error && <div className="mdp__error">{error}</div>}
+      <form className="stack" onSubmit={handleSubmit}>
+        {error && <Alert>{error}</Alert>}
         <TextField
           label="Run every (minutes)"
           type="number"
@@ -57,8 +57,8 @@ function IntervalModal({ job, onSaved, onClose }) {
           value={value}
           onChange={(e) => setValue(e.target.value)}
         />
-        <p className="aml__note">Between 1 and {MAX_INTERVAL} (7 days). The new interval counts from the last run.</p>
-        <div className="mdp__header-actions" style={{ justifyContent: "flex-end" }}>
+        <p className="note">Between 1 and {MAX_INTERVAL} (7 days). The new interval counts from the last run.</p>
+        <div className="form-actions">
           <Button type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
@@ -122,8 +122,8 @@ export function BackgroundJobsPage() {
       label: "Job",
       render: (j) => (
         <>
-          <span className="aml__name">{j.name}</span>
-          <span className="aml__sub aml__mono">{j.code}</span>
+          <span className="cell-title">{j.name}</span>
+          <span className="cell-sub mono">{j.code}</span>
         </>
       ),
     },
@@ -134,7 +134,7 @@ export function BackgroundJobsPage() {
       render: (j) => (
         <>
           {j.running ? <StatusPill status="RUNNING" /> : <StatusPill status={j.last_status} />}
-          {j.last_error && <span className="aml__row-error">{j.last_error}</span>}
+          {j.last_error && <span className="cell-error">{j.last_error}</span>}
         </>
       ),
     },
@@ -150,7 +150,7 @@ export function BackgroundJobsPage() {
           role="switch"
           aria-checked={!!j.enabled}
           aria-label={`${j.enabled ? "Switch off" : "Switch on"} ${j.name}`}
-          className={`aml__switch ${j.enabled ? "aml__switch--on" : ""}`}
+          className={`switch ${j.enabled ? "switch--on" : ""}`}
           disabled={busyCode === j.code}
           onClick={() => toggleJob(j)}
         />
@@ -166,7 +166,7 @@ export function BackgroundJobsPage() {
       render: (r) => (
         <>
           <StatusPill status={r.status} />
-          {r.error && <span className="aml__row-error">{r.error}</span>}
+          {r.error && <span className="cell-error">{r.error}</span>}
         </>
       ),
     },
@@ -184,7 +184,7 @@ export function BackgroundJobsPage() {
       sortable: false,
       render: (r) =>
         r.indices?.length ? (
-          <span className="aml__mono" title={r.indices.join("\n")}>
+          <span className="mono" title={r.indices.join("\n")}>
             {r.indices.length} version{r.indices.length === 1 ? "" : "s"}
           </span>
         ) : (
@@ -194,40 +194,43 @@ export function BackgroundJobsPage() {
   ];
 
   return (
-    <div className="mdp">
-      <div className="mdp__header">
-        <div>
-          <span className="mdp__eyebrow">AML</span>
-          <h1 className="mdp__title">Background Jobs</h1>
-          <p className="mdp__subtitle">The scheduled jobs that keep watchlists and ongoing screening up to date.</p>
-        </div>
-        <div className="mdp__header-actions">
-          <Button variant="secondary" onClick={load}>
+    <div className="page">
+      <PageHeader
+        eyebrow="AML"
+        title="Background Jobs"
+        subtitle="The scheduled jobs that keep watchlists and ongoing screening up to date."
+        actions={
+          <Button variant="secondary" onClick={load} icon="refresh">
             Reload
           </Button>
-        </div>
-      </div>
+        }
+      />
 
-      {error && <div className="mdp__error">{error}</div>}
+      {error && jobs?.length > 0 && <Alert>{error}</Alert>}
 
       <DataTable
+        error={error}
         columns={jobColumns}
         rows={jobs}
         isLoading={jobs === null}
         emptyMessage="No jobs."
         actions={(j) => (
-          <button type="button" className="aml__text-btn" onClick={() => setEditing(j)}>
+          <button type="button" className="text-btn" onClick={() => setEditing(j)}>
             Change interval
           </button>
         )}
       />
 
-      <h2 className="aml__section-title">Re-screening Runs</h2>
-      <p className="aml__note" style={{ marginBottom: 12 }}>
-        Ongoing Re-Screening runs after every list change and re-screens only when the searched list versions changed.
-        Hover “List versions” to see which ones a run used.
-      </p>
-      <DataTable columns={runColumns} rows={runs} isLoading={runs === null} emptyMessage="No re-screening runs yet." />
+      <section className="section">
+        <div>
+          <h2 className="section-title">Re-screening Runs</h2>
+          <p className="note">
+            Ongoing Re-Screening runs after every list change and re-screens only when the searched list versions changed.
+            Hover “List versions” to see which ones a run used.
+          </p>
+        </div>
+        <DataTable columns={runColumns} rows={runs} isLoading={runs === null} emptyMessage="No re-screening runs yet." />
+      </section>
 
       {editing && (
         <IntervalModal

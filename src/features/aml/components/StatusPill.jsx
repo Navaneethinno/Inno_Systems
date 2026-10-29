@@ -1,3 +1,5 @@
+import { TonePill } from "../../../components/ui/StatusBadge";
+
 const TONES = {
   ACTIVE: "active",
   OK: "active",
@@ -8,9 +10,8 @@ const TONES = {
   FAILED: "rejected",
 };
 
-// Reuses the DataTable status-pill styles so AML states look like every
-// other status in the Console.
+// Reuses the shared status pill so AML states look like every other
+// status in the Console.
 export function StatusPill({ status, label }) {
-  const tone = TONES[status] ?? "inactive";
-  return <span className={`dt__status dt__status--${tone}`}>{label ?? (status || "Never run")}</span>;
+  return <TonePill tone={TONES[status] ?? "inactive"}>{label ?? (status || "Never run")}</TonePill>;
 }

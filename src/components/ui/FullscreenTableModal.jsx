@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DataTable } from "./DataTable";
+import { Button } from "./Button";
+import { IconButton } from "./IconButton";
+import { TableSearchBar } from "./TableSearchBar";
 import "./FullscreenTableModal.css";
 
 const INFINITE_PAGE_SIZE = 50;
@@ -100,7 +103,7 @@ export function FullscreenTableModal({ title, columns, rows, actions, onClose, f
     <div className="ftm__overlay" onMouseDown={onClose}>
       <div className="ftm__panel" onMouseDown={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
         <div className="ftm__header">
-          <div>
+          <div className="ftm__heading">
             <h2 className="ftm__title">{title}</h2>
             <p className="ftm__count">
               {isInfinite
@@ -108,25 +111,13 @@ export function FullscreenTableModal({ title, columns, rows, actions, onClose, f
                 : `${filteredRows.length} of ${rows.length} record${rows.length === 1 ? "" : "s"}`}
             </p>
           </div>
-          <button type="button" className="ftm__close" onClick={onClose} aria-label="Close">
-            ×
-          </button>
-        </div>
-
-        <div className="ftm__toolbar">
-          <div className="ftm__search">
-            <svg viewBox="0 0 20 20" fill="none" width="16" height="16" aria-hidden="true">
-              <circle cx="9" cy="9" r="6" stroke="currentColor" strokeWidth="1.6" />
-              <path d="m17 17-3.5-3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-            </svg>
-            <input
-              type="text"
-              placeholder={isInfinite ? "Search loaded rows…" : "Search all columns…"}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              autoFocus
-            />
-          </div>
+          <TableSearchBar
+            value={query}
+            onChange={setQuery}
+            placeholder={isInfinite ? "Search loaded rows…" : "Search all columns…"}
+            autoFocus
+          />
+          <IconButton icon="close" label="Close" tone="ghost" size={18} onClick={onClose} />
         </div>
 
         <div className="ftm__body" ref={scrollRef} onScroll={handleScroll}>
@@ -137,6 +128,7 @@ export function FullscreenTableModal({ title, columns, rows, actions, onClose, f
             isLoading={isInitialInfiniteLoad}
             emptyMessage="No matching records."
             paginate={false}
+            density="compact"
           />
 
           {isInfinite && !isInitialInfiniteLoad && (
@@ -144,12 +136,15 @@ export function FullscreenTableModal({ title, columns, rows, actions, onClose, f
               {infiniteError ? (
                 <>
                   <span className="ftm__infinite-error">{infiniteError}</span>
-                  <button type="button" className="ftm__infinite-retry" onClick={loadMore}>
+                  <Button variant="secondary" size="sm" icon="refresh" onClick={loadMore}>
                     Retry
-                  </button>
+                  </Button>
                 </>
               ) : infiniteLoading ? (
-                "Loading more…"
+                <>
+                  <span className="ftm__spinner" aria-hidden="true" />
+                  Loading more…
+                </>
               ) : infiniteHasMore ? (
                 "Scroll for more"
               ) : (

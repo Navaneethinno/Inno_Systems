@@ -1,25 +1,8 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./store/AuthContext";
 import { ThemeProvider } from "./store/ThemeContext";
-import { ProtectedRoute, PublicOnlyRoute } from "./routes/ProtectedRoute";
-import { AppShell } from "./components/layout/AppShell";
 import { ErrorToaster } from "./components/ui/ErrorToaster";
-import { LoginPage } from "./features/auth/components/LoginPage";
-import { DashboardPage } from "./pages/dashboard/DashboardPage";
-import { MasterCrudPage } from "./features/masterData/components/MasterCrudPage";
-import { MenuActionsPage } from "./features/masterData/components/MenuActionsPage";
-import { MasterListPage } from "./features/masterData/components/MasterListPage";
-import { SystemFormPage } from "./features/system/components/SystemFormPage";
-import { ProfileFormPage } from "./features/system/components/ProfileFormPage";
-import { InstitutionFormPage } from "./features/system/components/InstitutionFormPage";
-import { InstitutionModuleFormPage } from "./features/system/components/InstitutionModuleFormPage";
-import { WatchlistsPage } from "./features/aml/components/WatchlistsPage";
-import { BackgroundJobsPage } from "./features/aml/components/BackgroundJobsPage";
-import { TryNamePage } from "./features/aml/components/TryNamePage";
-import { KeyCustodyPage } from "./features/keys/components/KeyCustodyPage";
-import { PlatformMonitorPage } from "./features/monitor/components/PlatformMonitorPage";
-import { SecurityEventsPage } from "./features/security/components/SecurityEventsPage";
-import { ExpiringDocumentsPage } from "./features/expiry/components/ExpiringDocumentsPage";
+import { AppRoutes } from "./routes/AppRoutes";
 
 function App() {
   return (
@@ -27,40 +10,7 @@ function App() {
       <BrowserRouter>
         <AuthProvider>
           <ErrorToaster />
-          <Routes>
-            <Route
-              path="/login"
-              element={
-                <PublicOnlyRoute>
-                  <LoginPage />
-                </PublicOnlyRoute>
-              }
-            />
-
-            <Route
-              element={
-                <ProtectedRoute>
-                  <AppShell />
-                </ProtectedRoute>
-              }
-            >
-              <Route path="/" element={<DashboardPage />} />
-              <Route path="/master/menu_action" element={<MenuActionsPage />} />
-              <Route path="/master/:entityKey" element={<MasterCrudPage />} />
-              <Route path="/reference/:entityKey" element={<MasterListPage />} />
-              <Route path="/system/profile" element={<ProfileFormPage />} />
-              <Route path="/system/institution" element={<InstitutionFormPage />} />
-              <Route path="/system/institutionModule" element={<InstitutionModuleFormPage />} />
-              <Route path="/system/:formKey" element={<SystemFormPage />} />
-              <Route path="/aml/watchlists" element={<WatchlistsPage />} />
-              <Route path="/aml/jobs" element={<BackgroundJobsPage />} />
-              <Route path="/aml/try-name" element={<TryNamePage />} />
-              <Route path="/system/key-custody" element={<KeyCustodyPage />} />
-              <Route path="/system/monitor" element={<PlatformMonitorPage />} />
-              <Route path="/security/events" element={<SecurityEventsPage />} />
-              <Route path="/expiry/documents" element={<ExpiringDocumentsPage />} />
-            </Route>
-          </Routes>
+          <AppRoutes />
         </AuthProvider>
       </BrowserRouter>
     </ThemeProvider>

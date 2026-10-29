@@ -1,4 +1,5 @@
 import { httpClient } from "../../../api/httpClient";
+import { API } from "../../../api/endpoints";
 import { extractOne } from "../../../lib/extractList";
 
 /**
@@ -11,7 +12,7 @@ import { extractOne } from "../../../lib/extractList";
  */
 export const monitorService = {
   async view(view, body = {}) {
-    const { data: envelope } = await httpClient.post(`/system/monitor/${view}`, body);
+    const { data: envelope } = await httpClient.post(API.SYSTEM.MONITOR.view(view), body);
     return extractOne(envelope.data) ?? {};
   },
 };

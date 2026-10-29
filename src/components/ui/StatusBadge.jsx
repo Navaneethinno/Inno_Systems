@@ -1,4 +1,4 @@
-import "./DataTable.css";
+import "./StatusBadge.css";
 
 /**
  * The single "Active"/"Inactive" pill used everywhere a row's status is
@@ -11,4 +11,13 @@ export function StatusBadge({ active }) {
       {active ? "Active" : "Inactive"}
     </span>
   );
+}
+
+/**
+ * A status pill in one of the four tones (active | pending | rejected |
+ * inactive) with any label — for states that aren't a plain Active/Inactive
+ * (job runs, severities, expiry states).
+ */
+export function TonePill({ tone = "inactive", children }) {
+  return <span className={`dt__status dt__status--${tone}`}>{children}</span>;
 }

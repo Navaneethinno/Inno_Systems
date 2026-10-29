@@ -1,118 +1,96 @@
 .ftm__overlay {
   position: fixed;
   inset: 0;
-  background: rgba(5, 11, 46, 0.55);
-  backdrop-filter: blur(2px);
+  z-index: var(--z-modal);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
-  z-index: 100;
+  background: var(--color-overlay);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: ftm-fade var(--duration-base) ease-out;
 }
 
 .ftm__panel {
-  width: 100%;
-  height: 100%;
-  max-width: 1400px;
-  background: var(--color-surface);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
   display: flex;
   flex-direction: column;
+  width: 100%;
+  height: 100%;
+  max-width: 1440px;
   overflow: hidden;
-  animation: ftm-in 0.16s ease;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-xl);
+  animation: ftm-in var(--duration-slow) var(--ease-out);
+}
+
+@keyframes ftm-fade {
+  from {
+    opacity: 0;
+  }
 }
 
 @keyframes ftm-in {
   from {
     opacity: 0;
-    transform: scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
+    transform: scale(0.985);
   }
 }
 
 .ftm__header {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  padding: 22px 28px 16px;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  padding: 18px 24px;
   border-bottom: 1px solid var(--color-border);
+}
+
+.ftm__heading {
+  flex: 1 1 200px;
+  min-width: 0;
 }
 
 .ftm__title {
+  margin: 0;
   font-family: var(--font-display);
-  font-size: 19px;
-  font-weight: 700;
+  font-size: var(--text-xl);
+  font-weight: 600;
   color: var(--color-text);
-  margin: 0 0 4px;
 }
 
 .ftm__count {
-  font-size: 12.5px;
+  margin: 2px 0 0;
+  font-size: var(--text-xs);
   color: var(--color-text-muted);
-  margin: 0;
 }
 
-.ftm__close {
-  background: none;
-  border: none;
-  font-size: 26px;
-  line-height: 1;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  padding: 2px 8px;
-  border-radius: var(--radius-sm);
-}
-
-.ftm__close:hover {
-  color: var(--color-text);
-  background: var(--color-table-head);
-}
-
-.ftm__toolbar {
-  padding: 16px 28px;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.ftm__search {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  max-width: 360px;
-  border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  padding: 0 12px;
-  background: var(--color-input-bg);
-}
-
-.ftm__search:focus-within {
-  border-color: var(--color-primary);
-  background: var(--color-surface);
-  box-shadow: 0 0 0 4px rgba(34, 102, 238, 0.12);
-}
-
-.ftm__search svg {
-  color: var(--color-text-muted);
-  flex-shrink: 0;
-}
-
-.ftm__search input {
-  flex: 1;
-  border: none;
-  outline: none;
-  background: transparent;
-  padding: 10px 0;
-  font-size: 14px;
-  color: var(--color-text);
+.ftm__header .tsb {
+  flex: 0 1 360px;
 }
 
 .ftm__body {
   flex: 1;
-  overflow-y: auto;
-  padding: 20px 28px 28px;
+  overflow: auto;
+  padding: 0 24px 24px;
+}
+
+/* The body is the scroll container here, so the table frame must not clip
+   or scroll on its own — that's what lets the sticky header pin to the top
+   of the modal body while scrolling through thousands of rows. */
+.ftm__body .dt__frame,
+.ftm__body .dt__scroll {
+  overflow: visible;
+}
+
+.ftm__body .dt__frame {
+  margin-top: 16px;
+}
+
+.ftm__body .dt th {
+  top: 0;
 }
 
 .ftm__infinite-status {
@@ -120,29 +98,28 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  padding: 14px 0 4px;
-  font-size: 12.5px;
+  padding: 16px 0 4px;
+  font-size: var(--text-xs);
   color: var(--color-text-muted);
 }
 
 .ftm__infinite-error {
-  color: var(--color-danger);
+  color: var(--color-danger-text);
 }
 
-.ftm__infinite-retry {
-  border: 1.5px solid var(--color-border);
-  background: var(--color-surface);
-  color: var(--color-text);
-  font-size: 12.5px;
-  font-weight: 600;
-  padding: 5px 12px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
+.ftm__spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--color-border-strong);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: ftm-spin 0.7s linear infinite;
 }
 
-.ftm__infinite-retry:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
+@keyframes ftm-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (max-width: 640px) {
@@ -152,16 +129,20 @@
 
   .ftm__panel {
     border-radius: 0;
+    border: none;
   }
 
-  .ftm__header,
-  .ftm__toolbar,
-  .ftm__body {
-    padding-left: 16px;
-    padding-right: 16px;
+  .ftm__header {
+    padding: 14px 16px;
   }
 
-  .ftm__search {
+  .ftm__header .tsb {
+    order: 3;
+    flex: 1 1 100%;
     max-width: none;
+  }
+
+  .ftm__body {
+    padding: 0 16px 16px;
   }
 }

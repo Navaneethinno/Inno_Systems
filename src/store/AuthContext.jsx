@@ -1,7 +1,6 @@
-import { createContext, useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { authService } from "../features/auth/services/authService";
-
-export const AuthContext = createContext(undefined);
+import { AuthContext } from "./contexts";
 
 export function AuthProvider({ children }) {
   // No /me endpoint exists on this backend — rehydrate the user we cached

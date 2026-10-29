@@ -7,12 +7,12 @@ import { DataTable } from "../../../components/ui/DataTable";
 import { Select } from "../../../components/ui/Select";
 import { TableSearchBar } from "../../../components/ui/TableSearchBar";
 import { TextField } from "../../../components/ui/TextField";
-import "../../masterData/components/MasterDataPage.css";
-import "../../aml/components/Aml.css";
-import "../../security/components/SecurityEvents.css";
+import { PageHeader } from "../../../components/ui/PageHeader";
+import { Alert } from "../../../components/ui/Alert";
+import { TonePill } from "../../../components/ui/StatusBadge";
 
 const LIMIT = 50;
-// State: VALID grey, EXPIRING amber, IN_GRACE / EXPIRED red (the DataTable pill tones).
+// State: VALID grey, EXPIRING amber, IN_GRACE / EXPIRED red (the status-pill tones).
 const STATES = [
   ["EXPIRING", "Expiring", "pending"],
   ["IN_GRACE", "In grace", "rejected"],
@@ -84,10 +84,8 @@ export function ExpiringDocumentsPage() {
       label: "Customer or merchant",
       render: (r) => (
         <span>
-          <b>{r.party_name || "—"}</b>
-          <span className="aml__note" style={{ display: "block" }}>
-            {PARTY[r.subject_type] ?? r.subject_type}
-          </span>
+          <span className="cell-title">{r.party_name || "—"}</span>
+          <span className="cell-sub">{PARTY[r.subject_type] ?? r.subject_type}</span>
         </span>
       ),
     },
@@ -97,9 +95,7 @@ export function ExpiringDocumentsPage() {
       render: (r) => (
         <span>
           {r.label}
-          <span className="aml__mono aml__note" style={{ display: "block" }}>
-            {r.reference || "—"}
-          </span>
+          <span className="cell-sub mono">{r.reference || "—"}</span>
         </span>
       ),
     },
@@ -107,11 +103,9 @@ export function ExpiringDocumentsPage() {
       key: "expires_on",
       label: "Expires on",
       render: (r) => (
-        <span className="sec__nowrap">
+        <span className="nowrap">
           {String(r.expires_on ?? "").slice(0, 10) || "—"}
-          <span className="aml__note" style={{ display: "block" }}>
-            {daysLeft(r.days_left)}
-          </span>
+          <span className="cell-sub">{daysLeft(r.days_left)}</span>
         </span>
       ),
     },
@@ -120,34 +114,22 @@ export function ExpiringDocumentsPage() {
       label: "State",
       render: (r) => (
         <span>
-          <span className={`dt__status dt__status--${STATE[r.state]?.tone ?? "inactive"}`}>{STATE[r.state]?.label ?? r.state}</span>
-          {r.holds?.length > 0 && (
-            <span className="aml__note" style={{ display: "block", color: "#b91c1c", fontWeight: 700 }}>
-              Money held
-            </span>
-          )}
+          <TonePill tone={STATE[r.state]?.tone}>{STATE[r.state]?.label ?? r.state}</TonePill>
+          {r.holds?.length > 0 && <strong className="cell-error">Money held</strong>}
         </span>
       ),
     },
-    { key: "action_taken", label: "Action taken", render: (r) => <span className="aml__mono">{r.action_taken || "—"}</span> },
+    { key: "action_taken", label: "Action taken", render: (r) => <span className="mono">{r.action_taken || "—"}</span> },
   ];
 
   const pagination = result?.pagination;
   return (
-    <div className="mdp">
-      <div className="mdp__header">
-        <div>
-          <span className="mdp__eyebrow">Expiry</span>
-          <h1 className="mdp__title">Expiring Documents</h1>
-          <p className="mdp__subtitle">
-            Customers&apos; and merchants&apos; documents in every institution, by how close they are to expiry. A renewed document leaves the list and its hold is lifted.
-          </p>
-        </div>
-      </div>
+    <div className="page">
+      <PageHeader eyebrow="Expiry" title="Expiring Documents" subtitle="Customers' and merchants' documents in every institution, by how close they are to expiry. A renewed document leaves the list and its hold is lifted." />
 
-      {error && <div className="mdp__error">{error}</div>}
+      {error && result?.rows?.length > 0 && <Alert>{error}</Alert>}
 
-      <div className="sec__filters">
+      <div className="filter-bar">
         <TableSearchBar value={search} onChange={setSearch} placeholder="Search name, reference or document…" />
         <Select label="Institution" placeholder="All institutions" value={filters.inst_profile_id} onChange={set("inst_profile_id")} options={institutions.map((row) => ({ value: String(rowValue(row)), label: rowLabel(row) }))} />
         <Select label="State" placeholder="All" value={filters.tab} onChange={set("tab")} options={STATES.map(([value, label]) => ({ value, label }))} />
@@ -155,7 +137,8 @@ export function ExpiringDocumentsPage() {
         <TextField label="Expiring within (days)" type="number" min={0} value={filters.within_days} onChange={set("within_days")} />
         {filtered && (
           <Button
-            variant="secondary"
+            variant="ghost"
+            icon="close"
             onClick={() => {
               setSearch("");
               filterBy(EMPTY);
@@ -167,6 +150,7 @@ export function ExpiringDocumentsPage() {
       </div>
 
       <DataTable
+        error={error}
         columns={columns}
         rows={result?.rows}
         isLoading={result === null}

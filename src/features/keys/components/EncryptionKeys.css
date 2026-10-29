@@ -1,45 +1,36 @@
-/* Encryption Keys: the status card, the key-part entry and the replies. */
-.keys__card {
-  padding: 18px;
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  background: var(--color-surface, transparent);
-  margin: 0 0 20px;
-}
-
-.keys__entry {
-  margin-top: 20px;
-}
-
-.keys__card-title {
-  margin: 0 0 4px;
+/* Key Custody: the status card, the key-part entry reply, custodian slots. */
+.keys__actions {
+  justify-content: flex-end;
 }
 
 .keys__status {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px 32px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-4) var(--space-6);
+  padding: var(--space-5);
 }
 
 .keys__status > div {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 6px;
   min-width: 0;
 }
 
 .keys__label {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--color-text-muted);
 }
 
 .keys__kcv {
-  font-size: 16px;
-  font-weight: 700;
+  font-size: var(--text-lg);
+  font-weight: 600;
   color: var(--color-text);
+  overflow-wrap: anywhere;
 }
 
 .keys__missing {
@@ -47,9 +38,8 @@
 }
 
 .keys__count {
-  display: block;
-  margin-top: 4px;
-  text-align: right;
+  align-self: flex-end;
+  font-variant-numeric: tabular-nums;
 }
 
 .keys__result {
@@ -58,49 +48,68 @@
   gap: 4px;
   padding: 12px 14px;
   border: 1px solid var(--color-success-border);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: var(--color-success-bg);
   color: var(--color-success-text);
-  font-size: 13px;
+  font-size: var(--text-sm);
   overflow-wrap: anywhere;
 }
 
-.keys__notice {
-  margin-bottom: 16px;
-}
-
-/* Key Custody: tabs, warnings, slots. */
-.keys__actions {
-  justify-content: flex-end;
-  margin-bottom: 16px;
-}
-
 .keys__locked {
-  font-weight: 700;
+  border-width: 1.5px;
 }
 
 .keys__warning {
-  display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  border-color: #f59e0b;
-  background: rgba(245, 158, 11, 0.08);
+  flex-wrap: wrap;
 }
 
 .keys__slots {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+  gap: var(--space-4);
+}
+
+.keys__slot {
+  padding: var(--space-5);
+}
+
+.keys__slot-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.keys__slot-head .btn {
+  margin-left: auto;
+}
+
+.keys__slot-badge {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-navy-soft));
+  color: var(--color-white);
+  font-family: var(--font-display);
+  font-weight: 700;
 }
 
 .keys__custodian {
   display: flex;
   justify-content: space-between;
-  gap: 8px;
-  padding: 10px 0;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-3) 0;
   border-top: 1px solid var(--color-border);
+}
+
+.keys__custodian:last-child {
+  padding-bottom: 0;
 }
 
 .keys__badges {

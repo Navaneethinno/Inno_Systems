@@ -5,15 +5,23 @@ import { DataTable } from "../../../components/ui/DataTable";
 import { Select } from "../../../components/ui/Select";
 import { TableSearchBar } from "../../../components/ui/TableSearchBar";
 import { TextField } from "../../../components/ui/TextField";
+import { PageHeader } from "../../../components/ui/PageHeader";
+import { Alert } from "../../../components/ui/Alert";
+import { StatCard } from "../../../components/ui/StatCard";
+import { TonePill } from "../../../components/ui/StatusBadge";
 import { formatDateTime, formatNumber } from "../../aml/components/formatAml";
-import "../../masterData/components/MasterDataPage.css";
-import "../../aml/components/Aml.css";
-import "./SecurityEvents.css";
 
 const LIMIT = 50;
+
+// Browsers line-break at hyphens, which split ISO timestamps in the
+// detail text mid-value; each word stays whole and lines break at spaces.
+const unbrokenWords = (text) =>
+  text.split(/(\s+)/).map((part, i) => (part.trim() ? <span key={i} className="nowrap">{part}</span> : part));
 const SEVERITIES = ["HIGH", "MEDIUM", "LOW", "INFO"];
-// Reuses the DataTable status-pill tones: HIGH red, MEDIUM amber, the rest grey.
+// Reuses the status-pill tones: HIGH red, MEDIUM amber, the rest grey.
 const TONES = { HIGH: "rejected", MEDIUM: "pending" };
+// The same severities as stat-card edge colours.
+const TILE_TONES = { HIGH: "bad", MEDIUM: "warn", LOW: "info" };
 const KINDS = [
   ["FILE_CHANGED", "A configuration or security file changed"],
   ["FILE_ADDED", "A watched file appeared"],
@@ -38,7 +46,7 @@ const MEANING = Object.fromEntries(KINDS);
 const EMPTY = { kind: "", severity: "", search: "", from: "", to: "" };
 
 function SeverityPill({ value }) {
-  return <span className={`dt__status dt__status--${TONES[value] ?? "inactive"}`}>{value}</span>;
+  return <TonePill tone={TONES[value] ?? "inactive"}>{value}</TonePill>;
 }
 
 export function SecurityEventsPage() {
@@ -79,59 +87,56 @@ export function SecurityEventsPage() {
   const filtered = Object.entries(filters).some(([, v]) => v);
 
   const columns = [
-    { key: "occurred_at", label: "Time", render: (r) => <span className="sec__nowrap">{formatDateTime(r.occurred_at)}</span> },
+    { key: "occurred_at", label: "Time", render: (r) => <span className="nowrap">{formatDateTime(r.occurred_at)}</span> },
     { key: "severity", label: "Severity", render: (r) => <SeverityPill value={r.severity} /> },
     {
       key: "kind",
       label: "Kind",
       render: (r) => (
-        <span className="aml__mono" title={MEANING[r.kind]}>
+        <span className="mono" title={MEANING[r.kind]}>
           {r.kind}
         </span>
       ),
     },
-    { key: "subject", label: "Subject", render: (r) => <span className="aml__mono sec__wrap">{r.subject || "—"}</span> },
-    { key: "detail", label: "Detail", render: (r) => <span className="sec__wrap">{r.detail || "—"}</span> },
+    { key: "subject", label: "Subject", render: (r) => <span className="mono cell-wrap">{r.subject || "—"}</span> },
+    { key: "detail", label: "Detail", render: (r) => <span className="cell-wrap">{r.detail ? unbrokenWords(r.detail) : "—"}</span> },
     { key: "repeats", label: "Repeats", render: (r) => (r.repeats > 1 ? `×${formatNumber(r.repeats)}` : "—") },
     { key: "inst_profile_name", label: "Institution", render: (r) => r.inst_profile_name || "—" },
-    { key: "source", label: "Source", render: (r) => <span className="aml__mono">{r.source || "—"}</span> },
+    { key: "source", label: "Source", render: (r) => <span className="mono">{r.source || "—"}</span> },
   ];
 
   return (
-    <div className="mdp">
-      <div className="mdp__header">
-        <div>
-          <span className="mdp__eyebrow">Security</span>
-          <h1 className="mdp__title">Security Events</h1>
-          <p className="mdp__subtitle">What the platform&apos;s runtime watch has seen, newest first. Events appear within about a minute.</p>
-        </div>
-        <div className="mdp__header-actions">
-          <Button variant="secondary" onClick={() => setVersion((v) => v + 1)}>
+    <div className="page">
+      <PageHeader
+        eyebrow="Security"
+        title="Security Events"
+        subtitle="What the platform's runtime watch has seen, newest first. Events appear within about a minute."
+        actions={
+          <Button variant="secondary" onClick={() => setVersion((v) => v + 1)} icon="refresh">
             Reload
           </Button>
-        </div>
-      </div>
+        }
+      />
 
-      {error && <div className="mdp__error">{error}</div>}
+      {error && result?.items?.length > 0 && <Alert>{error}</Alert>}
 
       {/* Counts for the current filters; a tile filters by its severity, a
           second click clears it. */}
-      <div className="sec__tiles">
+      <div className="stat-grid">
         {SEVERITIES.map((s) => (
-          <button
+          <StatCard
             key={s}
-            type="button"
-            aria-pressed={filters.severity === s}
-            className={`sec__tile sec__tile--${TONES[s] ?? "inactive"} ${filters.severity === s ? "sec__tile--on" : ""}`}
+            label={s}
+            value={formatNumber(counts[s] ?? 0)}
+            hint={filters.severity === s ? "Filtering · click to clear" : "Click to filter"}
+            tone={TILE_TONES[s]}
+            selected={filters.severity === s}
             onClick={() => filterBy((f) => ({ ...f, severity: f.severity === s ? "" : s }))}
-          >
-            <span className="sec__tile-label">{s}</span>
-            <span className="sec__tile-count">{formatNumber(counts[s] ?? 0)}</span>
-          </button>
+          />
         ))}
       </div>
 
-      <div className="sec__filters">
+      <div className="filter-bar">
         <TableSearchBar value={search} onChange={setSearch} placeholder="Search subject or detail…" />
         <Select label="Kind" placeholder="All kinds" value={filters.kind} onChange={set("kind")} options={KINDS.map(([value, meaning]) => ({ value, label: `${value} · ${meaning}` }))} />
         <Select label="Severity" placeholder="All" value={filters.severity} onChange={set("severity")} options={SEVERITIES.map((s) => ({ value: s, label: s }))} />
@@ -139,7 +144,8 @@ export function SecurityEventsPage() {
         <TextField label="To" type="date" value={filters.to} min={filters.from || undefined} onChange={set("to")} />
         {filtered && (
           <Button
-            variant="secondary"
+            variant="ghost"
+            icon="close"
             onClick={() => {
               setSearch("");
               filterBy(EMPTY);
@@ -151,6 +157,7 @@ export function SecurityEventsPage() {
       </div>
 
       <DataTable
+        error={error}
         columns={columns}
         rows={result?.items}
         isLoading={result === null}

@@ -1,78 +1,193 @@
+/* Shared page primitives (page header, cards, alerts, empty states,
+   skeletons, stat cards, form layout). @import must come first. */
+@import "./primitives.css";
+
 :root {
+  color-scheme: light;
+
+  /* ---------- Brand (fixed in both themes) ---------- */
   --color-primary: #2266ee;
   --color-primary-dark: #1a4fc4;
+  --color-primary-hover: #1d5ad8;
   --color-accent: #26ffff;
   --color-navy: #050b2e;
   --color-navy-soft: #0b1650;
   --color-navy-deep: #030716;
-  --color-slate: #495255;
-  --color-gray-light: #dedfdf;
+  --color-white: #ffffff;
+
+  /* ---------- Surfaces & text ---------- */
+  --color-slate: #475467;
+  --color-gray-light: #dfe3ea;
   --color-surface: #ffffff;
-  --color-page-bg: #f7f8fb;
-  --color-table-head: #f9fafb;
+  --color-surface-raised: #ffffff;
+  --color-surface-sunken: #f2f4f8;
+  --color-page-bg: #f4f6fb;
+  --color-table-head: #f8f9fc;
+  --color-row-hover: #f5f8ff;
   --color-text: #101828;
   --color-text-muted: #667085;
+  --color-text-subtle: #8a93a6;
   --color-placeholder: #a0a7b4;
+  --color-border: #e4e7ec;
+  --color-border-strong: #d0d5dd;
+  --color-input-bg: #ffffff;
+  --color-primary-tint: #f0f5ff;
+  --color-primary-soft: rgba(34, 102, 238, 0.1);
+  --color-primary-ring: rgba(34, 102, 238, 0.18);
+  --color-overlay: rgba(5, 11, 46, 0.5);
+
   --color-danger: #e0342f;
   --color-danger-dark: #b8241f;
-  --color-border: #e4e7ec;
-  --color-input-bg: #fbfcfe;
-  --color-white: #ffffff;
-  --color-primary-tint: #f5f8ff;
 
   /* Semantic tone triples (background/border/text) — every success, danger
      and warning surface in the app (alert banners, status pills, badges)
      reads from these instead of its own hardcoded hex, so retinting any of
      them is a one-line change here instead of a hunt across CSS files. */
   --color-success-bg: #ecfdf3;
-  --color-success-border: #b8f0cc;
-  --color-success-text: #15803d;
+  --color-success-border: #abefc6;
+  --color-success-text: #067647;
+  --color-success-solid: #17b26a;
 
-  --color-warning-bg: #fff7e6;
-  --color-warning-border: #fde3a7;
-  --color-warning-text: #a15c07;
+  --color-warning-bg: #fffaeb;
+  --color-warning-border: #fedf89;
+  --color-warning-text: #b54708;
+  --color-warning-solid: #f79009;
 
-  --color-danger-bg: #fdecec;
-  --color-danger-border: #f6c4c2;
-  --color-danger-text: #9c2b27;
+  --color-danger-bg: #fef3f2;
+  --color-danger-border: #fecdca;
+  --color-danger-text: #b42318;
+  --color-danger-solid: #f04438;
 
+  --color-info-bg: #eff4ff;
+  --color-info-border: #c7d7fe;
+  --color-info-text: #1d4ed8;
+
+  --color-neutral-bg: #f2f4f7;
+  --color-neutral-border: #e4e7ec;
+  --color-neutral-text: #475467;
+
+  /* ---------- Radius ---------- */
+  --radius-xs: 6px;
   --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 22px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
 
+  /* ---------- Spacing scale (4px base) ---------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* ---------- Typography ---------- */
+  --font-display: "Poppins", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --text-2xs: 11px;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-md: 14px;
+  --text-lg: 16px;
+  --text-xl: 18px;
+  --text-2xl: 22px;
+  --text-3xl: 28px;
+  --text-4xl: 36px;
+
+  /* ---------- Elevation ---------- */
+  --shadow-xs: 0 1px 2px rgba(16, 24, 40, 0.05);
+  --shadow-sm: 0 1px 3px rgba(16, 24, 40, 0.08), 0 1px 2px rgba(16, 24, 40, 0.04);
+  --shadow-md: 0 6px 16px -4px rgba(16, 24, 40, 0.1), 0 2px 6px -2px rgba(16, 24, 40, 0.05);
+  --shadow-lg: 0 16px 32px -8px rgba(16, 24, 40, 0.14), 0 4px 8px -4px rgba(16, 24, 40, 0.05);
+  --shadow-xl: 0 28px 64px -16px rgba(5, 11, 46, 0.32);
   --shadow-card: 0 24px 60px -20px rgba(5, 11, 46, 0.35);
-  --font-display: "Poppins", "Gotham", "Segoe UI", sans-serif;
-  --font-body: "Inter", "Gotham", "Segoe UI", sans-serif;
+  --shadow-primary: 0 8px 20px -8px rgba(34, 102, 238, 0.55);
+
+  /* ---------- Focus ---------- */
+  --focus-ring: 0 0 0 4px var(--color-primary-ring);
+  --focus-outline: 2px solid var(--color-primary);
+
+  /* ---------- Motion ---------- */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-standard: cubic-bezier(0.2, 0.8, 0.4, 1);
+  --duration-fast: 120ms;
+  --duration-base: 180ms;
+  --duration-slow: 280ms;
+  --transition-base: var(--duration-base) var(--ease-standard);
+
+  /* ---------- Layers ---------- */
+  --z-sticky: 10;
+  --z-dropdown: 50;
+  --z-modal: 100;
+  --z-toast: 1000;
+
+  /* ---------- Layout ---------- */
+  --page-max-width: 1440px;
 }
 
 /* Dark mode: toggled via a "theme" attribute on <html>, not OS preference,
    so it's an explicit user choice (persisted to localStorage). */
 :root[data-theme="dark"] {
-  --color-surface: #12172a;
-  --color-page-bg: #0b0e1a;
-  --color-table-head: #171d33;
-  --color-text: #e7e9f3;
-  --color-text-muted: #8f96ad;
-  --color-border: #262c44;
-  --color-input-bg: #171b2e;
-  --color-gray-light: #2a3050;
-  --shadow-card: 0 24px 60px -20px rgba(0, 0, 0, 0.6);
-  --color-primary-tint: #182035;
+  color-scheme: dark;
 
-  --color-success-bg: rgba(21, 128, 61, 0.18);
-  --color-success-border: rgba(74, 222, 128, 0.35);
+  --color-slate: #b4bcd0;
+  --color-surface: #11162b;
+  --color-surface-raised: #161c35;
+  --color-surface-sunken: #0d1124;
+  --color-page-bg: #0a0d1c;
+  --color-table-head: #151b33;
+  --color-row-hover: #182040;
+  --color-text: #e7e9f3;
+  --color-text-muted: #98a0b8;
+  --color-text-subtle: #6f7894;
+  --color-placeholder: #5e6784;
+  --color-border: #242b47;
+  --color-border-strong: #323a5c;
+  --color-input-bg: #0f1428;
+  --color-gray-light: #2a3050;
+  --color-primary-tint: #16203f;
+  --color-primary-soft: rgba(80, 140, 255, 0.16);
+  --color-primary-ring: rgba(80, 140, 255, 0.3);
+  --color-overlay: rgba(2, 4, 14, 0.66);
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 8px 20px -6px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 18px 36px -10px rgba(0, 0, 0, 0.6);
+  --shadow-xl: 0 28px 64px -16px rgba(0, 0, 0, 0.7);
+  --shadow-card: 0 24px 60px -20px rgba(0, 0, 0, 0.6);
+
+  --color-success-bg: rgba(23, 178, 106, 0.14);
+  --color-success-border: rgba(74, 222, 128, 0.3);
   --color-success-text: #4ade80;
 
-  --color-warning-bg: rgba(161, 92, 7, 0.2);
-  --color-warning-border: rgba(251, 191, 36, 0.35);
+  --color-warning-bg: rgba(247, 144, 9, 0.14);
+  --color-warning-border: rgba(251, 191, 36, 0.3);
   --color-warning-text: #fbbf24;
 
-  --color-danger-bg: rgba(156, 43, 39, 0.22);
-  --color-danger-border: rgba(248, 113, 113, 0.35);
+  --color-danger-bg: rgba(240, 68, 56, 0.15);
+  --color-danger-border: rgba(248, 113, 113, 0.32);
   --color-danger-text: #f87171;
+
+  --color-info-bg: rgba(80, 140, 255, 0.14);
+  --color-info-border: rgba(120, 165, 255, 0.32);
+  --color-info-text: #8fb4ff;
+
+  --color-neutral-bg: rgba(152, 160, 184, 0.12);
+  --color-neutral-border: rgba(152, 160, 184, 0.24);
+  --color-neutral-text: #b4bcd0;
 }
 
-* {
+/* ---------- Base ---------- */
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -82,15 +197,115 @@ body,
   height: 100%;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
   font-family: var(--font-body);
+  font-size: var(--text-md);
+  line-height: 1.5;
   color: var(--color-text);
   background: var(--color-page-bg);
   -webkit-font-smoothing: antialiased;
-  transition: background 0.15s ease, color 0.15s ease;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "cv11", "ss01";
+  transition: background var(--duration-base) ease, color var(--duration-base) ease;
 }
 
-button {
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  color: var(--color-text);
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button,
+input,
+select,
+textarea {
   font-family: inherit;
+}
+
+code,
+kbd,
+pre {
+  font-family: var(--font-mono);
+}
+
+img,
+svg {
+  vertical-align: middle;
+}
+
+::selection {
+  background: var(--color-primary-ring);
+  color: inherit;
+}
+
+/* Mouse clicks don't draw a ring; keyboard focus always does. */
+:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--color-primary);
+}
+
+/* Thin, theme-aware scrollbars everywhere except the sidebar (which styles
+   its own). */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-text-subtle);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

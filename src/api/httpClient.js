@@ -3,6 +3,7 @@ import { env } from "../config/env";
 import { tokenStore } from "../lib/tokenStore";
 import { extractOne } from "../lib/extractList";
 import { envelopeRefused, sealFields } from "../lib/credentialSeal";
+import { API, resolveApiPath } from "./endpoints";
 
 export const API_ERROR_EVENT = "api-error";
 
@@ -29,22 +30,13 @@ export const httpClient = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// Every route except /master/* and /aml/* lives under /config on the backend. Services
-// keep writing the bare paths (/system/user/login, /user/list, …); the prefix
-// is added here, once. Guarded so a retried request isn't prefixed twice.
-const CONFIG_PREFIX = "/config";
-function withConfigPrefix(url = "") {
-  if (url.startsWith("/master") || url.startsWith("/aml") || url.startsWith(CONFIG_PREFIX)) return url;
-  return `${CONFIG_PREFIX}${url}`;
-}
-
 httpClient.interceptors.request.use(async (config) => {
-  config.url = withConfigPrefix(config.url);
+  config.url = resolveApiPath(config.url);
   // Credentials are sealed afresh on every send, a retry included, so the
   // plain body is kept aside on the request config.
   if (config._plain === undefined) config._plain = config.data;
   config.data = await sealFields(config._plain);
-  // /system/user/login carries its own Basic auth header — never overwrite it.
+  // Login carries its own Basic auth header — never overwrite it.
   if (!config.headers.Authorization) {
     const token = tokenStore.getAccessToken();
     if (token) {
@@ -68,7 +60,7 @@ httpClient.interceptors.response.use(
     const originalRequest = error.config;
     const sealedRetry = retrySealed(originalRequest, error.response?.data);
     if (sealedRetry) return sealedRetry;
-    const isLoginCall = originalRequest?.url?.includes("/system/user/login");
+    const isLoginCall = originalRequest?.url?.includes(API.AUTH.LOGIN);
 
     if (error.response?.status === 401 && originalRequest && !originalRequest._retry && !isLoginCall) {
       if (isRefreshing) {
@@ -85,7 +77,7 @@ httpClient.interceptors.response.use(
         if (!refreshToken) throw error;
 
         const { data } = await axios.post(
-          `${env.apiBaseUrl}${withConfigPrefix("/system/user/refresh_token")}`,
+          `${env.apiBaseUrl}${resolveApiPath(API.AUTH.REFRESH_TOKEN)}`,
           undefined,
           { headers: { Authorization: `Bearer ${refreshToken}` } }
         );

@@ -3,9 +3,10 @@ import { DataTable } from "../../../components/ui/DataTable";
 import { Modal } from "../../../components/ui/Modal";
 import { Select } from "../../../components/ui/Select";
 import { TableSearchBar } from "../../../components/ui/TableSearchBar";
+import { Alert } from "../../../components/ui/Alert";
 import { Dot, LineChart, MiniTable, Panel, Tile, fmtBytes, fmtDuration, fmtMs, fmtNum, fmtPct, fmtTime, useMonitor } from "./monitorShared";
 
-const Err = ({ error }) => (error ? <div className="mdp__error">{error}</div> : null);
+const Err = ({ error }) => (error ? <Alert>{error}</Alert> : null);
 const Sql = ({ text }) => <code className="pm__sql">{text || "—"}</code>;
 const used = (total, free) => (total ? ((total - free) / total) * 100 : null);
 const tone = (pct, warn = 70, bad = 90) => (pct == null ? undefined : pct >= bad ? "bad" : pct >= warn ? "warn" : "ok");
@@ -21,13 +22,13 @@ export function OverviewTab({ onEvents }) {
   const dbPct = db.max_connections ? (db.connections / db.max_connections) * 100 : null;
   const columns = [
     { key: "service", label: "Processor", render: (p) => (
-        <span className="pm__nowrap">
+        <span className="nowrap">
           <Dot up={p.up} /> {p.service}
           {p.stuck > 0 && <span className="pm__badge pm__badge--bad">{p.stuck} stuck</span>}
         </span>
       ) },
     { key: "uptime_seconds", label: "Uptime", render: (p) => fmtDuration(p.uptime_seconds) },
-    { key: "version", label: "Version", render: (p) => <span className="pm__muted">{p.version ?? "—"}</span> },
+    { key: "version", label: "Version", render: (p) => <span className="muted">{p.version ?? "—"}</span> },
     { key: "cpu_pct", label: "CPU", render: (p) => fmtPct(p.cpu_pct, 2) },
     { key: "rss_bytes", label: "Memory", render: (p) => fmtBytes(p.rss_bytes) },
     { key: "goroutines", label: "Goroutines", render: (p) => fmtNum(p.goroutines) },
@@ -40,7 +41,7 @@ export function OverviewTab({ onEvents }) {
   return (
     <>
       <Err error={error} />
-      {data && data.collected === false && <div className="mdp__error">The platform hasn&apos;t collected any figures yet.</div>}
+      {data && data.collected === false && <Alert>The platform hasn&apos;t collected any figures yet.</Alert>}
       <div className="pm__tiles">
         <Tile label="Processors up" value={data ? `${fmtNum(data.processors_up)} / ${fmtNum(data.processors_total)}` : "…"} tone={data ? (data.processors_up < data.processors_total ? "bad" : "ok") : undefined} />
         <Tile label="Server CPU" value={fmtPct(s.cpu_pct)} hint={s.cpus ? `${s.cpus} CPUs · load ${fmtNum(s.load1, 2)}` : undefined} tone={tone(s.cpu_pct)} />
@@ -53,10 +54,10 @@ export function OverviewTab({ onEvents }) {
       </div>
       <Panel title="Events in the last 24 hours" hint="Click one to see it in Deadlocks & Stalls.">
         <div className="pm__chips">
-          {(data?.events_24h ?? []).length === 0 && <span className="pm__muted">None.</span>}
+          {(data?.events_24h ?? []).length === 0 && <span className="muted">None.</span>}
           {(data?.events_24h ?? []).map((e) => (
             <button key={e.kind} type="button" className="pm__chip" onClick={() => onEvents(e.kind)}>
-              <b>{e.kind}</b> ×{fmtNum(e.count)} <span className="pm__muted">· last {fmtTime(e.last_at)}</span>
+              <b>{e.kind}</b> ×{fmtNum(e.count)} <span className="muted">· last {fmtTime(e.last_at)}</span>
             </button>
           ))}
         </div>
@@ -79,7 +80,7 @@ export function ProcessorsTab({ period, services }) {
       <div className="pm__filters">
         <Select label="Processor" value={pick} onChange={(e) => setService(e.target.value)} options={services.map((s) => ({ value: s, label: s }))} />
       </div>
-      {live.figures_error && <div className="mdp__error">It answers its health check but not its figures: {live.figures_error}</div>}
+      {live.figures_error && <Alert>It answers its health check but not its figures: {live.figures_error}</Alert>}
       <div className="pm__grid">
         <Panel title="CPU">
           <LineChart rows={p?.series} lines={[{ key: "cpu_pct", label: "CPU %" }]} format={(v) => fmtPct(v, 2)} />
@@ -192,7 +193,7 @@ export function ApisTab({ period, services }) {
           {r.route}
         </button>
       ) },
-    { key: "service", label: "Processor", render: (r) => <span className="pm__muted">{r.service}</span> },
+    { key: "service", label: "Processor", render: (r) => <span className="muted">{r.service}</span> },
     { key: "calls", label: "Calls", render: (r) => fmtNum(r.calls) },
     { key: "calls_per_min", label: "Per min", render: (r) => fmtNum(r.calls_per_min, 2) },
     { key: "error_pct", label: "Errors", render: (r) => <span className={r.err_5xx ? "pm__bad" : r.err_4xx ? "pm__warn" : undefined}>{fmtNum(r.err_4xx + r.err_5xx)} · {fmtPct(r.error_pct)}</span> },
@@ -279,8 +280,8 @@ function DbQueries({ period }) {
     { key: "avg_ms", label: "Average", render: (r) => fmtMs(r.avg_ms) },
     { key: "max_ms", label: "Slowest", render: (r) => fmtMs(r.max_ms) },
     { key: "errors", label: "Errors", render: (r) => <span className={r.errors ? "pm__bad" : undefined}>{fmtNum(r.errors)}</span> },
-    { key: "route", label: "Last route", render: (r) => <span className="pm__muted">{r.route}</span> },
-    { key: "services", label: "Processors", render: (r) => <span className="pm__muted">{r.services}</span> },
+    { key: "route", label: "Last route", render: (r) => <span className="muted">{r.route}</span> },
+    { key: "services", label: "Processors", render: (r) => <span className="muted">{r.services}</span> },
   ];
   return (
     <>
@@ -336,11 +337,11 @@ function DbActivity() {
               <li key={i}>
                 <p>
                   <b>PID {w.waiting_pid}</b> has waited {fmtNum(w.waiting_seconds, 1)} s for <b>PID {w.blocking_pid}</b> ({w.blocking_state}, transaction open {fmtNum(w.blocking_transaction_seconds, 1)} s)
-                  {w.tables ? <span className="pm__muted"> · {Array.isArray(w.tables) ? w.tables.join(", ") : w.tables}</span> : null}
+                  {w.tables ? <span className="muted"> · {Array.isArray(w.tables) ? w.tables.join(", ") : w.tables}</span> : null}
                 </p>
-                <p className="pm__muted">Waiting:</p>
+                <p className="muted">Waiting:</p>
                 <Sql text={w.waiting_sql} />
-                <p className="pm__muted">Blocking:</p>
+                <p className="muted">Blocking:</p>
                 <Sql text={w.blocking_sql} />
               </li>
             ))}
@@ -491,7 +492,7 @@ function EventDetail({ e }) {
       {d.status && <p>Status {d.status}</p>}
       {d.sql && <Sql text={d.sql} />}
       {(d.blocked_by ?? []).map((b, i) => (
-        <p key={i} className="pm__muted">
+        <p key={i} className="muted">
           Blocked by PID {b.pid} ({b.state}, transaction {fmtNum(b.transaction_seconds, 1)} s)
         </p>
       ))}
@@ -509,10 +510,10 @@ export function StallsTab({ period, services, kind, onKind }) {
   const goroutines = (data?.goroutines ?? []).filter((g) => !service || g.service === service);
   const byService = service ? goroutines : [];
   const columns = [
-    { key: "at", label: "When", render: (e) => <span className="pm__nowrap">{fmtTime(e.at)}</span> },
-    { key: "kind", label: "Kind", render: (e) => <span className="pm__mono" title={KIND_MEANING[e.kind]}>{e.kind}</span> },
-    { key: "service", label: "Processor", render: (e) => <span className="pm__muted">{e.service || "—"}</span> },
-    { key: "route", label: "Route", render: (e) => <span className="pm__muted">{e.route || "—"}</span> },
+    { key: "at", label: "When", render: (e) => <span className="nowrap">{fmtTime(e.at)}</span> },
+    { key: "kind", label: "Kind", render: (e) => <span className="mono" title={KIND_MEANING[e.kind]}>{e.kind}</span> },
+    { key: "service", label: "Processor", render: (e) => <span className="muted">{e.service || "—"}</span> },
+    { key: "route", label: "Route", render: (e) => <span className="muted">{e.route || "—"}</span> },
     { key: "ms", label: "Waited / ran", render: (e) => fmtMs(e.ms) },
     { key: "detail", label: "Detail", sortable: false, render: (e) => <EventDetail e={e} /> },
   ];

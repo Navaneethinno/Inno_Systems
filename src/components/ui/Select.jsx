@@ -1,9 +1,9 @@
 import { forwardRef } from "react";
 import "./TextField.css";
 
-export const Select = forwardRef(({ label, error, options, placeholder, ...rest }, ref) => {
+export const Select = forwardRef(({ label, error, hint, options, placeholder, ...rest }, ref) => {
   return (
-    <div className={`tf ${error ? "tf--error" : ""}`}>
+    <div className={`tf ${error ? "tf--error" : ""} ${rest.disabled ? "tf--disabled" : ""}`}>
       {label && (
         <label className="tf__label" htmlFor={rest.id}>
           {label}
@@ -19,7 +19,7 @@ export const Select = forwardRef(({ label, error, options, placeholder, ...rest 
           ))}
         </select>
       </div>
-      {error && <span className="tf__error">{error}</span>}
+      {error ? <span className="tf__error">{error}</span> : hint && <span className="tf__hint">{hint}</span>}
     </div>
   );
 });

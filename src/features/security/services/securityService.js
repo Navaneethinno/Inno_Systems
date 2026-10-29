@@ -1,4 +1,5 @@
 import { httpClient } from "../../../api/httpClient";
+import { API } from "../../../api/endpoints";
 import { extractOne } from "../../../lib/extractList";
 
 /**
@@ -9,7 +10,7 @@ import { extractOne } from "../../../lib/extractList";
  */
 export const securityService = {
   async listEvents(filters) {
-    const { data: envelope } = await httpClient.post("/system/security/events", filters);
+    const { data: envelope } = await httpClient.post(API.SYSTEM.SECURITY.EVENTS, filters);
     return extractOne(envelope.data) ?? { items: [], total: 0, by_severity: {} };
   },
 };

@@ -1,5 +1,6 @@
 import { rowValue } from "../../../lib/rowLabel";
 import { renderStatusCell } from "../../../lib/renderStatusCell";
+import { API } from "../../../api/endpoints";
 
 /**
  * Field lists mirror SYSTEM_API_GUIDE.md, which supersedes the earlier
@@ -30,7 +31,7 @@ export const systemForms = {
     listMethod: "listUsers",
     // Mirrors the /user/* REST paths above — see the Live Menu Updates via
     // WebSocket handoff doc ("<resource-path>/live" is generic).
-    livePath: "user",
+    livePath: API.LIVE.USER,
     columns: [
       { key: "id", label: "ID", render: (row) => rowValue(row) ?? "—" },
       { key: "username", label: "Username" },
@@ -67,7 +68,7 @@ export const systemForms = {
         label: "Password policy",
         type: "select",
         required: true,
-        source: { kind: "master", type: "password_policy", path: "/user/password_policy/list" },
+        source: { kind: "master", type: "password_policy", path: API.USER.PASSWORD_POLICY_LIST },
       },
     ],
   },

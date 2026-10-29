@@ -13,8 +13,8 @@ const DEBOUNCE_MS = 500;
  * reports a create/edit/delete/etc. for that resource, so the caller can
  * refetch instead of the page only refreshing on its own mutations.
  *
- * `path` is the same resource path already used for REST calls (e.g.
- * "master/menu", no leading slash) — pass `null`/`undefined` to skip
+ * `path` is one of the API.LIVE channels (endpoints.js) — the resource path
+ * REST calls already use, no leading slash. Pass `null`/`undefined` to skip
  * connecting (e.g. while the entity key isn't known yet).
  *
  * This is a pure "refetch on signal" subscription: `changed` may carry only

@@ -16,17 +16,19 @@ function blockNegativePaste(e) {
 }
 
 export const TextField = forwardRef(
-  ({ label, error, icon, type = "text", ...rest }, ref) => {
+  ({ label, error, hint, icon, type = "text", ...rest }, ref) => {
     const [showPassword, setShowPassword] = useState(false);
     const isPassword = type === "password";
     const resolvedType = isPassword && showPassword ? "text" : type;
     const isNumber = type === "number";
 
     return (
-      <div className={`tf ${error ? "tf--error" : ""}`}>
-        <label className="tf__label" htmlFor={rest.id}>
-          {label}
-        </label>
+      <div className={`tf ${error ? "tf--error" : ""} ${rest.disabled ? "tf--disabled" : ""}`}>
+        {label && (
+          <label className="tf__label" htmlFor={rest.id}>
+            {label}
+          </label>
+        )}
         <div className="tf__control">
           {icon === "mail" && (
             <svg className="tf__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
@@ -90,7 +92,7 @@ export const TextField = forwardRef(
             </button>
           )}
         </div>
-        {error && <span className="tf__error">{error}</span>}
+        {error ? <span className="tf__error">{error}</span> : hint && <span className="tf__hint">{hint}</span>}
       </div>
     );
   }

@@ -1,4 +1,5 @@
 import { httpClient } from "../../../api/httpClient";
+import { API } from "../../../api/endpoints";
 import { extractList } from "../../../lib/extractList";
 
 /**
@@ -10,7 +11,7 @@ import { extractList } from "../../../lib/extractList";
  */
 export const expiryService = {
   async listDocuments(body) {
-    const { data: envelope } = await httpClient.post("/report/expiring_document/list", body);
+    const { data: envelope } = await httpClient.post(API.EXPIRY.DOCUMENTS_LIST, body);
     return { rows: extractList(envelope.data), pagination: envelope.pagination ?? null };
   },
 };

@@ -1,65 +1,97 @@
 .toaster {
   position: fixed;
-  top: 20px;
+  /* Below the 64px topbar, so a toast never covers the theme toggle or user menu. */
+  top: 76px;
   right: 20px;
-  z-index: 1000;
+  z-index: var(--z-toast);
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-width: min(420px, calc(100vw - 32px));
+  width: min(400px, calc(100vw - 32px));
+  pointer-events: none;
 }
 
 .toaster__item {
+  position: relative;
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  padding: 12px 14px;
-  border-radius: 10px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-danger-border);
-  border-left: 4px solid var(--color-danger);
-  box-shadow: 0 12px 28px -12px rgba(0, 0, 0, 0.35);
+  gap: 12px;
+  padding: 14px 14px 16px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-lg);
   color: var(--color-text);
-  font-size: 13.5px;
-  animation: toaster-in 0.18s ease-out;
+  font-size: var(--text-sm);
+  pointer-events: auto;
+  animation: toaster-in var(--duration-slow) var(--ease-out);
 }
 
 .toaster__icon {
-  flex-shrink: 0;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--color-danger);
-  color: var(--color-white);
-  font-weight: 700;
-  font-size: 12px;
   display: grid;
   place-items: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
 }
 
-.toaster__text {
+.toaster__content {
   flex: 1;
-  line-height: 1.45;
+  min-width: 0;
   padding-top: 1px;
 }
 
-.toaster__close {
-  background: none;
-  border: none;
-  color: var(--color-text-muted);
-  font-size: 18px;
-  line-height: 1;
-  cursor: pointer;
-  padding: 0 2px;
+.toaster__title {
+  display: block;
+  margin-bottom: 2px;
+  font-weight: 600;
+  color: var(--color-text);
 }
 
-.toaster__close:hover {
-  color: var(--color-text);
+.toaster__text {
+  display: block;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.toaster__close {
+  margin: -4px -4px 0 0;
+}
+
+/* Shrinking bar along the bottom: how long until the toast goes away. */
+.toaster__timer {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 100%;
+  background: var(--color-danger-solid);
+  transform-origin: left;
+  animation: toaster-timer linear forwards;
 }
 
 @keyframes toaster-in {
   from {
     opacity: 0;
-    transform: translateY(-6px);
+    transform: translateX(16px);
+  }
+}
+
+@keyframes toaster-timer {
+  to {
+    transform: scaleX(0);
+  }
+}
+
+@media (max-width: 640px) {
+  .toaster {
+    top: auto;
+    bottom: 16px;
+    right: 16px;
   }
 }

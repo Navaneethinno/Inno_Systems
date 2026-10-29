@@ -8,9 +8,10 @@ import { TextField } from "../../../components/ui/TextField";
 import { StatusPill } from "../../aml/components/StatusPill";
 import { formatDateTime } from "../../aml/components/formatAml";
 import { ConfirmModal, KeysTab, RotateNote } from "./KeysTab";
-import "../../masterData/components/MasterDataPage.css";
-import "../../../components/ui/StatusFilterTabs.css";
-import "../../aml/components/Aml.css";
+import { PageHeader } from "../../../components/ui/PageHeader";
+import { Alert } from "../../../components/ui/Alert";
+import { EmptyState } from "../../../components/ui/EmptyState";
+import { SkeletonList } from "../../../components/ui/Skeleton";
 import "./EncryptionKeys.css";
 
 const TABS = [
@@ -25,25 +26,20 @@ const TABS = [
 export function KeyCustodyPage() {
   const [tab, setTab] = useState("keys");
   return (
-    <div className="mdp">
-      <div className="mdp__header">
-        <div>
-          <span className="mdp__eyebrow">System</span>
-          <h1 className="mdp__title">Key Custody</h1>
-          <p className="mdp__subtitle">
-            The keys that protect PINs, card numbers and card security codes, the custodians who unlock them, and their rotation. A key is never shown, only
-            its check value.
-          </p>
-        </div>
-      </div>
-      <div className="sft" role="tablist" aria-label="Key Custody">
+    <div className="page">
+      <PageHeader
+        eyebrow="System"
+        title="Key Custody"
+        subtitle="The keys that protect PINs, card numbers and card security codes, the custodians who unlock them, and their rotation. A key is never shown, only its check value."
+      />
+      <div className="tabs" role="tablist" aria-label="Key Custody">
         {TABS.map(([key, label]) => (
-          <button key={key} type="button" role="tab" aria-selected={tab === key} className={`sft__tab ${tab === key ? "sft__tab--active" : ""}`} onClick={() => setTab(key)}>
+          <button key={key} type="button" role="tab" aria-selected={tab === key} className={`tabs__tab ${tab === key ? "tabs__tab--active" : ""}`} onClick={() => setTab(key)}>
             {label}
           </button>
         ))}
       </div>
-      <div style={{ marginTop: 16 }}>
+      <div className="stack" role="tabpanel">
         {tab === "keys" && <KeysTab />}
         {tab === "custodians" && <CustodiansTab />}
         {tab === "rotation" && <RotationTab />}
@@ -82,35 +78,36 @@ function CustodiansTab() {
   const noEmail = (rows ?? []).filter((c) => !c.email);
   return (
     <>
-      {error && <div className="mdp__error">{error}</div>}
-      {notice && <div className="keys__result keys__notice">{notice}</div>}
-      {rows && short && <div className="keys__card keys__warning">Each slot needs a primary and a backup.</div>}
+      {error && <Alert>{error}</Alert>}
+      {notice && <Alert tone="success">{notice}</Alert>}
+      {rows && short && <Alert tone="warning">Each slot needs a primary and a backup.</Alert>}
       {noEmail.length > 0 && (
-        <div className="keys__card keys__warning">No email for {noEmail.map((c) => c.user_name).join(", ")}: they cannot be called when the keys lock.</div>
+        <Alert tone="warning">No email for {noEmail.map((c) => c.user_name).join(", ")}: they cannot be called when the keys lock.</Alert>
       )}
       {!rows ? (
-        <div className="aml__note">Loading…</div>
+        <SkeletonList count={2} height={140} />
       ) : (
         <div className="keys__slots">
           {slots.map(([slot, list]) => (
-            <div key={slot} className="keys__card">
-              <div className="mdp__header-actions" style={{ justifyContent: "space-between" }}>
-                <h2 className="aml__section-title keys__card-title">Slot {slot}</h2>
-                <Button variant="secondary" onClick={() => setAdding(slot)}>
+            <div key={slot} className="card keys__slot">
+              <div className="keys__slot-head">
+                <span className="keys__slot-badge">{slot}</span>
+                <h2 className="section-title">Slot {slot}</h2>
+                <Button variant="secondary" size="sm" icon="plus" onClick={() => setAdding(slot)}>
                   Add custodian
                 </Button>
               </div>
-              {list.length === 0 && <p className="aml__note">Nobody holds slot {slot}.</p>}
+              {list.length === 0 && <EmptyState plain icon="alert" message={`Nobody holds slot ${slot}.`} />}
               {list.map((c) => (
                 <div key={c.id} className="keys__custodian">
                   <div>
-                    <span className="aml__name">{c.user_name}</span>
-                    <span className="aml__sub">{[c.inst_profile_name, c.email || "no email"].join(" · ")}</span>
-                    {c.narration && <span className="aml__sub">{c.narration}</span>}
+                    <span className="cell-title">{c.user_name}</span>
+                    <span className="cell-sub">{[c.inst_profile_name, c.email || "no email"].join(" · ")}</span>
+                    {c.narration && <span className="cell-sub">{c.narration}</span>}
                   </div>
                   <div className="keys__badges">
                     <StatusPill status={c.role === "PRIMARY" ? "ACTIVE" : "RETIRED"} label={c.role === "PRIMARY" ? "Primary" : "Backup"} />
-                    <button type="button" className="aml__text-btn" onClick={() => setRemoving(c)}>
+                    <button type="button" className="text-btn" onClick={() => setRemoving(c)}>
                       Remove
                     </button>
                   </div>
@@ -123,7 +120,7 @@ function CustodiansTab() {
       {adding && <AddCustodianModal slot={adding} onClose={() => setAdding(null)} onDone={done} />}
       {removing && (
         <ConfirmModal title={`Remove ${removing.user_name} from slot ${removing.slot}`} confirmLabel="Remove" run={() => keysService.removeCustodian(removing.id)} onClose={() => setRemoving(null)} onDone={done}>
-          <p className="aml__note">If they leave the bank, their slot&apos;s component should be replaced (a new key ceremony).</p>
+          <p className="note">If they leave the bank, their slot&apos;s component should be replaced (a new key ceremony).</p>
         </ConfirmModal>
       )}
     </>
@@ -160,8 +157,8 @@ function AddCustodianModal({ slot, onClose, onDone }) {
   };
   return (
     <Modal title={`Add a slot ${slot} custodian`} onClose={onClose}>
-      <form className="aml__stack" onSubmit={save}>
-        {error && <div className="mdp__error">{error}</div>}
+      <form className="stack" onSubmit={save}>
+        {error && <Alert>{error}</Alert>}
         <TextField label="Find a user" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Username" />
         <Select
           label="Staff user"
@@ -172,8 +169,8 @@ function AddCustodianModal({ slot, onClose, onDone }) {
         />
         <Select label="Role" value={form.role} onChange={set("role")} options={[{ value: "PRIMARY", label: "Primary" }, { value: "BACKUP", label: "Backup" }]} />
         <TextField label="Note (optional)" value={form.narration} onChange={set("narration")} placeholder="Treasury head" />
-        <p className="aml__note">Nobody may hold both slots. The custodian enters their component in the admin portal.</p>
-        <div className="mdp__header-actions" style={{ justifyContent: "flex-end" }}>
+        <p className="note">Nobody may hold both slots. The custodian enters their component in the admin portal.</p>
+        <div className="form-actions">
           <Button type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
@@ -225,12 +222,12 @@ function RotationTab() {
       label: "Key",
       render: (p) => (
         <>
-          <span className="aml__name aml__mono">{p.purpose}</span>
-          <span className="aml__sub">{p.description}</span>
+          <span className="cell-title mono">{p.purpose}</span>
+          <span className="cell-sub">{p.description}</span>
         </>
       ),
     },
-    { key: "active_key", label: "Active version", render: (p) => <span className="aml__mono">{p.active_key || "—"}</span> },
+    { key: "active_key", label: "Active version", render: (p) => <span className="mono">{p.active_key || "—"}</span> },
     { key: "since", label: "In use since", render: (p) => formatDateTime(p.since) },
     { key: "rotate_days", label: "Rotation period", render: (p) => (Number(p.rotate_days) === 0 ? "By hand only" : `${p.rotate_days} days`) },
     {
@@ -253,7 +250,7 @@ function RotationTab() {
           aria-checked={!!p.auto_rotate}
           aria-label={`Auto rotation for ${p.purpose}`}
           title={p.auto_allowed ? "Rotated by the nightly job when due" : "This key cannot rotate by itself"}
-          className={`aml__switch ${p.auto_rotate ? "aml__switch--on" : ""}`}
+          className={`switch ${p.auto_rotate ? "switch--on" : ""}`}
           disabled={!p.auto_allowed || busy === p.purpose}
           onClick={() => update({ purpose: p.purpose, rotate_days: Number(p.rotate_days), auto_rotate: !p.auto_rotate })}
         />
@@ -262,9 +259,9 @@ function RotationTab() {
   ];
   return (
     <>
-      {error && <div className="mdp__error">{error}</div>}
-      {notice && <div className="keys__result keys__notice">{notice}</div>}
-      <p className="aml__note" style={{ marginBottom: 12 }}>
+      {error && <Alert>{error}</Alert>}
+      {notice && <Alert tone="success">{notice}</Alert>}
+      <p className="note">
         The nightly job (KEY_ROTATION, 02:30) rotates the keys set to Auto when due, and reports the others. A new master key is a custodians&apos; ceremony.
       </p>
       <DataTable
@@ -274,11 +271,11 @@ function RotationTab() {
         emptyMessage="No rotation policies."
         actions={(p) => (
           <>
-            <button type="button" className="aml__text-btn" onClick={() => setEditing(p)}>
+            <button type="button" className="text-btn" onClick={() => setEditing(p)}>
               Change period
             </button>
             {p.purpose !== "MASTER" && (
-              <button type="button" className="aml__text-btn" onClick={() => setRotating(p.purpose)}>
+              <button type="button" className="text-btn" onClick={() => setRotating(p.purpose)}>
                 Rotate now
               </button>
             )}
@@ -312,15 +309,15 @@ function PeriodModal({ policy, busy, onClose, onSave }) {
   return (
     <Modal title={`Rotation period · ${policy.purpose}`} onClose={onClose}>
       <form
-        className="aml__stack"
+        className="stack"
         onSubmit={(e) => {
           e.preventDefault();
           if (valid) onSave(n);
         }}
       >
         <TextField label="Rotate every (days)" type="number" min={0} max={3650} value={days} onChange={(e) => setDays(e.target.value)} error={valid ? null : "0 to 3650 days"} />
-        <p className="aml__note">0 means by hand only.</p>
-        <div className="mdp__header-actions" style={{ justifyContent: "flex-end" }}>
+        <p className="note">0 means by hand only.</p>
+        <div className="form-actions">
           <Button type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>

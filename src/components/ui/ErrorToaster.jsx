@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { API_ERROR_EVENT } from "../../api/httpClient";
+import { Glyph } from "./Glyph";
+import { IconButton } from "./IconButton";
 import "./ErrorToaster.css";
 
 const SHOW_MS = 6000;
@@ -30,16 +32,22 @@ export function ErrorToaster() {
     <div className="toaster" role="alert" aria-live="assertive">
       {toasts.map((t) => (
         <div key={t.id} className="toaster__item">
-          <span className="toaster__icon" aria-hidden="true">!</span>
-          <span className="toaster__text">{t.message}</span>
-          <button
-            type="button"
+          <span className="toaster__icon" aria-hidden="true">
+            <Glyph name="alert" size={18} />
+          </span>
+          <span className="toaster__content">
+            <span className="toaster__title">Request failed</span>
+            <span className="toaster__text">{t.message}</span>
+          </span>
+          <IconButton
+            icon="close"
+            label="Dismiss"
+            tone="ghost"
+            size={14}
             className="toaster__close"
-            aria-label="Dismiss"
             onClick={() => setToasts((prev) => prev.filter((x) => x.id !== t.id))}
-          >
-            ×
-          </button>
+          />
+          <span className="toaster__timer" style={{ animationDuration: `${SHOW_MS}ms` }} aria-hidden="true" />
         </div>
       ))}
     </div>

@@ -13,13 +13,15 @@ import { renderStatusCell } from "../../../lib/renderStatusCell";
 import { FullscreenTableModal } from "../../../components/ui/FullscreenTableModal";
 import { StatusFilterTabs } from "../../../components/ui/StatusFilterTabs";
 import { TableSearchBar } from "../../../components/ui/TableSearchBar";
+import { PageHeader } from "../../../components/ui/PageHeader";
+import { IconButton } from "../../../components/ui/IconButton";
+import { EmptyState } from "../../../components/ui/EmptyState";
+import { Alert } from "../../../components/ui/Alert";
+import { Glyph } from "../../../components/ui/Glyph";
 import { useAuthStatusFilter } from "../../../hooks/useAuthStatusFilter";
 import { useLiveList } from "../../../hooks/useLiveList";
-import "../../masterData/components/MasterDataPage.css";
-import "../../masterData/components/MenuActionsPage.css";
+import { API } from "../../../api/endpoints";
 import "./SystemFormPage.css";
-import "./ProfileFormPage.css";
-import "../../aml/components/Aml.css";
 
 const emptyModuleRow = () => ({
   key: Math.random().toString(36).slice(2),
@@ -76,8 +78,8 @@ function InstitutionModuleForm({ institutions, defaultInstProfileId, onSuccess, 
   };
 
   return (
-    <form className="sfp__form ifp__form" onSubmit={handleSubmit}>
-      {error && <div className="mdp__error">{error}</div>}
+    <form className="stack" onSubmit={handleSubmit}>
+      {error && <Alert>{error}</Alert>}
 
       <Select
         label="Institution"
@@ -92,14 +94,18 @@ function InstitutionModuleForm({ institutions, defaultInstProfileId, onSuccess, 
         {rows.map((row, i) => (
           <div key={row.key} className="ifp__module-row">
             <div className="ifp__module-row-header">
-              <span className="ifp__module-row-label">Module {i + 1}</span>
+              <span className="ifp__module-row-label">
+                <span className="ifp__module-row-index">{i + 1}</span>
+                Module
+              </span>
               {rows.length > 1 && (
-                <button type="button" className="ifp__module-row-remove" onClick={() => removeRow(row.key)}>
+                <button type="button" className="link-btn link-btn--danger" onClick={() => removeRow(row.key)}>
+                  <Glyph name="trash" size={14} />
                   Remove
                 </button>
               )}
             </div>
-            <div className="ifp__grid">
+            <div className="form-grid">
               <Select
                 label="Module"
                 placeholder="Select module"
@@ -125,11 +131,11 @@ function InstitutionModuleForm({ institutions, defaultInstProfileId, onSuccess, 
         ))}
       </div>
 
-      <button type="button" className="sfp__expand-toggle" onClick={addRow}>
-        + Add another module
-      </button>
+      <Button variant="secondary" size="sm" icon="plus" className="ifp__add-row" onClick={addRow}>
+        Add another module
+      </Button>
 
-      <div className="pfp__form-actions">
+      <div className="form-actions">
         <Button type="button" variant="secondary" onClick={onCancel}>
           Cancel
         </Button>
@@ -171,13 +177,13 @@ function InstitutionModuleEditForm({ row, onSuccess, onCancel }) {
   };
 
   return (
-    <form className="sfp__form ifp__form" onSubmit={handleSubmit}>
-      {error && <div className="mdp__error">{error}</div>}
-      <div className="ifp__grid">
+    <form className="stack" onSubmit={handleSubmit}>
+      {error && <Alert>{error}</Alert>}
+      <div className="form-grid">
         <TextField label="Effective from" type="date" value={effectiveFrom} onChange={(e) => setEffectiveFrom(e.target.value)} />
         <TextField label="Effective to" type="date" value={effectiveTo} onChange={(e) => setEffectiveTo(e.target.value)} />
       </div>
-      <div className="pfp__form-actions">
+      <div className="form-actions">
         <Button type="button" variant="secondary" onClick={onCancel}>
           Cancel
         </Button>
@@ -222,7 +228,7 @@ function EndDate({ value, grace }) {
   return (
     <span>
       {String(value).slice(0, 10)}
-      {stops && <span className="aml__note" style={{ display: "block" }}>Stops on {stops}</span>}
+      {stops && <span className="cell-sub">Stops on {stops}</span>}
     </span>
   );
 }
@@ -268,8 +274,8 @@ function ModuleGrace({ instProfileId, onChange }) {
   const valid = days !== "" && Number(days) >= 0 && Number(days) <= 365;
   return (
     <>
-      <div className="mdp__state" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, textAlign: "left" }}>
-        <span>
+      <div className="ifp__grace">
+        <span className="ifp__grace-text">
           {grace == null ? (
             (error ?? "Loading the module grace…")
           ) : (
@@ -281,6 +287,7 @@ function ModuleGrace({ instProfileId, onChange }) {
         {grace != null && (
           <Button
             variant="secondary"
+            size="sm"
             onClick={() => {
               setDays(String(grace));
               setError(null);
@@ -293,11 +300,11 @@ function ModuleGrace({ instProfileId, onChange }) {
       </div>
       {editing && (
         <Modal title="Module grace" onClose={() => setEditing(false)} width={460}>
-          <form className="aml__stack" onSubmit={save}>
-            {error && <div className="mdp__error">{error}</div>}
+          <form className="stack" onSubmit={save}>
+            {error && <Alert>{error}</Alert>}
             <TextField label="Grace (days after the end date, 0 to 365)" type="number" min={0} max={365} value={days} onChange={(e) => setDays(e.target.value)} />
-            <p className="aml__note">Applies at once to every module of this institution.</p>
-            <div className="mdp__header-actions" style={{ justifyContent: "flex-end" }}>
+            <p className="note">Applies at once to every module of this institution.</p>
+            <div className="form-actions">
               <Button type="button" variant="secondary" onClick={() => setEditing(false)}>
                 Cancel
               </Button>
@@ -371,8 +378,8 @@ export function InstitutionModuleFormPage() {
   // See the Live Menu Updates via WebSocket handoff doc: refetch the
   // institution list and the selected institution's modules whenever
   // another user/tab changes either.
-  useLiveList("institution/profile", () => loadInstitutions({ silent: true }));
-  useLiveList("institution/module", () => loadModulesFor(instProfileId, { silent: true }));
+  useLiveList(API.LIVE.INSTITUTION, () => loadInstitutions({ silent: true }));
+  useLiveList(API.LIVE.INSTITUTION_MODULE, () => loadModulesFor(instProfileId, { silent: true }));
 
   const handleCreated = (createdInstProfileId) => {
     setIsModalOpen(false);
@@ -399,23 +406,25 @@ export function InstitutionModuleFormPage() {
   };
 
   return (
-    <div className="mdp">
-      <div className="mdp__header">
-        <div>
-          <span className="mdp__eyebrow">Configuration</span>
-          <h1 className="mdp__title">Institution Modules</h1>
-          <p className="mdp__subtitle">Modules assigned to an institution.</p>
-        </div>
-        <div className="mdp__header-actions">
-          <Button variant="secondary" onClick={() => setIsFullscreen(true)} disabled={rows.length === 0}>
-            ⛶ View all
-          </Button>
-          <Button onClick={() => setIsModalOpen(true)}>+ Add Institution Module</Button>
-        </div>
-      </div>
+    <div className="page">
+      <PageHeader
+        eyebrow="Configuration"
+        title="Institution Modules"
+        subtitle="Modules assigned to an institution."
+        actions={
+          <>
+            <Button variant="secondary" onClick={() => setIsFullscreen(true)} disabled={rows.length === 0} icon="expand">
+              View all
+            </Button>
+            <Button onClick={() => setIsModalOpen(true)} icon="plus">
+              Add Institution Module
+            </Button>
+          </>
+        }
+      />
 
-      <div className="map__module">
-        <span className="map__module-label">Institution</span>
+      <div className="field-inline">
+        <span className="field-inline__label">Institution</span>
         <Select
           placeholder={isLoadingInstitutions ? "Loading institutions…" : "Select institution"}
           options={institutions.map((row) => ({ value: rowValue(row), label: rowLabel(row) }))}
@@ -426,7 +435,7 @@ export function InstitutionModuleFormPage() {
       </div>
 
       {rows.length > 0 && (
-        <div className="mdp__toolbar">
+        <div className="toolbar">
           <TableSearchBar value={query} onChange={setQuery} placeholder="Search institution modules…" />
           {hasAuthStatus && (
             <StatusFilterTabs
@@ -440,24 +449,21 @@ export function InstitutionModuleFormPage() {
         </div>
       )}
 
-      {error && <div className="mdp__error">{error}</div>}
+      {error && rows.length > 0 && <Alert>{error}</Alert>}
       {instProfileId && <ModuleGrace key={instProfileId} instProfileId={instProfileId} onChange={setGrace} />}
 
       {!instProfileId ? (
-        <div className="mdp__state">Select an institution to view its assigned modules.</div>
+        <EmptyState icon="filter" title="Pick an institution" message="Select an institution to view its assigned modules." />
       ) : (
         <DataTable
           columns={shownColumns}
           rows={filteredRows}
           isLoading={isLoadingModules}
+          error={error}
           actions={(row) => (
             <>
-              <button className="dt__icon-btn" onClick={() => setEditTarget(row)} aria-label="Edit">
-                ✎
-              </button>
-              <button className="dt__icon-btn dt__icon-btn--danger" onClick={() => setDeleteTarget(row)} aria-label="Delete">
-                🗑
-              </button>
+              <IconButton icon="edit" label="Edit" onClick={() => setEditTarget(row)} />
+              <IconButton icon="trash" label="Delete" tone="danger" onClick={() => setDeleteTarget(row)} />
             </>
           )}
         />
@@ -503,7 +509,7 @@ export function InstitutionModuleFormPage() {
             </>
           }
         >
-          {deleteError && <div className="mdp__error">{deleteError}</div>}
+          {deleteError && <Alert>{deleteError}</Alert>}
           <p>
             Are you sure you want to delete <strong>{rowLabel(deleteTarget)}</strong>?
           </p>

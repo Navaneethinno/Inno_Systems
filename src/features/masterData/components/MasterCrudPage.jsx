@@ -11,9 +11,13 @@ import { renderStatusCell } from "../../../lib/renderStatusCell";
 import { FullscreenTableModal } from "../../../components/ui/FullscreenTableModal";
 import { StatusFilterTabs } from "../../../components/ui/StatusFilterTabs";
 import { TableSearchBar } from "../../../components/ui/TableSearchBar";
+import { PageHeader } from "../../../components/ui/PageHeader";
+import { IconButton } from "../../../components/ui/IconButton";
+import { EmptyState } from "../../../components/ui/EmptyState";
+import { Alert } from "../../../components/ui/Alert";
 import { useAuthStatusFilter } from "../../../hooks/useAuthStatusFilter";
 import { useLiveList } from "../../../hooks/useLiveList";
-import "./MasterDataPage.css";
+import { API } from "../../../api/endpoints";
 
 function rowLabel(row) {
   return row.name ?? row.menu_name ?? row.action_name ?? row.title ?? `#${row.id}`;
@@ -63,7 +67,7 @@ export function MasterCrudPage() {
 
   // Keeps this table in sync when another user (or tab) adds/edits/deletes
   // a row — see the Live Menu Updates via WebSocket handoff doc.
-  useLiveList(config ? `master/${entityKey}` : null, loadRows);
+  useLiveList(config ? API.LIVE.master(entityKey) : null, loadRows);
 
   const selectSources = useMemo(
     () => [...new Set((config?.fields ?? []).filter((f) => f.type === "select").map((f) => f.optionsFrom))],
@@ -91,7 +95,7 @@ export function MasterCrudPage() {
   }, [selectSources]);
 
   if (!config) {
-    return <div className="mdp__state">Unknown master data type "{entityKey}".</div>;
+    return <EmptyState icon="alert" title="Not found" message={`Unknown master data type "${entityKey}".`} />;
   }
 
   const openAdd = () => setModalState({ mode: "add", values: emptyValues(config.fields) });
@@ -179,21 +183,21 @@ export function MasterCrudPage() {
   });
 
   return (
-    <div className="mdp">
-      <div className="mdp__header">
-        <div>
-          <h1 className="mdp__title">{config.label}</h1>
-          <p className="mdp__subtitle">Manage {config.label.toLowerCase()} for the system.</p>
-        </div>
-        <div className="mdp__header-actions">
-          <Button variant="secondary" onClick={() => setIsFullscreen(true)} disabled={rows.length === 0}>
-            ⛶ View all
-          </Button>
-          <Button onClick={openAdd}>+ Add {config.label.slice(0, -1)}</Button>
-        </div>
-      </div>
+    <div className="page">
+      <PageHeader
+        title={config.label}
+        subtitle={`Manage ${config.label.toLowerCase()} for the system.`}
+        actions={
+          <>
+            <Button variant="secondary" onClick={() => setIsFullscreen(true)} disabled={rows.length === 0} icon="expand">
+              View all
+            </Button>
+            <Button onClick={openAdd} icon="plus">Add {config.label.slice(0, -1)}</Button>
+          </>
+        }
+      />
 
-      <div className="mdp__toolbar">
+      <div className="toolbar">
         <TableSearchBar value={query} onChange={setQuery} placeholder={`Search ${config.label.toLowerCase()}…`} />
         {hasAuthStatus && (
           <StatusFilterTabs
@@ -206,20 +210,17 @@ export function MasterCrudPage() {
         )}
       </div>
 
-      {error && <div className="mdp__error">{error}</div>}
+      {error && rows.length > 0 && <Alert>{error}</Alert>}
 
       <DataTable
         columns={columns}
         rows={filteredRows}
         isLoading={isLoading}
+        error={error}
         actions={(row) => (
           <>
-            <button className="dt__icon-btn" onClick={() => openEdit(row)} aria-label="Edit">
-              ✎
-            </button>
-            <button className="dt__icon-btn dt__icon-btn--danger" onClick={() => setDeleteTarget(row)} aria-label="Delete">
-              🗑
-            </button>
+            <IconButton icon="edit" label="Edit" onClick={() => openEdit(row)} />
+            <IconButton icon="trash" label="Delete" tone="danger" onClick={() => setDeleteTarget(row)} />
           </>
         )}
       />
@@ -232,16 +233,8 @@ export function MasterCrudPage() {
           onClose={() => setIsFullscreen(false)}
           actions={(row) => (
             <>
-              <button className="dt__icon-btn" onClick={() => openEdit(row)} aria-label="Edit">
-                ✎
-              </button>
-              <button
-                className="dt__icon-btn dt__icon-btn--danger"
-                onClick={() => setDeleteTarget(row)}
-                aria-label="Delete"
-              >
-                🗑
-              </button>
+              <IconButton icon="edit" label="Edit" onClick={() => openEdit(row)} />
+              <IconButton icon="trash" label="Delete" tone="danger" onClick={() => setDeleteTarget(row)} />
             </>
           )}
         />
@@ -262,7 +255,7 @@ export function MasterCrudPage() {
             </>
           }
         >
-          <form id="mdp-form" onSubmit={handleSave} className="mdp__form">
+          <form id="mdp-form" onSubmit={handleSave} className="stack">
             {config.fields.map((field) => {
               if (field.type === "select") {
                 const sourceRows = optionSets[field.optionsFrom] ?? [];
@@ -295,7 +288,7 @@ export function MasterCrudPage() {
               }
               if (field.type === "status") {
                 return (
-                  <label key={field.name} className="mdp__checkbox">
+                  <label key={field.name} className="check">
                     <input
                       type="checkbox"
                       checked={Boolean(modalState.values[field.name])}

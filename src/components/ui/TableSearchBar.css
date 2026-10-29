@@ -2,32 +2,74 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  flex: 1;
-  min-width: 200px;
+  flex: 1 1 240px;
+  min-width: 0;
   max-width: 380px;
-  border: 1.5px solid var(--color-border);
-  border-radius: 999px;
-  padding: 0 14px;
+  min-height: 40px;
+  padding: 0 8px 0 12px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
   background: var(--color-input-bg);
+  box-shadow: var(--shadow-xs);
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+}
+
+.tsb:hover {
+  border-color: var(--color-text-subtle);
 }
 
 .tsb:focus-within {
   border-color: var(--color-primary);
-  background: var(--color-surface);
-  box-shadow: 0 0 0 4px rgba(34, 102, 238, 0.12);
+  box-shadow: var(--focus-ring);
 }
 
-.tsb svg {
-  color: var(--color-text-muted);
+.tsb__icon {
   flex-shrink: 0;
+  color: var(--color-text-subtle);
 }
 
-.tsb input {
+.tsb:focus-within .tsb__icon {
+  color: var(--color-primary);
+}
+
+.tsb__input {
   flex: 1;
+  min-width: 0;
+  padding: 9px 0;
   border: none;
   outline: none;
   background: transparent;
-  padding: 10px 0;
-  font-size: 13.5px;
+  font-size: var(--text-md);
+  color: var(--color-text);
+}
+
+.tsb__input:focus-visible {
+  outline: none;
+}
+
+.tsb__input::placeholder {
+  color: var(--color-placeholder);
+}
+
+/* The clear button below replaces the browser's own search "×". */
+.tsb__input::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+.tsb__clear {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-surface-sunken);
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.tsb__clear:hover {
   color: var(--color-text);
 }

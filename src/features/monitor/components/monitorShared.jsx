@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { monitorService } from "../services/monitorService";
+import { Card } from "../../../components/ui/Card";
+import { StatCard } from "../../../components/ui/StatCard";
 
 // Shared pieces of the Platform Monitor: the data hook, formatters, tiles,
 // panels and a small SVG line chart (the console has no chart library).
@@ -63,34 +65,20 @@ export function Dot({ up }) {
 
 // tone: "ok" | "warn" | "bad" | undefined
 export function Tile({ label, value, hint, tone, onClick }) {
-  const Tag = onClick ? "button" : "div";
-  return (
-    <Tag type={onClick ? "button" : undefined} className={`pm__tile ${tone ? `pm__tile--${tone}` : ""} ${onClick ? "pm__tile--link" : ""}`} onClick={onClick}>
-      <span className="pm__tile-label">{label}</span>
-      <span className="pm__tile-value">{value}</span>
-      {hint && <span className="pm__tile-hint">{hint}</span>}
-    </Tag>
-  );
+  return <StatCard label={label} value={value} hint={hint} tone={tone} onClick={onClick} />;
 }
 
 export function Panel({ title, hint, action, children }) {
   return (
-    <section className="pm__panel">
-      {(title || action) && (
-        <div className="pm__panel-head">
-          <div>
-            <h3 className="pm__panel-title">{title}</h3>
-            {hint && <p className="pm__panel-hint">{hint}</p>}
-          </div>
-          {action}
-        </div>
-      )}
+    <Card title={title} subtitle={hint} actions={action} className="pm__panel">
       {children}
-    </section>
+    </Card>
   );
 }
 
-const COLORS = ["#2266ee", "#e0342f", "#15803d", "#d97706", "#7c3aed", "#0891b2"];
+// Series colours: brand blue first, then hues that stay distinct from it
+// and from each other in both themes.
+const COLORS = ["#2266ee", "#e0342f", "#17b26a", "#f79009", "#7a5af8", "#06aed4"];
 
 // A line chart of `rows` (each with `t`): one line per `lines` entry
 // ({ key, label }). Hover shows every line's value at that point.
@@ -140,8 +128,22 @@ export function LineChart({ rows, lines, format = fmtNum, height = 150 }) {
         <text x={W - pad.r} y={H - 4} className="pm__label" textAnchor="end">
           {fmtTick(data[data.length - 1].t)}
         </text>
+        {lines.length === 1 && (
+          <polygon
+            className="pm__area"
+            points={`${x(0)},${y(0)} ${data.map((r, n) => `${x(n)},${y(r[lines[0].key])}`).join(" ")} ${x(data.length - 1)},${y(0)}`}
+          />
+        )}
         {lines.map((l, i) => (
-          <polyline key={l.key} fill="none" stroke={COLORS[i % COLORS.length]} strokeWidth="1.6" points={data.map((r, n) => `${x(n)},${y(r[l.key])}`).join(" ")} />
+          <polyline
+            key={l.key}
+            fill="none"
+            stroke={COLORS[i % COLORS.length]}
+            strokeWidth="2"
+            strokeLinejoin="round"
+            strokeLinecap="round"
+            points={data.map((r, n) => `${x(n)},${y(r[l.key])}`).join(" ")}
+          />
         ))}
         {hover != null && <line x1={x(hover)} x2={x(hover)} y1={pad.t} y2={H - pad.b} className="pm__hover" />}
       </svg>

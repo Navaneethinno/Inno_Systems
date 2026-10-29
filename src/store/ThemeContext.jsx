@@ -1,4 +1,5 @@
-import { createContext, useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { ThemeContext } from "./contexts";
 
 const STORAGE_KEY = "innovitegra_theme";
 
@@ -11,8 +12,6 @@ function getInitialTheme() {
   }
   return "light";
 }
-
-export const ThemeContext = createContext(undefined);
 
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(getInitialTheme);

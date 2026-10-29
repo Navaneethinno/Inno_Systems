@@ -5,10 +5,10 @@ import { Modal } from "../../../components/ui/Modal";
 import { FullscreenTableModal } from "../../../components/ui/FullscreenTableModal";
 import { StatusFilterTabs } from "../../../components/ui/StatusFilterTabs";
 import { TableSearchBar } from "../../../components/ui/TableSearchBar";
+import { PageHeader } from "../../../components/ui/PageHeader";
+import { Alert } from "../../../components/ui/Alert";
 import { useAuthStatusFilter } from "../../../hooks/useAuthStatusFilter";
 import { useLiveList } from "../../../hooks/useLiveList";
-import "../../masterData/components/MasterDataPage.css";
-import "./SystemFormPage.css";
 
 /**
  * Shared shell for the "System" add pages: a table of what already exists
@@ -27,6 +27,8 @@ import "./SystemFormPage.css";
  * channel (e.g. "user", "user/profile", "institution/profile") and silently
  * refetches when another user/tab changes it — see the Live Menu Updates
  * via WebSocket handoff doc.
+ *
+ * `formWidth` sets the add modal's max width (the Institution form is wide).
  */
 export function EntityManagerPage({
   title,
@@ -39,6 +41,7 @@ export function EntityManagerPage({
   note,
   actions,
   livePath,
+  formWidth = 640,
 }) {
   const [rows, setRows] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -76,24 +79,24 @@ export function EntityManagerPage({
   };
 
   return (
-    <div className="mdp">
-      <div className="mdp__header">
-        <div>
-          {eyebrow && <span className="mdp__eyebrow">{eyebrow}</span>}
-          <h1 className="mdp__title">{title}</h1>
-          <p className="mdp__subtitle">
-            {hasAuthStatus ? `${totalCount} registered · ${activeCount} active` : subtitle}
-          </p>
-        </div>
-        <div className="mdp__header-actions">
-          <Button variant="secondary" onClick={() => setIsFullscreen(true)} disabled={rows.length === 0}>
-            ⛶ View all
-          </Button>
-          <Button onClick={() => setIsModalOpen(true)}>+ {addLabel}</Button>
-        </div>
-      </div>
+    <div className="page">
+      <PageHeader
+        eyebrow={eyebrow}
+        title={title}
+        subtitle={hasAuthStatus ? `${totalCount} registered · ${activeCount} active` : subtitle}
+        actions={
+          <>
+            <Button variant="secondary" onClick={() => setIsFullscreen(true)} disabled={rows.length === 0} icon="expand">
+              View all
+            </Button>
+            <Button onClick={() => setIsModalOpen(true)} icon="plus">
+              {addLabel}
+            </Button>
+          </>
+        }
+      />
 
-      <div className="mdp__toolbar">
+      <div className="toolbar">
         <TableSearchBar value={query} onChange={setQuery} placeholder={`Search ${title.toLowerCase()}…`} />
         {hasAuthStatus && (
           <StatusFilterTabs
@@ -106,13 +109,13 @@ export function EntityManagerPage({
         )}
       </div>
 
-      {note && <div className="sfp__success">{note}</div>}
-      {error && <div className="mdp__error">{error}</div>}
+      {note && <Alert tone="info">{note}</Alert>}
+      {error && rows.length > 0 && <Alert>{error}</Alert>}
 
-      <DataTable columns={columns} rows={filteredRows} isLoading={isLoading} actions={actions} />
+      <DataTable columns={columns} rows={filteredRows} isLoading={isLoading} actions={actions} error={error} />
 
       {isModalOpen && (
-        <Modal title={addLabel} onClose={() => setIsModalOpen(false)} width={640}>
+        <Modal title={addLabel} onClose={() => setIsModalOpen(false)} width={formWidth}>
           {renderForm({ onSuccess: handleCreated, onCancel: () => setIsModalOpen(false) })}
         </Modal>
       )}

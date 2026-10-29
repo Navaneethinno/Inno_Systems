@@ -1,47 +1,53 @@
 .modal__overlay {
   position: fixed;
   inset: 0;
-  background: rgba(5, 11, 46, 0.55);
-  backdrop-filter: blur(3px);
+  z-index: var(--z-modal);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
-  z-index: 100;
+  background: var(--color-overlay);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: modal-fade var(--duration-base) ease-out;
 }
 
 .modal__panel {
   position: relative;
-  width: 100%;
-  background: var(--color-surface);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 32px 80px -24px rgba(5, 11, 46, 0.45);
-  max-height: calc(100vh - 40px);
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-height: calc(100dvh - 40px);
   overflow: hidden;
-  animation: modal-in 0.16s cubic-bezier(0.2, 0.8, 0.4, 1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-xl);
+  animation: modal-in var(--duration-slow) var(--ease-out);
 }
 
-@keyframes modal-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
+/* Brand hairline across the top edge. */
 .modal__panel::before {
   content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 4px;
+  height: 3px;
   background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+}
+
+@keyframes modal-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
 }
 
 .modal__header {
@@ -49,54 +55,92 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  padding: 24px 28px 18px;
+  padding: 22px 28px 16px;
   border-bottom: 1px solid var(--color-border);
 }
 
+.modal__heading {
+  min-width: 0;
+}
+
 .modal__title {
-  font-family: var(--font-display);
-  font-size: 19px;
-  font-weight: 700;
-  color: var(--color-text);
   margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 600;
   letter-spacing: -0.01em;
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+.modal__subtitle {
+  margin: 4px 0 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
 }
 
 .modal__close {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  flex-shrink: 0;
-  background: var(--color-table-head);
-  border: none;
-  border-radius: 50%;
-  font-size: 18px;
-  line-height: 1;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
-}
-
-.modal__close:hover {
-  color: var(--color-text);
-  background: var(--color-border);
+  margin: -4px -8px 0 0;
 }
 
 .modal__body {
-  padding: 24px 28px;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 18px;
+  padding: 24px 28px;
+  overflow-y: auto;
+  font-size: var(--text-md);
+  line-height: 1.6;
+}
+
+.modal__body > p {
+  margin: 0;
 }
 
 .modal__footer {
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 10px;
-  padding: 18px 28px;
-  background: var(--color-table-head);
+  padding: 14px 28px;
   border-top: 1px solid var(--color-border);
+  background: var(--color-table-head);
+}
+
+/* Phones: the dialog becomes a bottom sheet. */
+@media (max-width: 640px) {
+  .modal__overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .modal__panel {
+    max-width: none !important;
+    max-height: 92dvh;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    animation-name: sheet-in;
+  }
+
+  .modal__header {
+    padding: 18px 18px 14px;
+  }
+
+  .modal__body {
+    padding: 20px 18px;
+  }
+
+  .modal__footer {
+    padding: 12px 18px;
+  }
+
+  .modal__footer > .btn {
+    flex: 1 1 auto;
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
 }

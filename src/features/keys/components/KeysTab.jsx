@@ -5,9 +5,7 @@ import { Modal } from "../../../components/ui/Modal";
 import { DataTable } from "../../../components/ui/DataTable";
 import { StatusPill } from "../../aml/components/StatusPill";
 import { formatDateTime } from "../../aml/components/formatAml";
-import "../../masterData/components/MasterDataPage.css";
-import "../../../components/ui/TextField.css";
-import "../../aml/components/Aml.css";
+import { Alert } from "../../../components/ui/Alert";
 import "./EncryptionKeys.css";
 
 const HEX64 = /^[0-9a-fA-F]{64}$/;
@@ -39,16 +37,16 @@ function ComponentEntry({ waiting, onDone }) {
   };
 
   return (
-    <form className="keys__card keys__entry aml__stack" onSubmit={submit} autoComplete="off">
+    <form className="card card--padded stack" onSubmit={submit} autoComplete="off">
       <div>
-        <h2 className="aml__section-title keys__card-title">{waiting ? "Second key part" : "Enter a key part"}</h2>
-        <p className="aml__note">
+        <h2 className="section-title">{waiting ? "Second key part" : "Enter a key part"}</h2>
+        <p className="note">
           {waiting
             ? "The first part is in. The second custodian enters theirs within 15 minutes of it."
             : "Two custodians each enter one part of the master key. Done once per environment, or again to replace the master key."}
         </p>
       </div>
-      {error && <div className="mdp__error">{error}</div>}
+      {error && <Alert>{error}</Alert>}
       <div className="tf">
         <label className="tf__label" htmlFor="key-component">
           Key part (64 hex characters)
@@ -57,7 +55,7 @@ function ComponentEntry({ waiting, onDone }) {
           <input
             id="key-component"
             type="password"
-            className="tf__input aml__mono"
+            className="tf__input mono"
             value={value}
             maxLength={64}
             spellCheck={false}
@@ -65,9 +63,9 @@ function ComponentEntry({ waiting, onDone }) {
             onChange={(e) => setValue(e.target.value.trim())}
           />
         </div>
-        <span className="aml__note keys__count">{value.length} / 64</span>
+        <span className="tf__hint keys__count">{value.length} / 64</span>
       </div>
-      <div className="mdp__header-actions" style={{ justifyContent: "flex-end" }}>
+      <div className="form-actions">
         <Button type="submit" loading={isSaving} disabled={!valid}>
           Send key part
         </Button>
@@ -76,11 +74,11 @@ function ComponentEntry({ waiting, onDone }) {
         <div className="keys__result">
           <strong>{result.message}</strong>
           <span>
-            Part check value <span className="aml__mono">{result.component_kcv}</span>
+            Part check value <span className="mono">{result.component_kcv}</span>
             {result.complete && (
               <>
                 {" "}
-                · master check value <span className="aml__mono">{result.master_kcv}</span>
+                · master check value <span className="mono">{result.master_kcv}</span>
               </>
             )}
           </span>
@@ -111,10 +109,10 @@ export function ConfirmModal({ title, children, confirmLabel, run, onClose, onDo
 
   return (
     <Modal title={title} onClose={onClose}>
-      <div className="aml__stack">
-        {error && <div className="mdp__error">{error}</div>}
+      <div className="stack">
+        {error && <Alert>{error}</Alert>}
         {children}
-        <div className="mdp__header-actions" style={{ justifyContent: "flex-end" }}>
+        <div className="form-actions">
           <Button type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
@@ -152,18 +150,18 @@ export function KeysTab() {
 
   const keys = state?.keys ?? [];
   const columns = [
-    { key: "id", label: "Key", render: (k) => <span className="aml__name aml__mono">{k.id}</span> },
+    { key: "id", label: "Key", render: (k) => <span className="cell-title mono">{k.id}</span> },
     { key: "purpose", label: "Purpose" },
     { key: "version", label: "Version" },
     { key: "active", label: "State", render: (k) => <StatusPill status={k.active ? "ACTIVE" : "RETIRED"} label={k.active ? "Active" : "Older version"} /> },
-    { key: "kcv", label: "Check value (KCV)", render: (k) => <span className="aml__mono">{k.kcv}</span> },
+    { key: "kcv", label: "Check value (KCV)", render: (k) => <span className="mono">{k.kcv}</span> },
     { key: "created", label: "Created", render: (k) => formatDateTime(k.created) },
   ];
 
   return (
     <>
-      <div className="mdp__header-actions keys__actions">
-        <Button variant="secondary" onClick={load}>
+      <div className="toolbar keys__actions">
+        <Button variant="secondary" onClick={load} icon="refresh">
           Reload
         </Button>
         {state?.ready && !state.locked && (
@@ -173,27 +171,31 @@ export function KeysTab() {
         )}
       </div>
 
-      {error && <div className="mdp__error">{error}</div>}
-      {state?.locked && <div className="mdp__error keys__locked">Keys locked: waiting for custodians. Payments, PINs and cards are refused until two custodians unlock them.</div>}
+      {error && <Alert>{error}</Alert>}
+      {state?.locked && (
+        <Alert className="keys__locked">
+          <strong>Keys locked: waiting for custodians.</strong> Payments, PINs and cards are refused until two custodians unlock them.
+        </Alert>
+      )}
       {state?.storage_key_left && (
-        <div className="keys__card keys__warning">
-          <span>The old storage key file is still on the server. Destroy it once the custodians hold the keys.</span>
-          <Button variant="danger" onClick={() => setConfirming("destroy")}>
+        <div className="alert alert--warning keys__warning">
+          <span className="alert__body">The old storage key file is still on the server. Destroy it once the custodians hold the keys.</span>
+          <Button variant="danger" size="sm" onClick={() => setConfirming("destroy")}>
             Destroy storage key file
           </Button>
         </div>
       )}
-      {notice && <div className="keys__result keys__notice">{notice}</div>}
+      {notice && <Alert tone="success">{notice}</Alert>}
 
       {state && (
-        <div className="keys__card keys__status">
+        <div className="card keys__status">
           <div>
             <span className="keys__label">State</span>
             <StatusPill status={state.ready ? "ACTIVE" : "FAILED"} label={state.ready ? "Ready" : "Not set up"} />
           </div>
           <div>
             <span className="keys__label">Master check value</span>
-            <span className="aml__mono keys__kcv">{state.master_kcv || "—"}</span>
+            <span className="mono keys__kcv">{state.master_kcv || "—"}</span>
           </div>
           <div>
             <span className="keys__label">Created</span>
@@ -231,7 +233,7 @@ export function KeysTab() {
         emptyMessage="No keys yet: enter both key parts to create them."
         actions={(k) =>
           k.active && (
-            <button type="button" className="aml__text-btn" onClick={() => setConfirming(k.purpose)}>
+            <button type="button" className="text-btn" onClick={() => setConfirming(k.purpose)}>
               Rotate
             </button>
           )
@@ -259,14 +261,14 @@ export function KeysTab() {
 // What each confirmed action says and does: lock, destroy, or a key's purpose (rotate).
 function confirmOf(what) {
   if (what === "lock") {
-    return { title: "Lock the keys", confirmLabel: "Lock keys", run: keysService.lock, children: <p className="aml__note">Payments stop until two custodians unlock. Continue?</p> };
+    return { title: "Lock the keys", confirmLabel: "Lock keys", run: keysService.lock, children: <p className="note">Payments stop until two custodians unlock. Continue?</p> };
   }
   if (what === "destroy") {
     return {
       title: "Destroy the storage key file",
       confirmLabel: "Destroy",
       run: keysService.destroyStorageKey,
-      children: <p className="aml__note">This cannot be undone: afterwards only the custodians can open the keys.</p>,
+      children: <p className="note">This cannot be undone: afterwards only the custodians can open the keys.</p>,
     };
   }
   return { title: `Rotate the ${what} key`, confirmLabel: "Rotate", run: () => keysService.rotate(what), children: <RotateNote purpose={what} /> };
@@ -274,7 +276,7 @@ function confirmOf(what) {
 
 export function RotateNote({ purpose }) {
   return (
-    <p className="aml__note">
+    <p className="note">
       A new version of the {purpose} key becomes active for everything protected from now on. Older versions keep working for what they already protect.
       {["CVK", "PVK"].includes(purpose) && " New cards get CVVs or PIN offsets under the new key; existing cards keep working."}
     </p>

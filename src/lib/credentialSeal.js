@@ -1,4 +1,5 @@
 import { env } from "../config/env";
+import { API } from "../api/endpoints";
 
 // Passwords, PINs and codes never travel as readable text: each is sealed
 // with the platform's RSA public key (RSA-OAEP-256, WebCrypto) and the API
@@ -17,7 +18,7 @@ let clockOffset = 0;
 async function loadKey() {
   // WebCrypto exists only on a secure page (https, or http://localhost).
   if (!globalThis.crypto?.subtle) throw new Error("Sign-in needs a secure connection. Open this page over https or on localhost.");
-  const res = await fetch(`${env.apiBaseUrl}/auth/public_key`);
+  const res = await fetch(`${env.apiBaseUrl}${API.AUTH.PUBLIC_KEY}`);
   const k = (await res.json())?.data?.[0];
   if (!k?.spki) throw new Error("The encryption key could not be loaded. Please try again.");
   if (Number(k.server_time)) clockOffset = Number(k.server_time) - Date.now();

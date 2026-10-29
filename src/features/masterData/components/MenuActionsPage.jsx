@@ -5,8 +5,12 @@ import { rowLabel, rowValue } from "../../../lib/rowLabel";
 import { Select } from "../../../components/ui/Select";
 import { Button } from "../../../components/ui/Button";
 import { StatusBadge } from "../../../components/ui/StatusBadge";
+import { PageHeader } from "../../../components/ui/PageHeader";
+import { EmptyState } from "../../../components/ui/EmptyState";
+import { Alert } from "../../../components/ui/Alert";
+import { SkeletonList } from "../../../components/ui/Skeleton";
 import { useLiveList } from "../../../hooks/useLiveList";
-import "./MasterDataPage.css";
+import { API } from "../../../api/endpoints";
 import "./MenuActionsPage.css";
 
 export function MenuActionsPage() {
@@ -64,10 +68,10 @@ export function MenuActionsPage() {
   // other pages/tabs/users — keep this configurator in sync with each. See
   // the Live Menu Updates via WebSocket handoff doc.
   const refreshSilently = () => loadAll({ silent: true });
-  useLiveList("master/module", refreshSilently);
-  useLiveList("master/menu", refreshSilently);
-  useLiveList("master/action", refreshSilently);
-  useLiveList("master/menu_action", refreshSilently);
+  useLiveList(API.LIVE.master("module"), refreshSilently);
+  useLiveList(API.LIVE.master("menu"), refreshSilently);
+  useLiveList(API.LIVE.master("action"), refreshSilently);
+  useLiveList(API.LIVE.master("menu_action"), refreshSilently);
 
   const menusForModule = useMemo(
     () => menus.filter((menu) => selectedModuleId && String(menu.module_id) === String(selectedModuleId)),
@@ -164,25 +168,15 @@ export function MenuActionsPage() {
   };
 
   return (
-    <div className="mdp">
-      <div className="mdp__header">
-        <div>
-          <h1 className="mdp__title">Menu Actions</h1>
-          <p className="mdp__subtitle">Manage actions available for menus.</p>
-        </div>
-      </div>
+    <div className="page">
+      <PageHeader eyebrow="Master Data" title="Menu Actions" subtitle="Choose which actions each menu offers, and in what order." />
 
       {error && (
-        <div className="mdp__error">
-          Unable to load data. Please try again.{" "}
-          <button type="button" className="map__retry" onClick={loadAll}>
-            Retry
-          </button>
-        </div>
+        <Alert action={{ label: "Retry", onClick: loadAll }}>Unable to load data. Please try again.</Alert>
       )}
 
-      <div className="map__module">
-        <span className="map__module-label">Module</span>
+      <div className="field-inline">
+        <span className="field-inline__label">Module</span>
         <Select
           placeholder={isLoading ? "Loading modules…" : "Select Module"}
           options={modules.map((module) => ({ value: rowValue(module), label: rowLabel(module) }))}
@@ -193,20 +187,22 @@ export function MenuActionsPage() {
       </div>
 
       {!selectedModuleId ? (
-        <div className="map__empty">
-          {isLoading ? "Loading…" : "Select a module to view its menus and configure actions."}
-        </div>
+        <EmptyState
+          icon="filter"
+          title={isLoading ? "Loading modules…" : "Pick a module"}
+          message="Select a module to view its menus and configure actions."
+        />
       ) : (
         <div className="map__layout">
-          <div className="map__menus">
-            <div className="map__panel-title">Menus</div>
+          <div className="card map__menus">
+            <div className="map__panel-head">
+              <h2 className="map__panel-title">Menus</h2>
+              {!isLoading && <span className="map__panel-count">{menusForModule.length}</span>}
+            </div>
             {isLoading ? (
-              <div className="map__skeleton-list">
-                <div className="map__skeleton-card" />
-                <div className="map__skeleton-card" />
-              </div>
+              <SkeletonList count={3} />
             ) : menusForModule.length === 0 ? (
-              <div className="map__empty map__empty--panel">No menus available for this module.</div>
+              <EmptyState plain message="No menus available for this module." />
             ) : (
               <div className="map__menu-list">
                 {menusForModule.map((menu) => {
@@ -236,24 +232,24 @@ export function MenuActionsPage() {
             )}
           </div>
 
-          <div className="map__actions">
+          <div className="card map__actions">
             {!selectedMenuId ? (
-              <div className="map__empty map__empty--panel">Select a menu to configure its actions.</div>
+              <EmptyState plain icon="arrowRight" title="Pick a menu" message="Select a menu on the left to configure its actions." />
             ) : (
               <>
-                <div className="map__panel-title">Actions for: {rowLabel(selectedMenu ?? {}).toUpperCase()}</div>
-                <p className="map__actions-hint">Select the actions that should be available for this menu.</p>
+                <div className="map__panel-head">
+                  <div>
+                    <h2 className="map__panel-title">
+                      Actions for <span className="map__panel-menu">{rowLabel(selectedMenu ?? {})}</span>
+                    </h2>
+                    <p className="map__actions-hint">Select the actions that should be available for this menu.</p>
+                  </div>
+                </div>
 
                 {isLoading ? (
-                  <div className="map__skeleton-list">
-                    <div className="map__skeleton-row" />
-                    <div className="map__skeleton-row" />
-                    <div className="map__skeleton-row" />
-                  </div>
+                  <SkeletonList count={3} height={44} />
                 ) : actions.length === 0 ? (
-                  <div className="map__empty map__empty--panel">
-                    No actions configured yet. Select the actions you want to enable.
-                  </div>
+                  <EmptyState plain message="No actions configured yet. Select the actions you want to enable." />
                 ) : (
                   <div className="map__action-table">
                     <div className="map__action-head">
@@ -308,10 +304,11 @@ export function MenuActionsPage() {
                   </div>
                 )}
 
-                {saveError && <div className="mdp__error">{saveError}</div>}
-                {saveSuccess && <div className="mdp__success">{saveSuccess}</div>}
+                {saveError && <Alert>{saveError}</Alert>}
+                {saveSuccess && <Alert tone="success">{saveSuccess}</Alert>}
 
                 <div className="map__save-bar">
+                  {hasChanges && <span className="map__unsaved">Unsaved changes</span>}
                   <Button
                     type="button"
                     onClick={handleSave}

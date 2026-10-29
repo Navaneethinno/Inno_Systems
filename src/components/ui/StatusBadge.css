@@ -1,0 +1,59 @@
+/* The status pill used everywhere a row's state is shown (StatusBadge,
+   AuthStatusBadge, AML StatusPill, severity and expiry states). Tones read
+   the semantic tokens in theme.css. */
+.dt__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px 3px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.dt__status::before {
+  content: "";
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.dt__status--active {
+  color: var(--color-success-text);
+  background: var(--color-success-bg);
+  border-color: var(--color-success-border);
+}
+
+.dt__status--pending {
+  color: var(--color-warning-text);
+  background: var(--color-warning-bg);
+  border-color: var(--color-warning-border);
+}
+
+/* In-flight states pulse their dot so "running" reads as live. */
+.dt__status--pending::before {
+  animation: status-pulse 1.6s ease-in-out infinite;
+}
+
+.dt__status--rejected {
+  color: var(--color-danger-text);
+  background: var(--color-danger-bg);
+  border-color: var(--color-danger-border);
+}
+
+.dt__status--inactive {
+  color: var(--color-neutral-text);
+  background: var(--color-neutral-bg);
+  border-color: var(--color-neutral-border);
+}
+
+@keyframes status-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}

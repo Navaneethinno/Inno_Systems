@@ -1,67 +1,57 @@
-.map__module {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-width: 420px;
-  margin-bottom: 20px;
-}
-
-.map__module-label {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-}
-
-.map__empty {
-  padding: 32px;
-  text-align: center;
-  color: var(--color-text-muted);
-  font-size: 13.5px;
-  border: 1px dashed var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-}
-
-.map__empty--panel {
-  border: none;
-  padding: 24px 16px;
-}
-
-.map__retry {
-  border: none;
-  background: none;
-  color: inherit;
-  font-weight: 700;
-  text-decoration: underline;
-  cursor: pointer;
-  padding: 0;
-}
-
 .map__layout {
   display: grid;
-  grid-template-columns: 320px 1fr;
-  gap: 20px;
+  grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+  gap: var(--space-5);
   align-items: start;
-}
-
-.map__panel-title {
-  font-family: var(--font-display);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  color: var(--color-text);
-  margin-bottom: 12px;
 }
 
 .map__menus,
 .map__actions {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 20px;
+  padding: var(--space-5);
+}
+
+.map__panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.map__panel-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.map__panel-menu {
+  color: var(--color-primary);
+}
+
+:root[data-theme="dark"] .map__panel-menu {
+  color: var(--color-info-text);
+}
+
+.map__panel-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-sunken);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+.map__actions-hint {
+  margin: 4px 0 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
 }
 
 /* The menu list can run much taller than the actions panel (a module with
@@ -69,196 +59,217 @@
    leave its "Actions for: ..." result scrolled off the top of the screen,
    forcing a scroll back up just to see what you clicked. `position: sticky`
    on .map__actions alone doesn't reliably fix this here — the page's
-   scrolling happens inside .shell__content (an ancestor made a scroll
-   container by its own overflow-x: hidden — see AppShell.css), and a
-   sticky element pinned to an ancestor scroll box that isn't actually
-   the one scrolling just scrolls off along with it. Capping the menu
-   list's own height instead means the row never grows past the viewport
-   in the first place, so the actions panel is never off-screen to begin
-   with — no scroll-context guessing required. */
+   scrolling happens inside the shell's content area (an ancestor made a
+   scroll container by its own overflow), and a sticky element pinned to an
+   ancestor scroll box that isn't actually the one scrolling just scrolls
+   off along with it. Capping the menu list's own height instead means the
+   row never grows past the viewport in the first place, so the actions
+   panel is never off-screen to begin with — no scroll-context guessing
+   required. */
 .map__menu-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  max-height: calc(100vh - 260px);
+  gap: var(--space-2);
+  max-height: calc(100vh - 300px);
+  min-height: 120px;
+  margin: 0 -6px;
+  padding: 0 6px 2px;
   overflow-y: auto;
-  padding-right: 4px;
 }
 
 .map__menu-card {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
-  text-align: left;
-  border: 1.5px solid var(--color-border);
+  padding: 11px 14px;
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: var(--color-input-bg);
-  padding: 12px 14px;
+  background: var(--color-surface);
+  font: inherit;
+  text-align: left;
   cursor: pointer;
-  font-family: inherit;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition: border-color var(--transition-base), background var(--transition-base), box-shadow var(--transition-base);
 }
 
 .map__menu-card:hover {
-  border-color: var(--color-primary);
+  border-color: var(--color-border-strong);
+  background: var(--color-table-head);
 }
 
-.map__menu-card--active {
+.map__menu-card--active,
+.map__menu-card--active:hover {
   border-color: var(--color-primary);
   background: var(--color-primary-tint);
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
 }
 
 .map__menu-dot {
   width: 8px;
   height: 8px;
-  border-radius: 50%;
-  background: var(--color-border);
   flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--color-border-strong);
+  transition: background var(--transition-base);
 }
 
 .map__menu-card--active .map__menu-dot {
   background: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
 }
 
 .map__menu-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
+  min-width: 0;
 }
 
 .map__menu-name {
-  font-size: 14px;
+  font-size: var(--text-md);
   font-weight: 600;
   color: var(--color-text);
+  overflow-wrap: anywhere;
 }
 
 .map__menu-meta {
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--color-text-muted);
-}
-
-.map__actions-hint {
-  font-size: 13px;
-  color: var(--color-text-muted);
-  margin: -6px 0 16px;
 }
 
 .map__action-table {
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
   overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
 }
 
 .map__action-head,
 .map__action-row {
   display: grid;
-  grid-template-columns: 1fr 120px 100px;
+  grid-template-columns: minmax(0, 1fr) 110px 96px;
   align-items: center;
-  padding: 10px 14px;
   gap: 12px;
+  padding: 10px 16px;
 }
 
 .map__action-head {
   background: var(--color-table-head);
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
   color: var(--color-text-muted);
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .map__action-row {
+  min-height: 52px;
   border-top: 1px solid var(--color-border);
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background var(--duration-fast) ease;
 }
 
 .map__action-row:hover {
-  background: var(--color-table-head);
+  background: var(--color-row-hover);
 }
 
-.map__action-select-all label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-}
-
-.map__action-select-all input {
-  width: 14px;
-  height: 14px;
-  accent-color: var(--color-primary);
-}
-
+.map__action-select-all label,
 .map__action-name {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 14px;
+}
+
+.map__action-select-all label {
+  cursor: pointer;
+}
+
+.map__action-name {
+  font-size: var(--text-md);
+  font-weight: 500;
   color: var(--color-text);
 }
 
+.map__action-select-all input,
 .map__action-name input {
   width: 16px;
   height: 16px;
-  accent-color: var(--color-primary);
+  margin: 0;
 }
 
 .map__priority-input {
-  width: 64px;
-  border: 1.5px solid var(--color-border);
+  width: 72px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-sm);
-  padding: 6px 8px;
-  font-size: 13.5px;
-  color: var(--color-text);
   background: var(--color-input-bg);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
 }
 
 .map__priority-input:focus {
   outline: none;
   border-color: var(--color-primary);
-  background: var(--color-surface);
+  box-shadow: var(--focus-ring);
 }
 
 .map__priority-empty {
-  color: var(--color-text-muted);
+  color: var(--color-text-subtle);
+}
+
+.map__actions .alert {
+  margin-top: var(--space-4);
 }
 
 .map__save-bar {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
-  margin-top: 20px;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
 }
 
-.map__skeleton-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.map__unsaved {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-warning-text);
 }
 
-.map__skeleton-card,
-.map__skeleton-row {
-  height: 46px;
-  border-radius: var(--radius-sm);
-  background: linear-gradient(90deg, #f1f2f4 25%, #f8f9fa 37%, #f1f2f4 63%);
-  background-size: 400% 100%;
-  animation: map-shimmer 1.4s ease infinite;
+.map__unsaved::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
 }
 
-@keyframes map-shimmer {
-  0% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0 50%;
-  }
-}
-
-@media (max-width: 860px) {
+@media (max-width: 900px) {
   .map__layout {
     grid-template-columns: 1fr;
+  }
+
+  .map__menu-list {
+    max-height: 320px;
+  }
+}
+
+@media (max-width: 520px) {
+  .map__action-head,
+  .map__action-row {
+    grid-template-columns: minmax(0, 1fr) 80px;
+    padding: 10px 12px;
+  }
+
+  .map__action-head > :last-child,
+  .map__action-status {
+    display: none;
   }
 }

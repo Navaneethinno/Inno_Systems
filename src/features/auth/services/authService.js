@@ -1,5 +1,6 @@
 import axios from "axios";
 import { httpClient } from "../../../api/httpClient";
+import { API, resolveApiPath } from "../../../api/endpoints";
 import { tokenStore } from "../../../lib/tokenStore";
 import { env } from "../../../config/env";
 import { extractOne } from "../../../lib/extractList";
@@ -25,7 +26,7 @@ export const authService = {
     const basicAuth = btoa(`${env.systemBasicUser}:${env.systemBasicPassword}`);
 
     const { data: envelope } = await httpClient.post(
-      "/system/user/login",
+      API.AUTH.LOGIN,
       { user_name: username, password },
       { headers: { Authorization: `Basic ${basicAuth}` } }
     );
@@ -72,7 +73,7 @@ export const authService = {
     const token = tokenStore.getAccessToken();
     if (token) {
       await axios
-        .post(`${env.apiBaseUrl}/config/system/user/logout`, {}, { headers: { Authorization: `Bearer ${token}` }, timeout: 10000 })
+        .post(`${env.apiBaseUrl}${resolveApiPath(API.AUTH.LOGOUT)}`, {}, { headers: { Authorization: `Bearer ${token}` }, timeout: 10000 })
         .catch(() => {});
     }
     tokenStore.clear();

@@ -6,10 +6,11 @@ import { TextField } from "../../../components/ui/TextField";
 import { Select } from "../../../components/ui/Select";
 import { Button } from "../../../components/ui/Button";
 import { Modal } from "../../../components/ui/Modal";
+import { IconButton } from "../../../components/ui/IconButton";
+import { Alert } from "../../../components/ui/Alert";
 import { renderStatusCell } from "../../../lib/renderStatusCell";
 import { EntityManagerPage } from "./EntityManagerPage";
-import "./SystemFormPage.css";
-import "./ProfileFormPage.css";
+import { API } from "../../../api/endpoints";
 
 // Per SYSTEM_API_GUIDE.md's example, values are uppercase (e.g. "MOBILE").
 const LOGIN_IDENTIFIERS = ["USERNAME", "EMAIL", "MOBILE"];
@@ -40,7 +41,7 @@ const initialState = {
 
 function Checkbox({ label, checked, onChange }) {
   return (
-    <label className="mdp__checkbox">
+    <label className="check">
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
       <span>{label}</span>
     </label>
@@ -171,144 +172,155 @@ function InstitutionForm({ row, onSuccess, onCancel }) {
   };
 
   return (
-    <form className="sfp__form ifp__form" onSubmit={handleSubmit}>
-      {error && <div className="mdp__error">{error}</div>}
+    <form className="stack" onSubmit={handleSubmit}>
+      {error && <Alert>{error}</Alert>}
 
-      <div className="ifp__grid">
-        <TextField label="Code" required value={values.code} onChange={(e) => set("code", e.target.value)} />
-        <TextField label="Name" required value={values.name} onChange={(e) => set("name", e.target.value)} />
-        <Select
-          label="Type"
-          placeholder="Select institution type"
-          required
-          options={institutionTypes.map((row) => ({ value: rowValue(row), label: rowLabel(row) }))}
-          value={values.type}
-          onChange={(e) => set("type", e.target.value)}
-        />
-        <TextField
-          label="Timezone"
-          placeholder="Asia/Kolkata"
-          value={values.timezone}
-          onChange={(e) => set("timezone", e.target.value)}
-        />
-      </div>
-
-      <h2 className="pfp__section-title">Languages</h2>
-      <div className="ifp__checks">
-        {languages.map((row) => {
-          const code = rowCode(row);
-          return (
-            <Checkbox
-              key={code}
-              label={rowLabel(row)}
-              checked={Boolean(values.languages[code])}
-              onChange={(v) => toggleLanguage(code, v)}
-            />
-          );
-        })}
-      </div>
-
-      <h2 className="pfp__section-title">Branches &amp; KYC</h2>
-      <div className="ifp__grid">
-        <TextField
-          label="Date format"
-          value={values.date_format}
-          onChange={(e) => set("date_format", e.target.value)}
-        />
-        <TextField
-          label="Max branches allowed"
-          type="number"
-          value={values.max_branches_allowed}
-          onChange={(e) => set("max_branches_allowed", e.target.value)}
-        />
-        <TextField
-          label="Total KYC levels"
-          type="number"
-          value={values.total_kyc_levels}
-          onChange={(e) => set("total_kyc_levels", e.target.value)}
-        />
-      </div>
-      <div className="ifp__checks">
-        <Checkbox label="Has branches" checked={values.has_branch} onChange={(v) => set("has_branch", v)} />
-        <Checkbox label="KYC enabled" checked={values.kyc_enabled} onChange={(v) => set("kyc_enabled", v)} />
-        <Checkbox
-          label="Allow KYC downgrade"
-          checked={values.allow_downgrade_kyc}
-          onChange={(v) => set("allow_downgrade_kyc", v)}
-        />
-        <Checkbox
-          label="Auto-approve KYC level"
-          checked={values.auto_approve_kyc_level}
-          onChange={(v) => set("auto_approve_kyc_level", v)}
-        />
-      </div>
-
-      <h2 className="pfp__section-title">Login identifiers</h2>
-      <div className="ifp__checks">
-        {LOGIN_IDENTIFIERS.map((id) => (
-          <Checkbox
-            key={id}
-            label={id[0] + id.slice(1).toLowerCase()}
-            checked={values.identifiers[id]}
-            onChange={(v) => toggleIdentifier(id, v)}
+      <section className="form-section">
+        <h2 className="form-section__title">Identity</h2>
+        <div className="form-grid">
+          <TextField label="Code" required value={values.code} onChange={(e) => set("code", e.target.value)} />
+          <TextField label="Name" required value={values.name} onChange={(e) => set("name", e.target.value)} />
+          <Select
+            label="Type"
+            placeholder="Select institution type"
+            required
+            options={institutionTypes.map((row) => ({ value: rowValue(row), label: rowLabel(row) }))}
+            value={values.type}
+            onChange={(e) => set("type", e.target.value)}
           />
-        ))}
-      </div>
-      <Select
-        label="Primary login identifier"
-        options={selectedIdentifiers.map((id) => ({ value: id, label: id[0] + id.slice(1).toLowerCase() }))}
-        value={values.primary_login_identifier}
-        onChange={(e) => set("primary_login_identifier", e.target.value)}
-      />
+          <TextField
+            label="Timezone"
+            placeholder="Asia/Kolkata"
+            value={values.timezone}
+            onChange={(e) => set("timezone", e.target.value)}
+          />
+        </div>
+      </section>
 
-      <h2 className="pfp__section-title">Login &amp; transaction PIN</h2>
-      <div className="ifp__checks">
-        <Checkbox
-          label="Login PIN enabled"
-          checked={values.is_login_pin_enabled}
-          onChange={(v) => set("is_login_pin_enabled", v)}
-        />
-        <Checkbox
-          label="Allow biometric login"
-          checked={values.allow_biometric_login}
-          onChange={(v) => set("allow_biometric_login", v)}
-        />
-        <Checkbox
-          label="Transaction PIN enabled"
-          checked={values.is_txn_pin_enabled}
-          onChange={(v) => set("is_txn_pin_enabled", v)}
-        />
-        <Checkbox
-          label="Allow same login/txn PIN"
-          checked={values.is_same_login_txn_pin_allowed}
-          onChange={(v) => set("is_same_login_txn_pin_allowed", v)}
-        />
-      </div>
-      <div className="ifp__grid">
-        <TextField
-          label="Login PIN length"
-          type="number"
-          value={values.login_pin_length}
-          onChange={(e) => set("login_pin_length", e.target.value)}
-        />
+      <section className="form-section">
+        <h2 className="form-section__title">Languages</h2>
+        <div className="check-group">
+          {languages.map((row) => {
+            const code = rowCode(row);
+            return (
+              <Checkbox
+                key={code}
+                label={rowLabel(row)}
+                checked={Boolean(values.languages[code])}
+                onChange={(v) => toggleLanguage(code, v)}
+              />
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="form-section">
+        <h2 className="form-section__title">Branches &amp; KYC</h2>
+        <div className="form-grid">
+          <TextField
+            label="Date format"
+            value={values.date_format}
+            onChange={(e) => set("date_format", e.target.value)}
+          />
+          <TextField
+            label="Max branches allowed"
+            type="number"
+            value={values.max_branches_allowed}
+            onChange={(e) => set("max_branches_allowed", e.target.value)}
+          />
+          <TextField
+            label="Total KYC levels"
+            type="number"
+            value={values.total_kyc_levels}
+            onChange={(e) => set("total_kyc_levels", e.target.value)}
+          />
+        </div>
+        <div className="check-group">
+          <Checkbox label="Has branches" checked={values.has_branch} onChange={(v) => set("has_branch", v)} />
+          <Checkbox label="KYC enabled" checked={values.kyc_enabled} onChange={(v) => set("kyc_enabled", v)} />
+          <Checkbox
+            label="Allow KYC downgrade"
+            checked={values.allow_downgrade_kyc}
+            onChange={(v) => set("allow_downgrade_kyc", v)}
+          />
+          <Checkbox
+            label="Auto-approve KYC level"
+            checked={values.auto_approve_kyc_level}
+            onChange={(v) => set("auto_approve_kyc_level", v)}
+          />
+        </div>
+      </section>
+
+      <section className="form-section">
+        <h2 className="form-section__title">Login identifiers</h2>
+        <div className="check-group">
+          {LOGIN_IDENTIFIERS.map((id) => (
+            <Checkbox
+              key={id}
+              label={id[0] + id.slice(1).toLowerCase()}
+              checked={values.identifiers[id]}
+              onChange={(v) => toggleIdentifier(id, v)}
+            />
+          ))}
+        </div>
         <Select
-          label="Login PIN type"
-          options={[
-            { value: "NUMERIC", label: "Numeric" },
-            { value: "ALPHANUMERIC", label: "Alphanumeric" },
-          ]}
-          value={values.login_pin_type}
-          onChange={(e) => set("login_pin_type", e.target.value)}
+          label="Primary login identifier"
+          options={selectedIdentifiers.map((id) => ({ value: id, label: id[0] + id.slice(1).toLowerCase() }))}
+          value={values.primary_login_identifier}
+          onChange={(e) => set("primary_login_identifier", e.target.value)}
         />
-        <TextField
-          label="Transaction PIN length"
-          type="number"
-          value={values.txn_pin_length}
-          onChange={(e) => set("txn_pin_length", e.target.value)}
-        />
-      </div>
+      </section>
 
-      <div className="pfp__form-actions">
+      <section className="form-section">
+        <h2 className="form-section__title">Login &amp; transaction PIN</h2>
+        <div className="check-group">
+          <Checkbox
+            label="Login PIN enabled"
+            checked={values.is_login_pin_enabled}
+            onChange={(v) => set("is_login_pin_enabled", v)}
+          />
+          <Checkbox
+            label="Allow biometric login"
+            checked={values.allow_biometric_login}
+            onChange={(v) => set("allow_biometric_login", v)}
+          />
+          <Checkbox
+            label="Transaction PIN enabled"
+            checked={values.is_txn_pin_enabled}
+            onChange={(v) => set("is_txn_pin_enabled", v)}
+          />
+          <Checkbox
+            label="Allow same login/txn PIN"
+            checked={values.is_same_login_txn_pin_allowed}
+            onChange={(v) => set("is_same_login_txn_pin_allowed", v)}
+          />
+        </div>
+        <div className="form-grid">
+          <TextField
+            label="Login PIN length"
+            type="number"
+            value={values.login_pin_length}
+            onChange={(e) => set("login_pin_length", e.target.value)}
+          />
+          <Select
+            label="Login PIN type"
+            options={[
+              { value: "NUMERIC", label: "Numeric" },
+              { value: "ALPHANUMERIC", label: "Alphanumeric" },
+            ]}
+            value={values.login_pin_type}
+            onChange={(e) => set("login_pin_type", e.target.value)}
+          />
+          <TextField
+            label="Transaction PIN length"
+            type="number"
+            value={values.txn_pin_length}
+            onChange={(e) => set("txn_pin_length", e.target.value)}
+          />
+        </div>
+      </section>
+
+      <div className="form-actions">
         <Button type="button" variant="secondary" onClick={onCancel}>
           Cancel
         </Button>
@@ -351,22 +363,19 @@ export function InstitutionFormPage() {
         eyebrow="Registry"
         subtitle="Institutions created via the system API."
         addLabel="Add Institution"
+        formWidth={780}
         columns={[
           { key: "id", label: "ID", render: (row) => rowValue(row) ?? "—" },
           { key: "name", label: "Name", render: (row) => rowLabel(row) },
           { key: "auth_status", label: "Status", narrow: true, render: renderStatusCell },
         ]}
         loadRows={() => systemService.listInstitutions()}
-        livePath="institution/profile"
+        livePath={API.LIVE.INSTITUTION}
         renderForm={({ onSuccess, onCancel }) => <InstitutionForm onSuccess={onSuccess} onCancel={onCancel} />}
         actions={(row) => (
           <>
-            <button className="dt__icon-btn" onClick={() => setEditTarget(row)} aria-label="Edit">
-              ✎
-            </button>
-            <button className="dt__icon-btn dt__icon-btn--danger" onClick={() => setDeleteTarget(row)} aria-label="Delete">
-              🗑
-            </button>
+            <IconButton icon="edit" label="Edit" onClick={() => setEditTarget(row)} />
+            <IconButton icon="trash" label="Delete" tone="danger" onClick={() => setDeleteTarget(row)} />
           </>
         )}
       />
@@ -400,7 +409,7 @@ export function InstitutionFormPage() {
             </>
           }
         >
-          {deleteError && <div className="mdp__error">{deleteError}</div>}
+          {deleteError && <Alert>{deleteError}</Alert>}
           <p>
             Are you sure you want to delete <strong>{rowLabel(deleteTarget)}</strong>?
           </p>

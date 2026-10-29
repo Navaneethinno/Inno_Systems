@@ -5,7 +5,8 @@ import { Modal } from "../../../components/ui/Modal";
 import { DataTable } from "../../../components/ui/DataTable";
 import { Select } from "../../../components/ui/Select";
 import { TextField } from "../../../components/ui/TextField";
-import "../../masterData/components/MasterDataPage.css";
+import { PageHeader } from "../../../components/ui/PageHeader";
+import { Alert } from "../../../components/ui/Alert";
 import "./Aml.css";
 
 // Why a match's score differs from its name score. The same adjustments
@@ -57,7 +58,7 @@ function EntityModal({ match, onClose }) {
   ].filter(([, v]) => v && v !== "—");
   return (
     <Modal title={e.name ?? match.matched_name} onClose={onClose} width={720}>
-      <dl className="aml__record">
+      <dl className="kv">
         {rows.map(([label, value]) => (
           <div key={label} style={{ display: "contents" }}>
             <dt>{label}</dt>
@@ -66,7 +67,7 @@ function EntityModal({ match, onClose }) {
         ))}
       </dl>
       {e.source_url && (
-        <p className="aml__note" style={{ marginTop: 14 }}>
+        <p className="note">
           <a href={e.source_url} target="_blank" rel="noreferrer">
             Open on the publisher's site ↗
           </a>
@@ -130,7 +131,7 @@ export function TryNamePage() {
       render: (m) => (
         <>
           <span className={`aml__score ${scoreClass(m.score)}`}>{m.score}</span>
-          <span className="aml__sub">name {m.name_score}</span>
+          <span className="cell-sub">name {m.name_score}</span>
         </>
       ),
     },
@@ -139,8 +140,8 @@ export function TryNamePage() {
       label: "Matched name",
       render: (m) => (
         <>
-          <span className="aml__name">{m.matched_name}</span>
-          {m.entity?.name && m.entity.name !== m.matched_name && <span className="aml__sub">{m.entity.name}</span>}
+          <span className="cell-title">{m.matched_name}</span>
+          {m.entity?.name && m.entity.name !== m.matched_name && <span className="cell-sub">{m.entity.name}</span>}
           <AdjustmentChips adjustments={m.adjustments} />
         </>
       ),
@@ -150,8 +151,8 @@ export function TryNamePage() {
       label: "List",
       render: (m) => (
         <>
-          <span className="aml__mono">{m.entity?.list ?? "—"}</span>
-          <span className="aml__sub">{m.entity?.category}</span>
+          <span className="mono">{m.entity?.list ?? "—"}</span>
+          <span className="cell-sub">{m.entity?.category}</span>
         </>
       ),
     },
@@ -164,18 +165,10 @@ export function TryNamePage() {
   const rows = result?.matches?.map((m, i) => ({ ...m, id: `${m.entity?.id ?? m.matched_name}-${i}`, list: m.entity?.list ?? "", entity_type: m.entity?.entity_type ?? "" }));
 
   return (
-    <div className="mdp">
-      <div className="mdp__header">
-        <div>
-          <span className="mdp__eyebrow">AML</span>
-          <h1 className="mdp__title">Try a Name</h1>
-          <p className="mdp__subtitle">
-            Screen any name against the switched-on platform watchlists. Nothing is stored; institutions' own lists aren't searched.
-          </p>
-        </div>
-      </div>
+    <div className="page">
+      <PageHeader eyebrow="AML" title="Try a Name" subtitle="Screen any name against the switched-on platform watchlists. Nothing is stored; institutions' own lists aren't searched." />
 
-      <form className="aml__form" onSubmit={run} noValidate>
+      <form className="card aml__form" onSubmit={run} noValidate>
         <div className="aml__form-wide">
           <TextField id="aml-name" label="Name *" value={form.name} onChange={set("name")} placeholder="Vladimir Putin" />
         </div>
@@ -206,41 +199,43 @@ export function TryNamePage() {
         <TextField id="aml-min" type="number" label="Minimum score (0–100)" value={form.min_score} onChange={set("min_score")} max={100} />
         <TextField id="aml-limit" type="number" label="Most matches" value={form.limit} onChange={set("limit")} />
         <div className="aml__form-actions">
-          <label className="aml__check">
+          <label className="check">
             <input type="checkbox" checked={form.exact} onChange={set("exact")} />
             Exact names only (word for word)
           </label>
-          <Button type="submit" loading={isRunning}>
+          <Button type="submit" loading={isRunning} icon="search">
             Screen name
           </Button>
         </div>
       </form>
 
-      {error && <div className="mdp__error">{error}</div>}
+      {error && <Alert>{error}</Alert>}
 
       {result && (
         <>
-          <div className="aml__summary">
+          <div className="card aml__summary">
             <span className={`aml__score aml__score--big ${scoreClass(result.score)}`}>{result.score}</span>
-            <span className="aml__note">
-              best score · {result.matches?.length ?? 0} match{result.matches?.length === 1 ? "" : "es"} · {result.took_ms} ms
-            </span>
-            <span className="aml__note">
-              Screened as: {[result.subject?.name, result.subject?.entity_type, result.subject?.birth_date, join(result.subject?.countries)].filter((v) => v && v !== "—").join(" · ")}
-            </span>
+            <div className="aml__summary-text">
+              <span className="aml__summary-title">
+                Best score · {result.matches?.length ?? 0} match{result.matches?.length === 1 ? "" : "es"} · {result.took_ms} ms
+              </span>
+              <span className="note">
+                Screened as: {[result.subject?.name, result.subject?.entity_type, result.subject?.birth_date, join(result.subject?.countries)].filter((v) => v && v !== "—").join(" · ")}
+              </span>
+              {result.searched?.length > 0 && (
+                <span className="note">
+                  Searched: <span className="mono">{result.searched.join(", ")}</span>
+                </span>
+              )}
+            </div>
           </div>
-          {result.searched?.length > 0 && (
-            <p className="aml__note" style={{ marginBottom: 12 }}>
-              Searched: <span className="aml__mono">{result.searched.join(", ")}</span>
-            </p>
-          )}
           <DataTable
             columns={columns}
             rows={rows}
             isLoading={false}
             emptyMessage="No matches above the minimum score."
             actions={(m) => (
-              <button type="button" className="aml__text-btn" onClick={() => setOpenMatch(m)}>
+              <button type="button" className="text-btn" onClick={() => setOpenMatch(m)}>
                 Record
               </button>
             )}

@@ -6,9 +6,13 @@ import { TextField } from "../../../components/ui/TextField";
 import { Select } from "../../../components/ui/Select";
 import { Button } from "../../../components/ui/Button";
 import { Modal } from "../../../components/ui/Modal";
+import { IconButton } from "../../../components/ui/IconButton";
+import { EmptyState } from "../../../components/ui/EmptyState";
+import { Alert } from "../../../components/ui/Alert";
+import { SkeletonList } from "../../../components/ui/Skeleton";
 import { renderStatusCell } from "../../../lib/renderStatusCell";
 import { EntityManagerPage } from "./EntityManagerPage";
-import "./SystemFormPage.css";
+import { API } from "../../../api/endpoints";
 import "./ProfileFormPage.css";
 
 function ProfileForm({ row, onSuccess, onCancel }) {
@@ -143,10 +147,10 @@ function ProfileForm({ row, onSuccess, onCancel }) {
   };
 
   return (
-    <form className="pfp__form" onSubmit={handleSubmit}>
-      {error && <div className="mdp__error">{error}</div>}
+    <form className="stack" onSubmit={handleSubmit}>
+      {error && <Alert>{error}</Alert>}
 
-      <div className="pfp__basics">
+      <div className="form-grid">
         <TextField
           label="Profile name"
           required
@@ -163,11 +167,14 @@ function ProfileForm({ row, onSuccess, onCancel }) {
         />
       </div>
 
-      <h2 className="pfp__section-title">Menu access</h2>
+      <div className="form-section">
+        <h2 className="form-section__title">Menu access</h2>
+        <p className="form-section__hint">Tick a menu to grant it, then pick the actions allowed on it.</p>
+      </div>
       {isLoading ? (
-        <div className="mdp__state">Loading menus…</div>
+        <SkeletonList count={4} />
       ) : menus.length === 0 ? (
-        <div className="mdp__state">No menus found.</div>
+        <EmptyState message="No menus found." />
       ) : (
         <div className="pfp__menu-list">
           {menus.map((menu) => {
@@ -182,6 +189,11 @@ function ProfileForm({ row, onSuccess, onCancel }) {
                 <label className="pfp__menu-header">
                   <input type="checkbox" checked={included} onChange={(e) => toggleMenu(menuId, e.target.checked)} />
                   <span>{rowLabel(menu)}</span>
+                  {included && (
+                    <span className="pfp__menu-count">
+                      {assignment.actionIds.size} of {actions.length}
+                    </span>
+                  )}
                 </label>
 
                 {included && (
@@ -190,7 +202,7 @@ function ProfileForm({ row, onSuccess, onCancel }) {
                       <p className="pfp__no-actions">No actions available.</p>
                     ) : (
                       <>
-                        <label className="pfp__action pfp__action--select-all">
+                        <label className="check pfp__select-all">
                           <input
                             type="checkbox"
                             checked={allSelected}
@@ -198,9 +210,9 @@ function ProfileForm({ row, onSuccess, onCancel }) {
                           />
                           <span>Select all</span>
                         </label>
-                        <div className="pfp__actions">
+                        <div className="check-group">
                           {actions.map((action) => (
-                            <label key={rowValue(action)} className="pfp__action">
+                            <label key={rowValue(action)} className="check">
                               <input
                                 type="checkbox"
                                 checked={Boolean(assignment?.actionIds?.has(rowValue(action)))}
@@ -220,7 +232,7 @@ function ProfileForm({ row, onSuccess, onCancel }) {
         </div>
       )}
 
-      <div className="pfp__form-actions">
+      <div className="form-actions">
         <Button type="button" variant="secondary" onClick={onCancel}>
           Cancel
         </Button>
@@ -266,6 +278,7 @@ export function ProfileFormPage() {
         eyebrow="Access Control"
         subtitle="Profiles created via the system API, with their menu/action access."
         addLabel="Add Profile"
+        formWidth={720}
         columns={[
           { key: "id", label: "ID", render: (row) => rowValue(row) ?? "—" },
           { key: "name", label: "Name", render: (row) => rowLabel(row) },
@@ -277,16 +290,12 @@ export function ProfileFormPage() {
           { key: "auth_status", label: "Status", narrow: true, render: renderStatusCell },
         ]}
         loadRows={() => systemService.listProfiles()}
-        livePath="user/profile"
+        livePath={API.LIVE.PROFILE}
         renderForm={({ onSuccess, onCancel }) => <ProfileForm onSuccess={onSuccess} onCancel={onCancel} />}
         actions={(row) => (
           <>
-            <button className="dt__icon-btn" onClick={() => setEditTarget(row)} aria-label="Edit">
-              ✎
-            </button>
-            <button className="dt__icon-btn dt__icon-btn--danger" onClick={() => setDeleteTarget(row)} aria-label="Delete">
-              🗑
-            </button>
+            <IconButton icon="edit" label="Edit" onClick={() => setEditTarget(row)} />
+            <IconButton icon="trash" label="Delete" tone="danger" onClick={() => setDeleteTarget(row)} />
           </>
         )}
       />
@@ -320,7 +329,7 @@ export function ProfileFormPage() {
             </>
           }
         >
-          {deleteError && <div className="mdp__error">{deleteError}</div>}
+          {deleteError && <Alert>{deleteError}</Alert>}
           <p>
             Are you sure you want to delete <strong>{rowLabel(deleteTarget)}</strong>?
           </p>

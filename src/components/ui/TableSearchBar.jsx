@@ -1,13 +1,24 @@
+import { Glyph } from "./Glyph";
 import "./TableSearchBar.css";
 
-export function TableSearchBar({ value, onChange, placeholder = "Search…" }) {
+export function TableSearchBar({ value, onChange, placeholder = "Search…", autoFocus }) {
   return (
     <div className="tsb">
-      <svg viewBox="0 0 20 20" fill="none" width="16" height="16" aria-hidden="true">
-        <circle cx="9" cy="9" r="6" stroke="currentColor" strokeWidth="1.6" />
-        <path d="m17 17-3.5-3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-      </svg>
-      <input type="text" placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)} />
+      <Glyph name="search" size={16} className="tsb__icon" />
+      <input
+        type="search"
+        className="tsb__input"
+        placeholder={placeholder}
+        aria-label={placeholder}
+        value={value}
+        autoFocus={autoFocus}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      {value && (
+        <button type="button" className="tsb__clear" aria-label="Clear search" onClick={() => onChange("")}>
+          <Glyph name="close" size={14} />
+        </button>
+      )}
     </div>
   );
 }

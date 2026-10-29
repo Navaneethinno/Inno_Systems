@@ -1,3 +1,5 @@
+import { API } from "../../../api/endpoints";
+
 /**
  * One entry per /master/{type} entity.
  *
@@ -95,7 +97,7 @@ export const masterEntities = {
   kyc_document_type: { label: "KYC Document Types", writable: false },
   // Lives under /user/, not /master/ — see listPath below and
   // masterDataService.list's `path` override.
-  password_policy: { label: "Password Policy", writable: false, listPath: "/user/password_policy/list" },
+  password_policy: { label: "Password Policy", writable: false, listPath: API.USER.PASSWORD_POLICY_LIST },
 };
 
 export const writableEntityKeys = Object.keys(masterEntities).filter((k) => masterEntities[k].writable);

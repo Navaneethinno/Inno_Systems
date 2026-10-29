@@ -1,26 +1,31 @@
+/* Segmented control: a sunken track with the selected tab raised on it. */
 .sft {
   display: inline-flex;
-  gap: 4px;
-  padding: 4px;
-  background: var(--color-table-head);
+  gap: 2px;
+  max-width: 100%;
+  padding: 3px;
+  overflow-x: auto;
   border: 1px solid var(--color-border);
-  border-radius: 999px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-sunken);
+  scrollbar-width: none;
 }
 
 .sft__tab {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
+  min-height: 32px;
+  padding: 0 14px;
   border: none;
+  border-radius: calc(var(--radius-md) - 3px);
   background: none;
   color: var(--color-text-muted);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 600;
-  padding: 7px 14px;
-  border-radius: 999px;
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
   white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--transition-base), color var(--transition-base), box-shadow var(--transition-base);
 }
 
 .sft__tab:hover {
@@ -29,30 +34,38 @@
 
 .sft__tab--active {
   background: var(--color-surface);
-  color: var(--color-primary);
-  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.1);
+  color: var(--color-text);
+  box-shadow: var(--shadow-sm);
 }
 
 .sft__count {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  border-radius: 999px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
   background: var(--color-border);
   color: var(--color-text-muted);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .sft__tab--active .sft__count {
-  background: rgba(34, 102, 238, 0.12);
+  background: var(--color-primary-soft);
   color: var(--color-primary);
 }
 
-.sft__count--pending {
-  background: var(--color-warning-border);
+.sft__count--active,
+.sft__tab--active .sft__count--active {
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+}
+
+.sft__count--pending,
+.sft__tab--active .sft__count--pending {
+  background: var(--color-warning-bg);
   color: var(--color-warning-text);
 }

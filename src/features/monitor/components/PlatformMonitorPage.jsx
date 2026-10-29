@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Button } from "../../../components/ui/Button";
 import { Select } from "../../../components/ui/Select";
+import { PageHeader } from "../../../components/ui/PageHeader";
 import { useMonitor } from "./monitorShared";
 import { ApisTab, DatabaseTab, OverviewTab, ProcessorsTab, ServerTab, StallsTab, ThroughputTab } from "./MonitorTabs";
-import "../../masterData/components/MasterDataPage.css";
 import "./PlatformMonitor.css";
 
 const TABS = [
@@ -39,31 +39,31 @@ export function PlatformMonitorPage() {
   const period = { minutes: minutes[tab] ?? DEFAULT_MINUTES[tab] ?? 60 };
   const props = { period, services };
   return (
-    <div className="mdp pm">
-      <div className="mdp__header">
-        <div>
-          <span className="mdp__eyebrow">System</span>
-          <h1 className="mdp__title">Platform Monitor</h1>
-          <p className="mdp__subtitle">How the platform runs, and where to optimise. Figures are collected once a minute and this page refreshes every minute.</p>
-        </div>
-        <div className="mdp__header-actions">
-          {tab !== "overview" && (
-            <Select aria-label="Period" value={String(period.minutes)} onChange={(e) => setMinutes((m) => ({ ...m, [tab]: Number(e.target.value) }))} options={PERIODS.map(([value, label]) => ({ value: String(value), label }))} />
-          )}
-          <Button variant="secondary" onClick={() => setNonce((n) => n + 1)}>
-            Reload
-          </Button>
-        </div>
-      </div>
-      <div className="pm__tabs" role="tablist">
+    <div className="page">
+      <PageHeader
+        eyebrow="System"
+        title="Platform Monitor"
+        subtitle="How the platform runs, and where to optimise. Figures are collected once a minute and this page refreshes every minute."
+        actions={
+          <>
+            {tab !== "overview" && (
+              <Select aria-label="Period" value={String(period.minutes)} onChange={(e) => setMinutes((m) => ({ ...m, [tab]: Number(e.target.value) }))} options={PERIODS.map(([value, label]) => ({ value: String(value), label }))} />
+            )}
+            <Button variant="secondary" onClick={() => setNonce((n) => n + 1)} icon="refresh">
+              Reload
+            </Button>
+          </>
+        }
+      />
+      <div className="tabs" role="tablist" aria-label="Platform Monitor">
         {TABS.map(([key, label]) => (
-          <button key={key} type="button" role="tab" aria-selected={tab === key} className={`pm__tab ${tab === key ? "pm__tab--on" : ""}`} onClick={() => setTab(key)}>
+          <button key={key} type="button" role="tab" aria-selected={tab === key} className={`tabs__tab ${tab === key ? "tabs__tab--active" : ""}`} onClick={() => setTab(key)}>
             {label}
           </button>
         ))}
       </div>
       {/* Reload remounts the tab, so it reads its figures again. */}
-      <div key={`${tab}:${nonce}`}>
+      <div key={`${tab}:${nonce}`} className="pm__body" role="tabpanel">
         {tab === "overview" && (
           <OverviewTab
             onEvents={(kind) => {

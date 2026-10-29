@@ -2,65 +2,105 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
   text-align: left;
 }
 
 .tf__label {
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--color-slate);
-  letter-spacing: 0.01em;
 }
 
 .tf__control {
   display: flex;
   align-items: center;
   gap: 10px;
-  border: 1.5px solid var(--color-border);
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-sm);
-  padding: 0 14px;
   background: var(--color-input-bg);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  box-shadow: var(--shadow-xs);
+  transition: border-color var(--transition-base), box-shadow var(--transition-base), background var(--transition-base);
+}
+
+.tf__control:hover {
+  border-color: var(--color-text-subtle);
 }
 
 .tf__control:focus-within {
   border-color: var(--color-primary);
-  background: var(--color-surface);
-  box-shadow: 0 0 0 4px rgba(34, 102, 238, 0.12);
+  box-shadow: var(--focus-ring);
 }
 
 .tf--error .tf__control {
   border-color: var(--color-danger);
 }
 
+.tf--error .tf__control:focus-within {
+  box-shadow: 0 0 0 4px rgba(224, 52, 47, 0.16);
+}
+
+.tf--disabled .tf__control {
+  background: var(--color-surface-sunken);
+  box-shadow: none;
+}
+
+.tf--disabled .tf__control:hover {
+  border-color: var(--color-border-strong);
+}
+
 .tf__icon {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
-  color: var(--color-text-muted);
+  color: var(--color-text-subtle);
+  transition: color var(--transition-base);
+}
+
+.tf__control:focus-within .tf__icon {
+  color: var(--color-primary);
 }
 
 .tf__input {
   flex: 1;
+  min-width: 0;
+  width: 100%;
+  padding: 9px 0;
   border: none;
   outline: none;
   background: transparent;
-  padding: 12px 0;
-  font-size: 14.5px;
+  font-size: var(--text-md);
   color: var(--color-text);
+}
+
+.tf__input:focus-visible {
+  outline: none;
 }
 
 .tf__input::placeholder {
   color: var(--color-placeholder);
 }
 
-.tf__toggle {
-  background: none;
-  border: none;
-  padding: 4px;
-  cursor: pointer;
+.tf__input:disabled {
+  cursor: not-allowed;
   color: var(--color-text-muted);
+}
+
+/* Native date pickers draw their own icon; tint it to the theme. */
+:root[data-theme="dark"] .tf__input::-webkit-calendar-picker-indicator {
+  filter: invert(0.8);
+}
+
+.tf__toggle {
   display: flex;
+  padding: 4px;
+  border: none;
+  border-radius: var(--radius-xs);
+  background: none;
+  color: var(--color-text-subtle);
+  cursor: pointer;
 }
 
 .tf__toggle svg {
@@ -70,11 +110,22 @@
 
 .tf__toggle:hover {
   color: var(--color-primary);
+  background: var(--color-primary-tint);
+}
+
+.tf__error,
+.tf__hint {
+  font-size: var(--text-xs);
+  line-height: 1.4;
 }
 
 .tf__error {
-  font-size: 12.5px;
-  color: var(--color-danger);
+  color: var(--color-danger-text);
+  font-weight: 500;
+}
+
+.tf__hint {
+  color: var(--color-text-muted);
 }
 
 .tf__select {
@@ -84,17 +135,16 @@
      the rest of this control uses, regardless of OS/browser dark mode —
      the popup itself isn't otherwise stylable cross-browser. */
   color-scheme: light;
-  font-family: inherit;
-  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><path d="m5 8 5 5 5-5" stroke="%23667085" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+  text-overflow: ellipsis;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><path d="m5.5 8 4.5 4.5L14.5 8" stroke="%23667085" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>');
   background-repeat: no-repeat;
   background-position: right 0 center;
   background-size: 16px;
-  padding-right: 22px;
+  padding-right: 24px;
 }
 
 .tf__select:disabled {
   cursor: not-allowed;
-  color: var(--color-text-muted);
 }
 
 :root[data-theme="dark"] .tf__select {
@@ -104,4 +154,25 @@
 :root[data-theme="dark"] .tf__select option {
   background: var(--color-surface);
   color: var(--color-text);
+}
+
+/* Multi-line input: same frame as .tf__control, no wrapper needed. */
+.tf__textarea {
+  min-height: 84px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-input-bg);
+  box-shadow: var(--shadow-xs);
+  font-size: var(--text-md);
+  line-height: 1.5;
+  color: var(--color-text);
+  resize: vertical;
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+}
+
+.tf__textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: var(--focus-ring);
 }

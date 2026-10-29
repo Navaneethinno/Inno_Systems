@@ -6,9 +6,12 @@ import { DataTable } from "../../../components/ui/DataTable";
 import { Button } from "../../../components/ui/Button";
 import { FullscreenTableModal } from "../../../components/ui/FullscreenTableModal";
 import { TableSearchBar } from "../../../components/ui/TableSearchBar";
+import { PageHeader } from "../../../components/ui/PageHeader";
+import { EmptyState } from "../../../components/ui/EmptyState";
+import { Alert } from "../../../components/ui/Alert";
 import { renderStatusCell } from "../../../lib/renderStatusCell";
 import { useLiveList } from "../../../hooks/useLiveList";
-import "./MasterDataPage.css";
+import { API } from "../../../api/endpoints";
 
 const PAGE_SIZE = 10;
 
@@ -98,7 +101,7 @@ export function MasterListPage() {
   // Reference tables (Countries, Currencies, ...) are shared across the
   // whole system, not just this app — refetch when another client changes
   // them. See the Live Menu Updates via WebSocket handoff doc.
-  const livePath = (config?.listPath ?? `/master/${entityKey}`).replace(/^\/+/, "");
+  const livePath = (config?.listPath ?? API.MASTER.list(entityKey)).replace(/^\/+/, "");
   useLiveList(livePath, () => {
     setFullRows(null);
     setLiveTick((t) => t + 1);
@@ -115,32 +118,30 @@ export function MasterListPage() {
   }, [fullRows, q, searchActive]);
 
   if (!config) {
-    return <div className="mdp__state">Unknown master data type "{entityKey}".</div>;
+    return <EmptyState icon="alert" title="Not found" message={`Unknown master data type "${entityKey}".`} />;
   }
 
   const columns = buildColumns(searchActive ? fullRows ?? [] : rows);
 
   return (
-    <div className="mdp">
-      <div className="mdp__header">
-        <div>
-          <h1 className="mdp__title">{config.label}</h1>
-          <p className="mdp__subtitle">Reference data — read-only.</p>
-        </div>
-        <div className="mdp__header-actions">
-          <Button variant="secondary" onClick={() => setIsFullscreen(true)} disabled={rows.length === 0}>
-            ⛶ View all
+    <div className="page">
+      <PageHeader
+        title={config.label}
+        subtitle="Reference data — read-only."
+        actions={
+          <Button variant="secondary" onClick={() => setIsFullscreen(true)} disabled={rows.length === 0} icon="expand">
+            View all
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {rows.length > 0 && (
-        <div className="mdp__toolbar">
+        <div className="toolbar">
           <TableSearchBar value={query} onChange={setQuery} placeholder={`Search ${config.label.toLowerCase()}…`} />
         </div>
       )}
 
-      {error && <div className="mdp__error">{error}</div>}
+      {error && rows.length > 0 && <Alert>{error}</Alert>}
 
       {searchActive ? (
         <DataTable columns={columns} rows={filteredRows ?? []} isLoading={filteredRows === null} emptyMessage="No matching records." />
@@ -149,6 +150,7 @@ export function MasterListPage() {
           columns={columns}
           rows={rows}
           isLoading={isLoading}
+          error={error}
           pagination={pagination}
           page={page}
           onPageChange={setPage}

@@ -3,9 +3,10 @@ import { amlService } from "../services/amlService";
 import { Button } from "../../../components/ui/Button";
 import { Modal } from "../../../components/ui/Modal";
 import { DataTable } from "../../../components/ui/DataTable";
+import { PageHeader } from "../../../components/ui/PageHeader";
+import { Alert } from "../../../components/ui/Alert";
 import { formatBytes, formatDateTime, formatNumber } from "./formatAml";
 import { StatusPill } from "./StatusPill";
-import "../../masterData/components/MasterDataPage.css";
 import "./Aml.css";
 
 // After a refresh or a first-time load starts in the background, re-read the
@@ -38,8 +39,8 @@ function VersionsModal({ watchlist, onClose }) {
       label: "Index / error",
       render: (v) => (
         <>
-          <span className="aml__mono">{v.index_name || "—"}</span>
-          {v.error && <span className="aml__row-error">{v.error}</span>}
+          <span className="mono">{v.index_name || "—"}</span>
+          {v.error && <span className="cell-error">{v.error}</span>}
         </>
       ),
     },
@@ -47,8 +48,7 @@ function VersionsModal({ watchlist, onClose }) {
 
   return (
     <Modal title={`History — ${watchlist.name}`} onClose={onClose} width={1100}>
-      {error && <div className="mdp__error">{error}</div>}
-      <DataTable columns={columns} rows={versions} isLoading={!versions && !error} emptyMessage="No versions yet." />
+      <DataTable columns={columns} rows={versions} error={error} isLoading={!versions && !error} emptyMessage="No versions yet." />
     </Modal>
   );
 }
@@ -69,11 +69,11 @@ function EnableConfirmModal({ watchlist, onConfirm, onClose, isSaving }) {
         </>
       }
     >
-      <div className="aml__stack">
-        <p className="aml__note">
+      <div className="stack">
+        <p className="note">
           <strong>Licence:</strong> {watchlist.licence_note}
         </p>
-        <p className="aml__note">
+        <p className="note">
           Screening searches this list as soon as it is loaded. If it has never been loaded, loading runs in the
           background and can take a few minutes.
         </p>
@@ -168,9 +168,9 @@ export function WatchlistsPage() {
       label: "Name",
       render: (w) => (
         <>
-          <span className="aml__name">{w.name}</span>
-          <span className="aml__sub aml__mono">{w.code}</span>
-          {w.last_error && <span className="aml__row-error">{w.last_error}</span>}
+          <span className="cell-title">{w.name}</span>
+          <span className="cell-sub mono">{w.code}</span>
+          {w.last_error && <span className="cell-error">{w.last_error}</span>}
         </>
       ),
     },
@@ -198,13 +198,13 @@ export function WatchlistsPage() {
       key: "enabled",
       label: "On/off",
       render: (w) => (
-        <span className="aml__switch-cell">
+        <span className="switch-cell">
           <button
             type="button"
             role="switch"
             aria-checked={!!w.enabled}
             aria-label={`${w.enabled ? "Switch off" : "Switch on"} ${w.name}`}
-            className={`aml__switch ${w.enabled ? "aml__switch--on" : ""}`}
+            className={`switch ${w.enabled ? "switch--on" : ""}`}
             disabled={busyCode === w.code}
             onClick={() => onToggle(w)}
           />
@@ -226,43 +226,44 @@ export function WatchlistsPage() {
   }));
 
   return (
-    <div className="mdp">
-      <div className="mdp__header">
-        <div>
-          <span className="mdp__eyebrow">AML</span>
-          <h1 className="mdp__title">Watchlists</h1>
-          <p className="mdp__subtitle">Sanctions, PEP and crime lists customers are screened against.</p>
-        </div>
-        <div className="mdp__header-actions">
-          <Button variant="secondary" onClick={load}>
-            Reload
-          </Button>
-          <Button onClick={() => refresh()} loading={refreshingAll}>
-            Refresh all now
-          </Button>
-        </div>
-      </div>
+    <div className="page">
+      <PageHeader
+        eyebrow="AML"
+        title="Watchlists"
+        subtitle="Sanctions, PEP and crime lists customers are screened against."
+        actions={
+          <>
+            <Button variant="secondary" onClick={load}>
+              Reload
+            </Button>
+            <Button onClick={() => refresh()} loading={refreshingAll} icon="refresh">
+              Refresh all now
+            </Button>
+          </>
+        }
+      />
 
-      {error && <div className="mdp__error">{error}</div>}
-      {notice && <div className="mdp__success">{notice}</div>}
+      {error && rows?.length > 0 && <Alert>{error}</Alert>}
+      {notice && <Alert tone="success">{notice}</Alert>}
 
       <DataTable
         columns={columns}
         rows={tableRows}
         isLoading={rows === null}
+        error={error}
         emptyMessage="No watchlists."
         actions={(w) => (
           <>
             <button
               type="button"
-              className="aml__text-btn"
+              className="text-btn"
               disabled={!w.enabled || busyCode === w.code}
               title={w.enabled ? "Check the publisher for a new version" : "Switch the list on first"}
               onClick={() => refresh([w.code])}
             >
               Refresh
             </button>
-            <button type="button" className="aml__text-btn" onClick={() => setHistoryFor(w)}>
+            <button type="button" className="text-btn" onClick={() => setHistoryFor(w)}>
               History
             </button>
           </>

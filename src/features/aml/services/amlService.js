@@ -1,4 +1,5 @@
 import { httpClient } from "../../../api/httpClient";
+import { API } from "../../../api/endpoints";
 import { extractList } from "../../../lib/extractList";
 
 /**
@@ -8,36 +9,36 @@ import { extractList } from "../../../lib/extractList";
  */
 export const amlService = {
   async listWatchlists() {
-    const { data: envelope } = await httpClient.post("/aml/system/watchlist/list", {});
+    const { data: envelope } = await httpClient.post(API.AML.WATCHLIST_LIST, {});
     return extractList(envelope.data);
   },
 
   // Returns { watchlist, loading, message }. `loading: true` means the list
   // had never been loaded and is now loading in the background.
   async setWatchlistEnabled(code, enabled) {
-    const { data: envelope } = await httpClient.post("/aml/system/watchlist/set_enabled", { code, enabled });
+    const { data: envelope } = await httpClient.post(API.AML.WATCHLIST_SET_ENABLED, { code, enabled });
     return { ...(envelope.data ?? {}), message: envelope.message };
   },
 
   // No codes → refresh every switched-on list. 202 = started in background.
   async refreshWatchlists(codes) {
-    const { data: envelope } = await httpClient.post("/aml/system/watchlist/refresh", codes?.length ? { codes } : {});
+    const { data: envelope } = await httpClient.post(API.AML.WATCHLIST_REFRESH, codes?.length ? { codes } : {});
     return envelope;
   },
 
   async listWatchlistVersions(code, limit = 20) {
-    const { data: envelope } = await httpClient.post("/aml/system/watchlist/versions", { code, limit });
+    const { data: envelope } = await httpClient.post(API.AML.WATCHLIST_VERSIONS, { code, limit });
     return extractList(envelope.data);
   },
 
   async listJobs() {
-    const { data: envelope } = await httpClient.post("/aml/system/job/list", {});
+    const { data: envelope } = await httpClient.post(API.AML.JOB_LIST, {});
     return extractList(envelope.data);
   },
 
   // Send either field or both; interval_minutes must be 1–10080.
   async setJob(payload) {
-    const { data: envelope } = await httpClient.post("/aml/system/job/set", payload);
+    const { data: envelope } = await httpClient.post(API.AML.JOB_SET, payload);
     return envelope.data;
   },
 
@@ -46,12 +47,12 @@ export const amlService = {
   // searched. Only `name` is required. Returns { subject, score, took_ms,
   // searched, matches }.
   async screenTest(payload) {
-    const { data: envelope } = await httpClient.post("/aml/system/screen/test", payload);
+    const { data: envelope } = await httpClient.post(API.AML.SCREEN_TEST, payload);
     return Array.isArray(envelope.data) ? envelope.data[0] : envelope.data;
   },
 
   async listRescreenRuns(limit = 20) {
-    const { data: envelope } = await httpClient.post("/aml/system/rescreen/runs", { limit });
+    const { data: envelope } = await httpClient.post(API.AML.RESCREEN_RUNS, { limit });
     return extractList(envelope.data);
   },
 };

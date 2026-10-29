@@ -1,0 +1,499 @@
+.sidebar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  flex-shrink: 0;
+  width: var(--sidebar-width);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, var(--color-navy) 0%, var(--color-navy-deep) 100%);
+  color: var(--color-white);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  transition: width 0.28s var(--sidebar-ease), transform 0.28s var(--sidebar-ease);
+}
+
+.shell--rail .sidebar {
+  width: var(--sidebar-rail-width);
+}
+
+/* Text that only shows while the sidebar is wide. */
+.sidebar__collapsible {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.shell--rail .sidebar__collapsible {
+  display: none;
+}
+
+/* ---------- Brand ---------- */
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 20px 16px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.shell--rail .sidebar-brand {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+.sidebar-brand__icon {
+  height: 34px;
+  width: auto;
+  flex-shrink: 0;
+}
+
+.sidebar-brand__text {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.sidebar-brand__wordmark {
+  height: 14px;
+  width: auto;
+  align-self: flex-start;
+}
+
+.sidebar-brand__tag {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  opacity: 0.8;
+}
+
+/* ---------- Search ---------- */
+
+.sidebar-search {
+  padding: 0 14px 10px;
+}
+
+.sidebar-search__field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 10px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sidebar-search__field:focus-within {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(34, 102, 238, 0.3);
+}
+
+.sidebar-search__icon {
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.sidebar-search__input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--color-white);
+  font: inherit;
+  font-size: 13px;
+}
+
+.sidebar-search__input::placeholder {
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.sidebar-search__input::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+.sidebar-search__clear,
+.sidebar-search__rail-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.sidebar-search__clear {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  padding: 0;
+}
+
+.sidebar-search__clear:hover {
+  color: var(--color-white);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-search__rail-btn {
+  width: 44px;
+  height: 40px;
+  margin: 0 auto;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.sidebar-search__rail-btn:hover {
+  color: var(--color-white);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.shell--rail .sidebar-search {
+  display: flex;
+  padding-inline: 0;
+}
+
+/* ---------- Nav ---------- */
+
+.sidebar__nav {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 2px 12px 16px;
+}
+
+.sidebar__nav {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+}
+
+.sidebar__nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar__nav::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+}
+
+.sidebar__nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.sidebar__entry {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 2px;
+}
+
+.sidebar__section {
+  padding: 16px 12px 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.36);
+  white-space: nowrap;
+}
+
+.sidebar__entry:first-child .sidebar__section {
+  padding-top: 6px;
+}
+
+/* On the rail a section label becomes a thin divider. */
+.shell--rail .sidebar__section {
+  height: 1px;
+  margin: 10px 14px;
+  padding: 0;
+  font-size: 0;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.shell--rail .sidebar__entry:first-child .sidebar__section {
+  display: none;
+}
+
+.sidebar__empty {
+  margin: 12px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ---------- Items and group toggles ---------- */
+
+.sidebar-item,
+.sidebar-group__toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: rgba(255, 255, 255, 0.7);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sidebar-item:hover,
+.sidebar-group__toggle:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--color-white);
+}
+
+.sidebar-item:focus-visible,
+.sidebar-group__toggle:focus-visible,
+.sidebar-brand:focus-visible,
+.sidebar-search__rail-btn:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+.sidebar-item__icon,
+.sidebar-group__icon {
+  flex-shrink: 0;
+}
+
+.sidebar-item__label,
+.sidebar-group__label {
+  flex: 1;
+}
+
+.sidebar-item--active,
+.sidebar-item--active:hover {
+  color: var(--color-white);
+}
+
+/* A top-level page gets the solid primary pill; a nested one a tinted pill
+   with an accent bar on the group's guide line. */
+.sidebar-item--depth-0.sidebar-item--active {
+  background: var(--color-primary);
+  box-shadow: 0 8px 18px -8px rgba(34, 102, 238, 0.8);
+}
+
+.sidebar-item--depth-1,
+.sidebar-item--depth-2,
+.sidebar-group--depth-1 > .sidebar-group__toggle {
+  height: 36px;
+  font-size: 13px;
+  gap: 10px;
+}
+
+.sidebar-item--depth-1.sidebar-item--active,
+.sidebar-item--depth-2.sidebar-item--active {
+  background: rgba(34, 102, 238, 0.26);
+  font-weight: 600;
+}
+
+.sidebar-item--depth-1.sidebar-item--active::before,
+.sidebar-item--depth-2.sidebar-item--active::before {
+  content: "";
+  position: absolute;
+  left: -12px;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 999px;
+  background: var(--color-accent);
+}
+
+.sidebar-item--active .sidebar-item__icon {
+  color: var(--color-accent);
+}
+
+.sidebar-item--depth-0.sidebar-item--active .sidebar-item__icon {
+  color: var(--color-white);
+}
+
+.sidebar-item__dot {
+  flex-shrink: 0;
+  width: 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.sidebar-item__dot::after {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.32);
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.sidebar-item:hover .sidebar-item__dot::after {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.sidebar-item--active .sidebar-item__dot::after {
+  background: var(--color-accent);
+  transform: scale(1.3);
+}
+
+.sidebar-group__toggle--active {
+  color: var(--color-white);
+}
+
+.sidebar-group__toggle--active .sidebar-group__icon {
+  color: var(--color-accent);
+}
+
+.sidebar-group__chevron {
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.4);
+  transition: transform 0.22s var(--sidebar-ease);
+}
+
+.sidebar-group--open > .sidebar-group__toggle .sidebar-group__chevron {
+  transform: rotate(90deg);
+}
+
+/* Open/close eases the panel's height to its content (0fr → 1fr). */
+.sidebar-group__panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.28s var(--sidebar-ease);
+}
+
+.sidebar-group--open > .sidebar-group__panel {
+  grid-template-rows: 1fr;
+}
+
+.sidebar-group__inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.sidebar-group__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 2px 0 4px 21px;
+  padding-left: 10px;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* No height cap on Reference Data: a nested scroll area hid half its
+   tables. The whole nav already scrolls, and the group is collapsible. */
+.sidebar-group--depth-1 .sidebar-group__list {
+  margin-left: 20px;
+}
+
+/* ---------- Rail ---------- */
+
+.shell--rail .sidebar__nav {
+  padding-inline: 0;
+}
+
+.shell--rail .sidebar-item,
+.shell--rail .sidebar-group__toggle {
+  justify-content: center;
+  width: 44px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+.shell--rail .sidebar-group__panel {
+  display: none;
+}
+
+.shell--rail .sidebar-group__toggle--active {
+  background: rgba(34, 102, 238, 0.28);
+}
+
+/* ---------- Footer ---------- */
+
+.sidebar__footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.shell--rail .sidebar__footer {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+.sidebar__avatar {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-navy-soft));
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.sidebar__footer-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebar__footer-user {
+  font-size: 13px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar__footer-version {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* ---------- Drawer (below 900px; see SidebarProvider) ---------- */
+
+@media (max-width: 900px) {
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: min(var(--sidebar-width), 86vw);
+    height: auto;
+    transform: translateX(-100%);
+    box-shadow: none;
+  }
+
+  .shell--drawer-open .sidebar {
+    transform: translateX(0);
+    box-shadow: 24px 0 60px -20px rgba(3, 7, 22, 0.6);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .sidebar-group__panel,
+  .sidebar-group__chevron {
+    transition: none;
+  }
+}

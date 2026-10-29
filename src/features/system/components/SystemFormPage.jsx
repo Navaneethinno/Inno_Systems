@@ -8,8 +8,10 @@ import { TextField } from "../../../components/ui/TextField";
 import { Select } from "../../../components/ui/Select";
 import { Button } from "../../../components/ui/Button";
 import { Modal } from "../../../components/ui/Modal";
+import { IconButton } from "../../../components/ui/IconButton";
+import { EmptyState } from "../../../components/ui/EmptyState";
+import { Alert } from "../../../components/ui/Alert";
 import { EntityManagerPage } from "./EntityManagerPage";
-import "./SystemFormPage.css";
 
 function defaultValue(field) {
   if (field.default !== undefined) return field.default;
@@ -103,27 +105,18 @@ function GenericForm({ config, row, onSuccess, onCancel }) {
   };
 
   return (
-    <form className="sfp__form" onSubmit={handleSubmit}>
-      {error && <div className="mdp__error">{error}</div>}
+    <form className="stack" onSubmit={handleSubmit}>
+      {error && <Alert>{error}</Alert>}
 
-      {config.fields.map((field) => {
-        if (field.type === "boolean") {
-          return (
-            <label key={field.name} className="mdp__checkbox">
-              <input
-                type="checkbox"
-                checked={Boolean(values[field.name])}
-                onChange={(e) => handleChange(field.name, e.target.checked)}
-              />
-              <span>{field.label}</span>
-            </label>
-          );
-        }
+      {/* Inputs flow in a responsive grid; on/off flags gather below them. */}
+      <div className="form-grid">
+        {config.fields.map((field) => {
+          if (field.type === "boolean") return null;
 
-        if (field.type === "select") {
-          return (
-            <div key={field.name} className="sfp__select-block">
+          if (field.type === "select") {
+            return (
               <Select
+                key={field.name}
                 label={field.label}
                 placeholder={`Select ${field.label.toLowerCase()}`}
                 options={optionsFor(field)}
@@ -131,39 +124,57 @@ function GenericForm({ config, row, onSuccess, onCancel }) {
                 value={values[field.name] ?? ""}
                 onChange={(e) => handleChange(field.name, e.target.value)}
               />
-            </div>
-          );
-        }
+            );
+          }
 
-        if (field.type === "textarea") {
+          if (field.type === "textarea") {
+            return (
+              <div className="tf form-grid__full" key={field.name}>
+                <label className="tf__label">{field.label}</label>
+                <textarea
+                  className="tf__textarea"
+                  required={field.required}
+                  value={values[field.name] ?? ""}
+                  onChange={(e) => handleChange(field.name, e.target.value)}
+                />
+              </div>
+            );
+          }
+
           return (
-            <div className="tf" key={field.name}>
-              <label className="tf__label">{field.label}</label>
-              <textarea
-                className="sfp__textarea"
-                required={field.required}
-                value={values[field.name] ?? ""}
-                onChange={(e) => handleChange(field.name, e.target.value)}
-              />
-            </div>
+            <TextField
+              key={field.name}
+              label={field.label}
+              type={field.type === "text-list" ? "text" : field.type}
+              icon={field.type === "password" ? "lock" : undefined}
+              placeholder={isEdit && field.type === "password" ? "Leave blank to keep current password" : undefined}
+              hint={field.type === "text-list" ? "Separate values with commas." : undefined}
+              required={isEdit && field.type === "password" ? false : field.required}
+              value={values[field.name] ?? ""}
+              onChange={(e) => handleChange(field.name, e.target.value)}
+            />
           );
-        }
+        })}
+      </div>
 
-        return (
-          <TextField
-            key={field.name}
-            label={field.label}
-            type={field.type === "text-list" ? "text" : field.type}
-            icon={field.type === "password" ? "lock" : undefined}
-            placeholder={isEdit && field.type === "password" ? "Leave blank to keep current password" : undefined}
-            required={isEdit && field.type === "password" ? false : field.required}
-            value={values[field.name] ?? ""}
-            onChange={(e) => handleChange(field.name, e.target.value)}
-          />
-        );
-      })}
+      {config.fields.some((field) => field.type === "boolean") && (
+        <div className="check-group">
+          {config.fields
+            .filter((field) => field.type === "boolean")
+            .map((field) => (
+              <label key={field.name} className="check">
+                <input
+                  type="checkbox"
+                  checked={Boolean(values[field.name])}
+                  onChange={(e) => handleChange(field.name, e.target.checked)}
+                />
+                <span>{field.label}</span>
+              </label>
+            ))}
+        </div>
+      )}
 
-      <div className="sfp__form-actions">
+      <div className="form-actions">
         <Button type="button" variant="secondary" onClick={onCancel}>
           Cancel
         </Button>
@@ -186,7 +197,7 @@ export function SystemFormPage() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   if (!config) {
-    return <div className="mdp__state">Unknown form "{formKey}".</div>;
+    return <EmptyState icon="alert" title="Not found" message={`Unknown form "${formKey}".`} />;
   }
 
   const bumpRefresh = () => setRefreshKey((k) => k + 1);
@@ -226,18 +237,10 @@ export function SystemFormPage() {
             ? (row) => (
                 <>
                   {config.editServiceMethod && (
-                    <button className="dt__icon-btn" onClick={() => setEditTarget(row)} aria-label="Edit">
-                      ✎
-                    </button>
+                    <IconButton icon="edit" label="Edit" onClick={() => setEditTarget(row)} />
                   )}
                   {config.deleteServiceMethod && (
-                    <button
-                      className="dt__icon-btn dt__icon-btn--danger"
-                      onClick={() => setDeleteTarget(row)}
-                      aria-label="Delete"
-                    >
-                      🗑
-                    </button>
+                    <IconButton icon="trash" label="Delete" tone="danger" onClick={() => setDeleteTarget(row)} />
                   )}
                 </>
               )
@@ -275,7 +278,7 @@ export function SystemFormPage() {
             </>
           }
         >
-          {deleteError && <div className="mdp__error">{deleteError}</div>}
+          {deleteError && <Alert>{deleteError}</Alert>}
           <p>
             Are you sure you want to delete <strong>{rowLabel(deleteTarget)}</strong>? This sets its status to
             inactive.

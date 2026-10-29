@@ -5,6 +5,7 @@ import { loginSchema } from "../schema/loginSchema";
 import { useAuth } from "../hooks/useAuth";
 import { TextField } from "../../../components/ui/TextField";
 import { Button } from "../../../components/ui/Button";
+import { IconButton } from "../../../components/ui/IconButton";
 import logoIcon from "../../../assets/logo-icon.png";
 import logoWordmark from "../../../assets/logo-wordmark.png";
 import "./LoginPage.css";
@@ -83,15 +84,14 @@ export function LoginPage() {
             <img src={logoIcon} alt="Innovitegra Solutions" />
           </div>
 
+          <span className="login__eyebrow">System Console</span>
           <h2 className="login__title">Welcome back</h2>
           <p className="login__desc">Sign in to continue to your dashboard.</p>
 
           {error && (
-            <div className="login__alert" role="alert">
-              {error}
-              <button type="button" onClick={clearError} aria-label="Dismiss error">
-                ×
-              </button>
+            <div className="alert alert--danger login__alert" role="alert">
+              <span className="alert__body">{error}</span>
+              <IconButton icon="close" label="Dismiss error" tone="ghost" size={14} className="login__alert-close" onClick={clearError} />
             </div>
           )}
 
@@ -123,17 +123,8 @@ export function LoginPage() {
               <span>Remember me</span>
             </label>
 
-            <Button type="submit" fullWidth loading={isLoading}>
-              {isLoading ? (
-                "Signing in…"
-              ) : (
-                <>
-                  Sign in
-                  <svg viewBox="0 0 20 20" fill="none" width="16" height="16" aria-hidden="true">
-                    <path d="M4 10h12M11 5l5 5-5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </>
-              )}
+            <Button type="submit" size="lg" fullWidth loading={isLoading} iconRight="arrowRight">
+              {isLoading ? "Signing in…" : "Sign in"}
             </Button>
           </form>
 

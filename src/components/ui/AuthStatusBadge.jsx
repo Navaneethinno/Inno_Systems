@@ -1,4 +1,4 @@
-import "./DataTable.css";
+import "./StatusBadge.css";
 
 function toneFor(value) {
   const v = String(value ?? "").toUpperCase();
