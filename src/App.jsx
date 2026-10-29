@@ -17,6 +17,7 @@ import { WatchlistsPage } from "./features/aml/components/WatchlistsPage";
 import { BackgroundJobsPage } from "./features/aml/components/BackgroundJobsPage";
 import { TryNamePage } from "./features/aml/components/TryNamePage";
 import { KeyCustodyPage } from "./features/keys/components/KeyCustodyPage";
+import { PlatformMonitorPage } from "./features/monitor/components/PlatformMonitorPage";
 import { SecurityEventsPage } from "./features/security/components/SecurityEventsPage";
 import { ExpiringDocumentsPage } from "./features/expiry/components/ExpiringDocumentsPage";
 
@@ -55,6 +56,7 @@ function App() {
               <Route path="/aml/jobs" element={<BackgroundJobsPage />} />
               <Route path="/aml/try-name" element={<TryNamePage />} />
               <Route path="/system/key-custody" element={<KeyCustodyPage />} />
+              <Route path="/system/monitor" element={<PlatformMonitorPage />} />
               <Route path="/security/events" element={<SecurityEventsPage />} />
               <Route path="/expiry/documents" element={<ExpiringDocumentsPage />} />
             </Route>
