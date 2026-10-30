@@ -63,6 +63,13 @@ export const systemService = {
     return extractOne(envelope.data);
   },
 
+  // Sends a draft on: for the System user it becomes active at once (with
+  // its default password policy); for others it goes for approval.
+  async submitInstitution(id) {
+    const { data: envelope } = await httpClient.post(API.INSTITUTION.SUBMIT, { id });
+    return { message: envelope.message, record: extractOne(envelope.data) };
+  },
+
   // Batch endpoint: one call assigns N modules to an institution. It's all
   // or nothing server-side (one bad entry fails the whole request), and the
   // response is one row per assigned module, not a single record.

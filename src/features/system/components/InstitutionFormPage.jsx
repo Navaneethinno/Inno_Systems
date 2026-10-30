@@ -127,8 +127,10 @@ function InstitutionForm({ row, onSuccess, onCancel }) {
   const selectedIdentifiers = LOGIN_IDENTIFIERS.filter((id) => values.identifiers[id]);
   const selectedLanguageCodes = Object.keys(values.languages).filter((code) => values.languages[code]);
 
-  // A draft stays with its maker until submitted (backend round 5): adding
-  // can save one, and editing a draft can keep it a draft or submit it.
+  // A draft stays with its maker until submitted (backend round 6): adding
+  // can save one (is_draft), an edit keeps it a draft, and Submit saves the
+  // edit then calls /institution/profile/submit, which for the System user
+  // makes it active at once.
   const isDraft = isEdit && statusCode(row.status) === 9;
 
   const handleSubmit = async (e, { asDraft = false } = {}) => {
@@ -160,11 +162,12 @@ function InstitutionForm({ row, onSuccess, onCancel }) {
         is_txn_pin_enabled: values.is_txn_pin_enabled,
         txn_pin_length: Math.max(0, Number(values.txn_pin_length) || 0),
         is_same_login_txn_pin_allowed: values.is_same_login_txn_pin_allowed,
-        ...(asDraft || isDraft ? { is_draft: asDraft } : {}),
+        ...(asDraft || isDraft ? { is_draft: true } : {}),
       };
 
       if (isEdit) {
         await systemService.editInstitution({ id: rowValue(row), ...payload });
+        if (isDraft && !asDraft) await systemService.submitInstitution(rowValue(row));
       } else {
         await systemService.addInstitution(payload);
       }
@@ -427,7 +430,13 @@ export function InstitutionFormPage() {
         >
           {deleteError && <Alert>{deleteError}</Alert>}
           <p>
-            Are you sure you want to delete <strong>{rowLabel(deleteTarget)}</strong>?
+            Delete <strong>{rowLabel(deleteTarget)}</strong>?
+          </p>
+          {/* The System user's deletes skip approval; the backend refuses one
+              for an institution still in use (409 institution.in_use). */}
+          <p className="note">
+            This deletes the institution at once and can&apos;t be undone. An institution with users, customers or accounts
+            can&apos;t be deleted: deactivate it instead.
           </p>
         </Modal>
       )}

@@ -43,6 +43,7 @@ export const API = {
   INSTITUTION: {
     GET_ACTIVE: "/institution/profile/get_active",
     LIST: "/institution/profile/list",
+    SUBMIT: "/institution/profile/submit",
     ADD: "/system/institution/profile/add",
     EDIT: "/system/institution/profile/edit",
     DELETE: "/system/institution/profile/delete",
