@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { masterDataService } from "../../masterData/services/masterDataService";
 import { systemService } from "../services/systemService";
 import { rowLabel, rowValue } from "../../../lib/rowLabel";
@@ -13,6 +13,7 @@ import { SkeletonList } from "../../../components/ui/Skeleton";
 import { renderStatusCell } from "../../../lib/renderStatusCell";
 import { EntityManagerPage } from "./EntityManagerPage";
 import { API } from "../../../api/endpoints";
+import { EDIT_WAITING, statusCode } from "../../../lib/statusCodes";
 import "./ProfileFormPage.css";
 
 function ProfileForm({ row, onSuccess, onCancel }) {
@@ -26,6 +27,12 @@ function ProfileForm({ row, onSuccess, onCancel }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
+  // The form is long; bring a new error into view rather than leave it
+  // above the scroll position, out of sight of the Save button.
+  const errorRef = useRef(null);
+  useEffect(() => {
+    if (error) errorRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [error]);
 
   useEffect(() => {
     let cancelled = false;
@@ -112,6 +119,19 @@ function ProfileForm({ row, onSuccess, onCancel }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // A ticked menu with no actions is refused by the server with only
+    // "Invalid Menu Info", so name the menus here instead.
+    const empty = Object.entries(assignments)
+      .filter(([, a]) => a.included && a.actionIds.size === 0)
+      .map(([menuId]) => rowLabel(menus.find((m) => String(rowValue(m)) === menuId) ?? { id: menuId }));
+    if (empty.length) {
+      setError(`Pick at least one action for ${empty.join(", ")}, or untick ${empty.length === 1 ? "it" : "them"}.`);
+      return;
+    }
+    if (!Object.values(assignments).some((a) => a.included)) {
+      setError("Tick at least one menu.");
+      return;
+    }
     setIsSaving(true);
     setError(null);
     try {
@@ -145,14 +165,26 @@ function ProfileForm({ row, onSuccess, onCancel }) {
     }
   };
 
+  const waitingSet = isEdit ? (row.menu_actions_edited ?? row.edited_menu_actions) : null;
+  const editWaiting = isEdit && (statusCode(row.process_status) === EDIT_WAITING || Boolean(waitingSet));
+  const waitingMenus = Array.isArray(waitingSet) ? waitingSet.length : null;
+
   return (
     <form className="stack" onSubmit={handleSubmit}>
-      {error && <Alert>{error}</Alert>}
-      {/* menu_actions holds only the approved grants; an edit still waiting
-          for approval is in menu_actions_edited, which these boxes don't show. */}
-      {isEdit && (row.menu_actions_edited ?? row.edited_menu_actions) && (
+      {error && (
+        <div ref={errorRef}>
+          <Alert>{error}</Alert>
+        </div>
+      )}
+      {/* The backend refuses a second edit while one waits for approval
+          (process_status 3), so Save is off until it's decided. The boxes
+          show the approved grants; the waiting edit's set is in
+          menu_actions_edited. */}
+      {editWaiting && (
         <Alert tone="warning">
-          This profile has an edit waiting for approval. The boxes show only what is approved now, not the waiting edit.
+          An edit is waiting for approval
+          {waitingMenus != null && ` (${waitingMenus} menu${waitingMenus === 1 ? "" : "s"})`}. You can save a new one once
+          it&apos;s approved or rejected. The boxes show what is approved now.
         </Alert>
       )}
 
@@ -242,7 +274,7 @@ function ProfileForm({ row, onSuccess, onCancel }) {
         <Button type="button" variant="secondary" onClick={onCancel}>
           Cancel
         </Button>
-        <Button type="submit" loading={isSaving}>
+        <Button type="submit" loading={isSaving} disabled={editWaiting}>
           {isEdit ? "Save Changes" : "Create Profile"}
         </Button>
       </div>

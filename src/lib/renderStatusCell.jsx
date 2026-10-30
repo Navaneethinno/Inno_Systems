@@ -1,33 +1,32 @@
 import { AuthStatusBadge } from "../components/ui/AuthStatusBadge";
-import { StatusBadge } from "../components/ui/StatusBadge";
+import { TonePill } from "../components/ui/StatusBadge";
+import { describeStatus, statusCode } from "./statusCodes";
 
 /**
- * Shared "Status" column renderer. The API sends up to three status fields
- * on a row: `status` (numeric: 1 Active, 9 Draft, …) with its label
- * `status_name`, which say whether the record is live; and `auth_status`
- * (AUTHORIZED / AUTH WAIT / EDIT_DEAUTH / …), which describes only its
- * latest change. Per the backend, the live state comes from `status`: an
- * institution whose last edit was rejected is still Active. So the badge
- * shows `status_name`, and a latest change that isn't authorized is noted
- * beneath it.
+ * Shared "Status" column renderer. Per the backend, `status` is the
+ * record's live state and `process_status` the state of its latest change,
+ * both as the codes in statusCodes.js: the badge is coloured by `status`'s
+ * kind and labelled with the server's `status_name`. When the latest change
+ * differs (Active with an edit rejected), it's noted underneath, by its
+ * `process_status_name`. Rows without a known code fall back to the text.
  */
 export function renderStatusCell(row) {
-  const change = row.auth_status && String(row.auth_status).toUpperCase() !== "AUTHORIZED" ? row.auth_status : null;
-  const live = row.status_name ? (
-    <AuthStatusBadge value={row.status_name} />
-  ) : "status" in row ? (
-    <StatusBadge active={Number(row.status) === 1} />
-  ) : row.auth_status ? (
-    <AuthStatusBadge value={row.auth_status} />
+  const live = describeStatus(row.status, row.status_name);
+  const badge = live ? (
+    <TonePill tone={live.tone}>{live.label}</TonePill>
+  ) : row.status_name || row.auth_status ? (
+    <AuthStatusBadge value={row.status_name ?? row.auth_status} />
   ) : (
     "—"
   );
-  // Skip the note when it only repeats the status (a draft whose change is "DRAFT").
-  if (!change || !row.status_name || String(change).toUpperCase() === String(row.status_name).toUpperCase()) return live;
+
+  const change = statusCode(row.process_status);
+  if (!live || change == null || change === statusCode(row.status)) return badge;
+  const changeLabel = describeStatus(change, row.process_status_name).label;
   return (
     <span className="status-stack">
-      {live}
-      <span className="cell-sub">Last change: {String(change).replace(/_/g, " ").toLowerCase()}</span>
+      {badge}
+      <span className="cell-sub">Last change: {changeLabel.toLowerCase()}</span>
     </span>
   );
 }

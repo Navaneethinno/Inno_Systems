@@ -1,38 +1,31 @@
 import "./StatusFilterTabs.css";
 
-export function StatusFilterTabs({ filter, onChange, totalCount, activeCount, pendingCount }) {
+const LABELS = { all: "All", active: "Active", pending: "Pending", inactive: "Inactive" };
+const TONES = { active: "active", pending: "pending" };
+
+/**
+ * All / Active / Pending tabs, each with its count. `counts` ({ all, active,
+ * pending } or any other filter names) picks the tabs; master data uses
+ * all / active / inactive. The older totalCount / activeCount / pendingCount
+ * props still work.
+ */
+export function StatusFilterTabs({ filter, onChange, counts, totalCount, activeCount, pendingCount }) {
+  const tabs = counts ?? { all: totalCount, active: activeCount, pending: pendingCount };
   return (
     <div className="sft" role="tablist" aria-label="Filter by status">
-      <button
-        type="button"
-        role="tab"
-        aria-selected={filter === "all"}
-        className={`sft__tab ${filter === "all" ? "sft__tab--active" : ""}`}
-        onClick={() => onChange("all")}
-      >
-        All
-        {totalCount > 0 && <span className="sft__count">{totalCount}</span>}
-      </button>
-      <button
-        type="button"
-        role="tab"
-        aria-selected={filter === "active"}
-        className={`sft__tab ${filter === "active" ? "sft__tab--active" : ""}`}
-        onClick={() => onChange("active")}
-      >
-        Active
-        {activeCount > 0 && <span className="sft__count sft__count--active">{activeCount}</span>}
-      </button>
-      <button
-        type="button"
-        role="tab"
-        aria-selected={filter === "pending"}
-        className={`sft__tab ${filter === "pending" ? "sft__tab--active" : ""}`}
-        onClick={() => onChange("pending")}
-      >
-        Pending
-        {pendingCount > 0 && <span className="sft__count sft__count--pending">{pendingCount}</span>}
-      </button>
+      {Object.entries(tabs).map(([key, count]) => (
+        <button
+          key={key}
+          type="button"
+          role="tab"
+          aria-selected={filter === key}
+          className={`sft__tab ${filter === key ? "sft__tab--active" : ""}`}
+          onClick={() => onChange(key)}
+        >
+          {LABELS[key] ?? key}
+          {count > 0 && <span className={`sft__count ${TONES[key] ? `sft__count--${TONES[key]}` : ""}`}>{count}</span>}
+        </button>
+      ))}
     </div>
   );
 }

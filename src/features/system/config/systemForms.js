@@ -64,6 +64,8 @@ export const systemForms = {
         type: "select",
         required: true,
         source: { kind: "system", method: "listProfiles" },
+        sameInstitution: true,
+        labelKey: "profile_name",
       },
       {
         name: "pwd_policy",
@@ -71,6 +73,8 @@ export const systemForms = {
         type: "select",
         required: true,
         source: { kind: "master", type: "password_policy", path: API.USER.PASSWORD_POLICY_LIST },
+        sameInstitution: true,
+        labelKey: "policy_name",
       },
     ],
   },

@@ -32,16 +32,6 @@ export const masterDataService = {
     return extractList(envelope.data);
   },
 
-  // Real server-side pagination — sends { page, limit } as-is (confirmed
-  // live: page=2 returns a genuinely different slice, not just a re-sort of
-  // the same first page) and returns the API's own pagination envelope
-  // ({ totalRecords, totalPages, currentPage, limit }) alongside just that
-  // page's rows, for DataTable's server-paged mode (`page`/`onPageChange`).
-  async listWithPagination(type, { page = 1, limit = 10 } = {}, path) {
-    const { data: envelope } = await httpClient.post(path ?? API.MASTER.list(type), { page, limit });
-    return { rows: extractList(envelope.data), pagination: envelope.pagination };
-  },
-
   async add(type, payload) {
     const { data: envelope } = await httpClient.post(API.MASTER.add(type), payload);
     return extractOne(envelope.data);

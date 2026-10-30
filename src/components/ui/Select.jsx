@@ -13,7 +13,7 @@ export const Select = forwardRef(({ label, error, hint, options, placeholder, ..
         <select ref={ref} className="tf__input tf__select" {...rest}>
           {placeholder && <option value="">{placeholder}</option>}
           {options.map((opt) => (
-            <option key={opt.value} value={opt.value}>
+            <option key={opt.value} value={opt.value} disabled={opt.disabled}>
               {opt.label}
             </option>
           ))}

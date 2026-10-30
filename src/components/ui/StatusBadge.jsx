@@ -14,7 +14,7 @@ export function StatusBadge({ active }) {
 }
 
 /**
- * A status pill in one of the four tones (active | pending | rejected |
+ * A status pill in one of the tones (active | pending | rejected | draft |
  * inactive) with any label — for states that aren't a plain Active/Inactive
  * (job runs, severities, expiry states).
  */

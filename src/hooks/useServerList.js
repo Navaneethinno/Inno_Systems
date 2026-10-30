@@ -3,7 +3,7 @@ import { systemService } from "../features/system/services/systemService";
 
 const PAGE_SIZE = 10;
 const SEARCH_DELAY_MS = 300;
-const FILTERS = ["all", "active", "pending"];
+const DEFAULT_FILTERS = ["all", "active", "pending"];
 
 /**
  * One server-paged list: the current page's rows, the All / Active /
@@ -13,9 +13,11 @@ const FILTERS = ["all", "active", "pending"];
  *
  * `params` adds fixed fields to every call (e.g. `{ inst_profile_id }`);
  * pass a stable object (useMemo) so it doesn't refetch on every render.
+ * `filters` names the tabs to count: master data has no maker-checker, so
+ * its lists use all / active / inactive instead of the default.
  * `refresh()` reloads quietly, keeping the rows on screen.
  */
-export function useServerList(listPath, params) {
+export function useServerList(listPath, params, filters = DEFAULT_FILTERS) {
   const [rows, setRows] = useState([]);
   const [pagination, setPagination] = useState(null);
   const [counts, setCounts] = useState(null);
@@ -71,17 +73,18 @@ export function useServerList(listPath, params) {
   // The tab counts: one row per filter is enough to read its total.
   useEffect(() => {
     let cancelled = false;
-    Promise.all(FILTERS.map((f) => systemService.pageList(listPath, { page: 1, limit: 1, filter: f, search, params })))
+    Promise.all(filters.map((f) => systemService.pageList(listPath, { page: 1, limit: 1, filter: f, search, params })))
       .then((results) => {
         if (cancelled) return;
-        const [all, active, pending] = results.map((r) => r.pagination?.totalRecords ?? r.rows.length);
-        setCounts({ all, active, pending });
+        setCounts(Object.fromEntries(results.map((r, i) => [filters[i], r.pagination?.totalRecords ?? r.rows.length])));
       })
       .catch(() => !cancelled && setCounts(null));
     return () => {
       cancelled = true;
     };
-  }, [listPath, search, params, tick]);
+    // filters is a constant per caller; joining keeps an inline array stable.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listPath, search, params, tick, filters.join()]);
 
   const refresh = useCallback(() => setTick((t) => t + 1), []);
 

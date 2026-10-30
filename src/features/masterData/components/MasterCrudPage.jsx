@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { masterEntities } from "../config/masterEntities";
 import { masterDataService } from "../services/masterDataService";
@@ -15,7 +15,7 @@ import { PageHeader } from "../../../components/ui/PageHeader";
 import { IconButton } from "../../../components/ui/IconButton";
 import { EmptyState } from "../../../components/ui/EmptyState";
 import { Alert } from "../../../components/ui/Alert";
-import { useAuthStatusFilter } from "../../../hooks/useAuthStatusFilter";
+import { useServerList } from "../../../hooks/useServerList";
 import { useLiveList } from "../../../hooks/useLiveList";
 import { API } from "../../../api/endpoints";
 
@@ -26,48 +26,31 @@ function rowLabel(row) {
 const emptyValues = (fields) =>
   Object.fromEntries(fields.map((f) => [f.name, f.type === "status" ? true : ""]));
 
+// Master data has no maker-checker: status is 1 Active or 13 Inactive, so
+// the tabs are All / Active / Inactive and the checkbox maps to those codes.
+const MASTER_FILTERS = ["all", "active", "inactive"];
+const ACTIVE = 1;
+const INACTIVE = 13;
+
 export function MasterCrudPage() {
   const { entityKey } = useParams();
   const config = masterEntities[entityKey];
 
-  const [rows, setRows] = useState([]);
   const [optionSets, setOptionSets] = useState({});
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [saveError, setSaveError] = useState(null);
 
   const [modalState, setModalState] = useState(null); // { mode: "add" | "edit", values }
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  const { filter, setFilter, query, setQuery, filteredRows, hasAuthStatus, activeCount, pendingCount, totalCount } =
-    useAuthStatusFilter(rows);
-
-  // These tables (Modules, Menus, Menu Actions) are small — fetched in full
-  // (masterDataService.list() requests a high limit to avoid the backend's
-  // default limit=10 truncation) rather than server-paged, since the search
-  // box and status filter tabs below need the whole dataset in memory to
-  // filter correctly. Real server-side paging (see MasterListPage) is worth
-  // it for the large reference tables (Countries, Currencies); not here.
-  const loadRows = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      setRows(await masterDataService.list(entityKey));
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [entityKey]);
-
-  useEffect(() => {
-    loadRows();
-  }, [loadRows]);
+  // Paged, filtered and searched on the server, like every other list.
+  const { rows, pagination, counts, page, setPage, filter, changeFilter, query, setQuery, search, isLoading, error, refresh, fetchPage } =
+    useServerList(API.MASTER.list(entityKey), undefined, MASTER_FILTERS);
 
   // Keeps this table in sync when another user (or tab) adds/edits/deletes
   // a row — see the Live Menu Updates via WebSocket handoff doc.
-  useLiveList(config ? API.LIVE.master(entityKey) : null, loadRows);
+  useLiveList(config ? API.LIVE.master(entityKey) : null, refresh);
 
   const selectSources = useMemo(
     () => [...new Set((config?.fields ?? []).filter((f) => f.type === "select").map((f) => f.optionsFrom))],
@@ -99,7 +82,13 @@ export function MasterCrudPage() {
   }
 
   const openAdd = () => setModalState({ mode: "add", values: emptyValues(config.fields) });
-  const openEdit = (row) => setModalState({ mode: "edit", values: { ...emptyValues(config.fields), ...row } });
+  const openEdit = (row) => {
+    const values = { ...emptyValues(config.fields), ...row };
+    config.fields.forEach((f) => {
+      if (f.type === "status") values[f.name] = Number(row[f.name]) === ACTIVE;
+    });
+    setModalState({ mode: "edit", values });
+  };
   const closeModal = () => setModalState(null);
 
   const handleFieldChange = (name, value) => {
@@ -117,7 +106,7 @@ export function MasterCrudPage() {
   const handleSave = async (e) => {
     e.preventDefault();
     setIsSaving(true);
-    setError(null);
+    setSaveError(null);
     try {
       const payload = { ...modalState.values };
       config.fields.forEach((f) => {
@@ -130,7 +119,7 @@ export function MasterCrudPage() {
         if (f.type === "number" && f.omitIfEmpty && (payload[f.name] === "" || payload[f.name] == null)) {
           delete payload[f.name];
         } else if (f.type === "number") payload[f.name] = Math.max(0, Number(payload[f.name]) || 0);
-        if (f.type === "status") payload[f.name] = payload[f.name] ? 1 : 0;
+        if (f.type === "status") payload[f.name] = payload[f.name] ? ACTIVE : INACTIVE;
       });
 
       if (modalState.mode === "add") {
@@ -139,9 +128,9 @@ export function MasterCrudPage() {
         await masterDataService.edit(entityKey, { ...payload, id: modalState.values.id });
       }
       closeModal();
-      await loadRows();
+      refresh();
     } catch (err) {
-      setError(err.message);
+      setSaveError(err.message);
     } finally {
       setIsSaving(false);
     }
@@ -149,13 +138,13 @@ export function MasterCrudPage() {
 
   const handleDelete = async () => {
     setIsSaving(true);
-    setError(null);
+    setSaveError(null);
     try {
       await masterDataService.remove(entityKey, deleteTarget.id);
       setDeleteTarget(null);
-      await loadRows();
+      refresh();
     } catch (err) {
-      setError(err.message);
+      setSaveError(err.message);
     } finally {
       setIsSaving(false);
     }
@@ -199,24 +188,21 @@ export function MasterCrudPage() {
 
       <div className="toolbar">
         <TableSearchBar value={query} onChange={setQuery} placeholder={`Search ${config.label.toLowerCase()}…`} />
-        {hasAuthStatus && (
-          <StatusFilterTabs
-            filter={filter}
-            onChange={setFilter}
-            totalCount={totalCount}
-            activeCount={activeCount}
-            pendingCount={pendingCount}
-          />
-        )}
+        {counts && <StatusFilterTabs filter={filter} onChange={changeFilter} counts={counts} />}
       </div>
 
       {error && rows.length > 0 && <Alert>{error}</Alert>}
+      {saveError && !modalState && !deleteTarget && <Alert>{saveError}</Alert>}
 
       <DataTable
         columns={columns}
-        rows={filteredRows}
+        rows={rows}
         isLoading={isLoading}
         error={error}
+        emptyMessage={search || filter !== "all" ? "No matching records." : "No records found."}
+        pagination={pagination}
+        page={page}
+        onPageChange={setPage}
         actions={(row) => (
           <>
             <IconButton icon="edit" label="Edit" onClick={() => openEdit(row)} />
@@ -229,8 +215,12 @@ export function MasterCrudPage() {
         <FullscreenTableModal
           title={config.label}
           columns={columns}
-          rows={filteredRows}
+          rows={rows}
           onClose={() => setIsFullscreen(false)}
+          fetchMore={async (fetchPageNo, limit) => {
+            const result = await fetchPage({ page: fetchPageNo, limit });
+            return { rows: result.rows, totalPages: result.pagination?.totalPages ?? 1 };
+          }}
           actions={(row) => (
             <>
               <IconButton icon="edit" label="Edit" onClick={() => openEdit(row)} />
@@ -256,6 +246,7 @@ export function MasterCrudPage() {
           }
         >
           <form id="mdp-form" onSubmit={handleSave} className="stack">
+            {saveError && <Alert>{saveError}</Alert>}
             {config.fields.map((field) => {
               if (field.type === "select") {
                 const sourceRows = optionSets[field.optionsFrom] ?? [];
@@ -329,9 +320,9 @@ export function MasterCrudPage() {
             </>
           }
         >
+          {saveError && <Alert>{saveError}</Alert>}
           <p>
-            Are you sure you want to delete <strong>{rowLabel(deleteTarget)}</strong>? This sets its status to
-            inactive.
+            Delete <strong>{rowLabel(deleteTarget)}</strong>? Master data is shared by every institution.
           </p>
         </Modal>
       )}

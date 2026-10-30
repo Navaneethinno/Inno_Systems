@@ -62,12 +62,30 @@ function GenericForm({ config, row, onSuccess, onCancel }) {
     };
   }, [selectFields]);
 
+  // `sameInstitution`: profiles and password policies belong to one
+  // institution (seven policies are all named DEFAULT), so only the chosen
+  // institution's live ones are offered. `labelKey` names the option text.
   const optionsFor = (field) => {
     if (field.staticOptions) return field.staticOptions;
-    return (optionRows[field.name] ?? []).map((row) => ({ value: rowValue(row), label: rowLabel(row) }));
+    let rows = optionRows[field.name] ?? [];
+    if (field.sameInstitution) {
+      const inst = Number(values.inst_profile_id);
+      rows = rows.filter((r) => Number(r.inst_profile_id) === inst && (r.status == null || Number(r.status) === 1));
+    }
+    return rows.map((r) => ({ value: rowValue(r), label: (field.labelKey && r[field.labelKey]) || rowLabel(r) }));
   };
 
-  const handleChange = (name, value) => setValues((prev) => ({ ...prev, [name]: value }));
+  // Picking another institution clears the choices that depended on it.
+  const handleChange = (name, value) =>
+    setValues((prev) => {
+      const next = { ...prev, [name]: value };
+      if (name === "inst_profile_id") {
+        config.fields.forEach((f) => {
+          if (f.sameInstitution) next[f.name] = "";
+        });
+      }
+      return next;
+    });
 
   const buildPayload = () => {
     const payload = {};
@@ -118,7 +136,12 @@ function GenericForm({ config, row, onSuccess, onCancel }) {
               <Select
                 key={field.name}
                 label={field.label}
-                placeholder={`Select ${field.label.toLowerCase()}`}
+                placeholder={
+                  field.sameInstitution && !values.inst_profile_id
+                    ? "Select the institution first"
+                    : `Select ${field.label.toLowerCase()}`
+                }
+                disabled={field.sameInstitution && !values.inst_profile_id}
                 options={optionsFor(field)}
                 required={field.required}
                 value={values[field.name] ?? ""}

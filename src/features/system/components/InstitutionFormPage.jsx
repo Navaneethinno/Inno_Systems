@@ -11,6 +11,7 @@ import { Alert } from "../../../components/ui/Alert";
 import { renderStatusCell } from "../../../lib/renderStatusCell";
 import { EntityManagerPage } from "./EntityManagerPage";
 import { API } from "../../../api/endpoints";
+import { identifierCodes, languageCodes } from "../../../lib/institutionShape";
 
 // Per SYSTEM_API_GUIDE.md's example, values are uppercase (e.g. "MOBILE").
 const LOGIN_IDENTIFIERS = ["USERNAME", "EMAIL", "MOBILE"];
@@ -48,20 +49,17 @@ function Checkbox({ label, checked, onChange }) {
   );
 }
 
-// Maps a full institution record (from listInstitutions/institution/profile/
-// list) back into the form's state shape — language/allowed_login_identifiers
-// come back as flat arrays, converted to the {code: true} maps the checkboxes
-// use. Defensive against the one legacy bootstrap row that stores these as
-// a bare {} instead of an array.
+// Maps a full institution record (from /institution/profile/list) back into
+// the form's state shape; see lib/institutionShape.js for the stored shapes.
 function stateFromRow(row) {
-  const toMap = (arr) => Object.fromEntries((Array.isArray(arr) ? arr : []).map((v) => [v, true]));
+  const toMap = (arr) => Object.fromEntries(arr.map((v) => [v, true]));
   return {
     ...initialState,
     code: row.code ?? "",
     name: row.name ?? "",
     type: row.type ?? "",
     timezone: row.timezone ?? "",
-    languages: toMap(row.language),
+    languages: toMap(languageCodes(row.language)),
     date_format: row.date_format ?? "YYYY-MM-DD",
     has_branch: Boolean(row.has_branch),
     max_branches_allowed: row.max_branches_allowed ?? "",
@@ -69,7 +67,7 @@ function stateFromRow(row) {
     total_kyc_levels: row.total_kyc_levels ?? "",
     allow_downgrade_kyc: Boolean(row.allow_downgrade_kyc),
     auto_approve_kyc_level: Boolean(row.auto_approve_kyc_level),
-    identifiers: { USERNAME: false, EMAIL: false, MOBILE: false, ...toMap(row.allowed_login_identifiers) },
+    identifiers: { USERNAME: false, EMAIL: false, MOBILE: false, ...toMap(identifierCodes(row.allowed_login_identifiers)) },
     primary_login_identifier: row.primary_login_identifier ?? "MOBILE",
     is_login_pin_enabled: Boolean(row.is_login_pin_enabled),
     login_pin_length: row.login_pin_length ?? 0,

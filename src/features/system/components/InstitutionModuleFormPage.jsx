@@ -40,15 +40,42 @@ function InstitutionModuleForm({ institutions, defaultInstProfileId, onSuccess, 
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
 
+  // The picked institution's current modules: the server refuses a second
+  // assignment of the same module ("Record Already Exists"), so they're
+  // shown as assigned and can't be picked.
+  const [assignedIds, setAssignedIds] = useState(() => new Set());
+
   useEffect(() => {
     masterDataService.list("module").then(setModules);
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!instProfileId) {
+      setAssignedIds(new Set());
+      return undefined;
+    }
+    systemService
+      .pageList(API.INSTITUTION_MODULE.LIST, { limit: 200, params: { inst_profile_id: Number(instProfileId) } })
+      .then(({ rows: current }) => !cancelled && setAssignedIds(new Set(current.map((r) => Number(r.module_id)))))
+      .catch(() => !cancelled && setAssignedIds(new Set()));
+    return () => {
+      cancelled = true;
+    };
+  }, [instProfileId]);
 
   const institutionOptions = useMemo(
     () => institutions.map((row) => ({ value: rowValue(row), label: rowLabel(row) })),
     [institutions]
   );
-  const moduleOptions = useMemo(() => modules.map((row) => ({ value: rowValue(row), label: rowLabel(row) })), [modules]);
+  const moduleOptions = useMemo(
+    () =>
+      modules.map((row) => {
+        const taken = assignedIds.has(Number(rowValue(row)));
+        return { value: rowValue(row), label: taken ? `${rowLabel(row)} (already assigned)` : rowLabel(row), disabled: taken };
+      }),
+    [modules, assignedIds]
+  );
 
   const updateRow = (key, field, value) =>
     setRows((prev) => prev.map((r) => (r.key === key ? { ...r, [field]: value } : r)));

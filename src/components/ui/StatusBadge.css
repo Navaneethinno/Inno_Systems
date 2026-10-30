@@ -46,6 +46,12 @@
   border-color: var(--color-danger-border);
 }
 
+.dt__status--draft {
+  color: var(--color-info-text);
+  background: var(--color-info-bg);
+  border-color: var(--color-info-border);
+}
+
 .dt__status--inactive {
   color: var(--color-neutral-text);
   background: var(--color-neutral-bg);

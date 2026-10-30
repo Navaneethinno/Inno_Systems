@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { masterEntities } from "../config/masterEntities";
-import { masterDataService } from "../services/masterDataService";
 import { DataTable } from "../../../components/ui/DataTable";
 import { Button } from "../../../components/ui/Button";
 import { FullscreenTableModal } from "../../../components/ui/FullscreenTableModal";
@@ -10,14 +9,13 @@ import { PageHeader } from "../../../components/ui/PageHeader";
 import { EmptyState } from "../../../components/ui/EmptyState";
 import { Alert } from "../../../components/ui/Alert";
 import { renderStatusCell } from "../../../lib/renderStatusCell";
+import { StatusFilterTabs } from "../../../components/ui/StatusFilterTabs";
 import { useLiveList } from "../../../hooks/useLiveList";
+import { useServerList } from "../../../hooks/useServerList";
 import { API } from "../../../api/endpoints";
 
-const PAGE_SIZE = 10;
-
-// A 404 here means the backend no longer (or doesn't yet) serves this
-// reference type, not that the request went wrong.
-const NOT_ON_SERVER = "not-on-server";
+// Master data has no maker-checker: status is 1 Active or 13 Inactive.
+const MASTER_FILTERS = ["all", "active", "inactive"];
 
 function buildColumns(rows) {
   if (rows.length === 0) return [];
@@ -40,105 +38,30 @@ function buildColumns(rows) {
 }
 
 /**
- * Browsing (no search) uses real server-side pagination — one page of 10
- * fetched per click, matching the API's actual paging contract (confirmed
- * live: /master/{type} genuinely returns a different slice per `page`, not
- * just the same rows re-sorted). The API's `search` param is a no-op on
- * this deployment (confirmed live), so search instead lazily fetches the
- * whole table once (cached, capped — fine for now, but not the pattern to
- * copy for a table that could hold far more rows) and filters client-side.
- *
- * "View all" is separate: it hands FullscreenTableModal a `fetchMore` so
- * the modal loads its own pages independently as the user scrolls, rather
- * than eagerly fetching everything up front like search does.
+ * A read-only reference table. Paging, search and the All / Active /
+ * Inactive tabs run on the server, which /master/{type} supports (backend
+ * round 4); "View all" loads its own pages as the user scrolls.
  */
 export function MasterListPage() {
   const { entityKey } = useParams();
   const config = masterEntities[entityKey];
+  return config ? <ReferenceList key={entityKey} entityKey={entityKey} config={config} /> : (
+    <EmptyState icon="alert" title="Not found" message={`Unknown master data type "${entityKey}".`} />
+  );
+}
 
-  const [page, setPage] = useState(1);
-  const [rows, setRows] = useState([]);
-  const [pagination, setPagination] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const [fullRows, setFullRows] = useState(null);
+function ReferenceList({ entityKey, config }) {
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [query, setQuery] = useState("");
-  const [liveTick, setLiveTick] = useState(0);
-
-  useEffect(() => {
-    setPage(1);
-    setFullRows(null);
-    setQuery("");
-  }, [entityKey]);
-
-  useEffect(() => {
-    let cancelled = false;
-    setIsLoading(true);
-    setError(null);
-    masterDataService
-      .listWithPagination(entityKey, { page, limit: PAGE_SIZE }, config?.listPath)
-      .then(({ rows: data, pagination: p }) => {
-        if (cancelled) return;
-        setRows(data);
-        setPagination(p);
-      })
-      .catch((err) => !cancelled && setError(err.status === 404 ? NOT_ON_SERVER : err.message))
-      .finally(() => !cancelled && setIsLoading(false));
-    return () => {
-      cancelled = true;
-    };
-  }, [entityKey, page, config?.listPath, liveTick]);
-
-  const ensureFullRows = useCallback(async () => {
-    if (fullRows) return fullRows;
-    const data = await masterDataService.list(entityKey, {}, config?.listPath);
-    setFullRows(data);
-    return data;
-  }, [entityKey, fullRows, config?.listPath]);
-
-  useEffect(() => {
-    if (query.trim()) ensureFullRows();
-  }, [query, ensureFullRows]);
+  const listPath = config.listPath ?? API.MASTER.list(entityKey);
+  const { rows, pagination, counts, page, setPage, filter, changeFilter, query, setQuery, search, isLoading, error, refresh, fetchPage } =
+    useServerList(listPath, undefined, MASTER_FILTERS);
 
   // Reference tables (Countries, Currencies, ...) are shared across the
-  // whole system, not just this app — refetch when another client changes
-  // them. See the Live Menu Updates via WebSocket handoff doc.
-  const livePath = (config?.listPath ?? API.MASTER.list(entityKey)).replace(/^\/+/, "");
-  useLiveList(livePath, () => {
-    setFullRows(null);
-    setLiveTick((t) => t + 1);
-  });
+  // whole system — refetch when another client changes them. See the Live
+  // Menu Updates via WebSocket handoff doc.
+  useLiveList(listPath.replace(/^\/+/, ""), refresh);
 
-  const q = query.trim().toLowerCase();
-  const searchActive = Boolean(q);
-
-  const filteredRows = useMemo(() => {
-    if (!searchActive || !fullRows) return null;
-    return fullRows.filter((row) =>
-      Object.values(row).some((v) => v != null && typeof v !== "object" && String(v).toLowerCase().includes(q))
-    );
-  }, [fullRows, q, searchActive]);
-
-  if (!config) {
-    return <EmptyState icon="alert" title="Not found" message={`Unknown master data type "${entityKey}".`} />;
-  }
-
-  if (error === NOT_ON_SERVER) {
-    return (
-      <div className="page">
-        <PageHeader title={config.label} subtitle="Reference data — read-only." />
-        <EmptyState
-          icon="inbox"
-          title="Not available yet"
-          message={`The server doesn't provide ${config.label} yet. This page will show the data once the backend adds it.`}
-        />
-      </div>
-    );
-  }
-
-  const columns = buildColumns(searchActive ? fullRows ?? [] : rows);
+  const columns = buildColumns(rows);
 
   return (
     <div className="page">
@@ -152,27 +75,23 @@ export function MasterListPage() {
         }
       />
 
-      {rows.length > 0 && (
-        <div className="toolbar">
-          <TableSearchBar value={query} onChange={setQuery} placeholder={`Search ${config.label.toLowerCase()}…`} />
-        </div>
-      )}
+      <div className="toolbar">
+        <TableSearchBar value={query} onChange={setQuery} placeholder={`Search ${config.label.toLowerCase()}…`} />
+        {counts && <StatusFilterTabs filter={filter} onChange={changeFilter} counts={counts} />}
+      </div>
 
       {error && rows.length > 0 && <Alert>{error}</Alert>}
 
-      {searchActive ? (
-        <DataTable columns={columns} rows={filteredRows ?? []} isLoading={filteredRows === null} emptyMessage="No matching records." />
-      ) : (
-        <DataTable
-          columns={columns}
-          rows={rows}
-          isLoading={isLoading}
-          error={error}
-          pagination={pagination}
-          page={page}
-          onPageChange={setPage}
-        />
-      )}
+      <DataTable
+        columns={columns}
+        rows={rows}
+        isLoading={isLoading}
+        error={error}
+        emptyMessage={search || filter !== "all" ? "No matching records." : "No records found."}
+        pagination={pagination}
+        page={page}
+        onPageChange={setPage}
+      />
 
       {isFullscreen && (
         <FullscreenTableModal
@@ -180,17 +99,9 @@ export function MasterListPage() {
           columns={columns}
           rows={rows}
           onClose={() => setIsFullscreen(false)}
-          // The table could hold far more rows than are safe to fetch/render
-          // in one shot (e.g. Countries at 249, or a future much larger
-          // reference table) — load it independently in chunks as the user
-          // scrolls, instead of eagerly fetching everything up front.
-          fetchMore={async (fetchPage, limit) => {
-            const { rows: pageRows, pagination: p } = await masterDataService.listWithPagination(
-              entityKey,
-              { page: fetchPage, limit },
-              config?.listPath
-            );
-            return { rows: pageRows, totalPages: p?.totalPages ?? 1 };
+          fetchMore={async (fetchPageNo, limit) => {
+            const result = await fetchPage({ page: fetchPageNo, limit });
+            return { rows: result.rows, totalPages: result.pagination?.totalPages ?? 1 };
           }}
         />
       )}
