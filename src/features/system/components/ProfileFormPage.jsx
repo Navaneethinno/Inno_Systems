@@ -6,12 +6,12 @@ import { TextField } from "../../../components/ui/TextField";
 import { Select } from "../../../components/ui/Select";
 import { Button } from "../../../components/ui/Button";
 import { Modal } from "../../../components/ui/Modal";
-import { IconButton } from "../../../components/ui/IconButton";
 import { EmptyState } from "../../../components/ui/EmptyState";
 import { Alert } from "../../../components/ui/Alert";
 import { SkeletonList } from "../../../components/ui/Skeleton";
 import { renderStatusCell } from "../../../lib/renderStatusCell";
 import { EntityManagerPage } from "./EntityManagerPage";
+import { RowActions } from "./RowActions";
 import { API } from "../../../api/endpoints";
 import { EDIT_WAITING, statusCode } from "../../../lib/statusCodes";
 import "./ProfileFormPage.css";
@@ -330,10 +330,7 @@ export function ProfileFormPage() {
         livePath={API.LIVE.PROFILE}
         renderForm={({ onSuccess, onCancel }) => <ProfileForm onSuccess={onSuccess} onCancel={onCancel} />}
         actions={(row) => (
-          <>
-            <IconButton icon="edit" label="Edit" onClick={() => setEditTarget(row)} />
-            <IconButton icon="trash" label="Delete" tone="danger" onClick={() => setDeleteTarget(row)} />
-          </>
+          <RowActions row={row} onEdit={setEditTarget} onDelete={setDeleteTarget} />
         )}
       />
 

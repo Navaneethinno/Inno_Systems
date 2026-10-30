@@ -8,10 +8,10 @@ import { TextField } from "../../../components/ui/TextField";
 import { Select } from "../../../components/ui/Select";
 import { Button } from "../../../components/ui/Button";
 import { Modal } from "../../../components/ui/Modal";
-import { IconButton } from "../../../components/ui/IconButton";
 import { EmptyState } from "../../../components/ui/EmptyState";
 import { Alert } from "../../../components/ui/Alert";
 import { EntityManagerPage } from "./EntityManagerPage";
+import { RowActions } from "./RowActions";
 
 function defaultValue(field) {
   if (field.default !== undefined) return field.default;
@@ -257,14 +257,11 @@ export function SystemFormPage() {
         actions={
           config.editServiceMethod || config.deleteServiceMethod
             ? (row) => (
-                <>
-                  {config.editServiceMethod && (
-                    <IconButton icon="edit" label="Edit" onClick={() => setEditTarget(row)} />
-                  )}
-                  {config.deleteServiceMethod && (
-                    <IconButton icon="trash" label="Delete" tone="danger" onClick={() => setDeleteTarget(row)} />
-                  )}
-                </>
+                <RowActions
+                  row={row}
+                  onEdit={config.editServiceMethod ? setEditTarget : undefined}
+                  onDelete={config.deleteServiceMethod ? setDeleteTarget : undefined}
+                />
               )
             : undefined
         }

@@ -14,13 +14,13 @@ import { FullscreenTableModal } from "../../../components/ui/FullscreenTableModa
 import { StatusFilterTabs } from "../../../components/ui/StatusFilterTabs";
 import { TableSearchBar } from "../../../components/ui/TableSearchBar";
 import { PageHeader } from "../../../components/ui/PageHeader";
-import { IconButton } from "../../../components/ui/IconButton";
 import { EmptyState } from "../../../components/ui/EmptyState";
 import { Alert } from "../../../components/ui/Alert";
 import { Glyph } from "../../../components/ui/Glyph";
 import { useServerList } from "../../../hooks/useServerList";
 import { useLiveList } from "../../../hooks/useLiveList";
 import { API } from "../../../api/endpoints";
+import { RowActions } from "./RowActions";
 import "./SystemFormPage.css";
 
 const emptyModuleRow = () => ({
@@ -477,10 +477,7 @@ export function InstitutionModuleFormPage() {
           page={page}
           onPageChange={setPage}
           actions={(row) => (
-            <>
-              <IconButton icon="edit" label="Edit" onClick={() => setEditTarget(row)} />
-              <IconButton icon="trash" label="Delete" tone="danger" onClick={() => setDeleteTarget(row)} />
-            </>
+            <RowActions row={row} onEdit={setEditTarget} onDelete={setDeleteTarget} />
           )}
         />
       )}

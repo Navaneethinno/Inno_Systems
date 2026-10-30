@@ -6,12 +6,13 @@ import { TextField } from "../../../components/ui/TextField";
 import { Select } from "../../../components/ui/Select";
 import { Button } from "../../../components/ui/Button";
 import { Modal } from "../../../components/ui/Modal";
-import { IconButton } from "../../../components/ui/IconButton";
 import { Alert } from "../../../components/ui/Alert";
 import { renderStatusCell } from "../../../lib/renderStatusCell";
 import { EntityManagerPage } from "./EntityManagerPage";
+import { RowActions } from "./RowActions";
 import { API } from "../../../api/endpoints";
-import { identifierCodes, languageCodes } from "../../../lib/institutionShape";
+import { identifierCodes, identifierObject, languageCodes, languageObject } from "../../../lib/institutionShape";
+import { statusCode } from "../../../lib/statusCodes";
 
 // Per SYSTEM_API_GUIDE.md's example, values are uppercase (e.g. "MOBILE").
 const LOGIN_IDENTIFIERS = ["USERNAME", "EMAIL", "MOBILE"];
@@ -21,7 +22,8 @@ const initialState = {
   name: "",
   type: "",
   timezone: "",
-  languages: {}, // code -> bool, sent as a flat array — no default/supported split anymore
+  languages: {}, // code -> bool; sent as { default, supported }
+  default_language: "",
   date_format: "YYYY-MM-DD",
   has_branch: false,
   max_branches_allowed: "",
@@ -60,6 +62,7 @@ function stateFromRow(row) {
     type: row.type ?? "",
     timezone: row.timezone ?? "",
     languages: toMap(languageCodes(row.language)),
+    default_language: row.language?.default ?? "",
     date_format: row.date_format ?? "YYYY-MM-DD",
     has_branch: Boolean(row.has_branch),
     max_branches_allowed: row.max_branches_allowed ?? "",
@@ -124,20 +127,23 @@ function InstitutionForm({ row, onSuccess, onCancel }) {
   const selectedIdentifiers = LOGIN_IDENTIFIERS.filter((id) => values.identifiers[id]);
   const selectedLanguageCodes = Object.keys(values.languages).filter((code) => values.languages[code]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // A draft stays with its maker until submitted (backend round 5): adding
+  // can save one, and editing a draft can keep it a draft or submit it.
+  const isDraft = isEdit && statusCode(row.status) === 9;
+
+  const handleSubmit = async (e, { asDraft = false } = {}) => {
+    e?.preventDefault();
     setIsSaving(true);
     setError(null);
     try {
-      // Per SYSTEM_API_GUIDE.md: language and allowed_login_identifiers are
-      // flat string arrays, not nested {default, supported} / {identifiers}
-      // objects — and the identifier values are uppercase.
+      // The stored shapes, as the backend asks: language as
+      // { default, supported } and login identifiers as lowercase flags.
       const payload = {
         code: values.code,
         name: values.name,
         type: Number(values.type) || 0,
         timezone: values.timezone,
-        language: selectedLanguageCodes,
+        language: languageObject(selectedLanguageCodes, values.default_language),
         date_format: values.date_format,
         has_branch: values.has_branch,
         max_branches_allowed: Math.max(0, Number(values.max_branches_allowed) || 0),
@@ -145,7 +151,7 @@ function InstitutionForm({ row, onSuccess, onCancel }) {
         total_kyc_levels: Math.max(0, Number(values.total_kyc_levels) || 0),
         allow_downgrade_kyc: values.allow_downgrade_kyc,
         auto_approve_kyc_level: values.auto_approve_kyc_level,
-        allowed_login_identifiers: selectedIdentifiers,
+        allowed_login_identifiers: identifierObject(selectedIdentifiers),
         primary_login_identifier: values.primary_login_identifier,
         is_login_pin_enabled: values.is_login_pin_enabled,
         login_pin_length: Math.max(0, Number(values.login_pin_length) || 0),
@@ -154,6 +160,7 @@ function InstitutionForm({ row, onSuccess, onCancel }) {
         is_txn_pin_enabled: values.is_txn_pin_enabled,
         txn_pin_length: Math.max(0, Number(values.txn_pin_length) || 0),
         is_same_login_txn_pin_allowed: values.is_same_login_txn_pin_allowed,
+        ...(asDraft || isDraft ? { is_draft: asDraft } : {}),
       };
 
       if (isEdit) {
@@ -210,6 +217,16 @@ function InstitutionForm({ row, onSuccess, onCancel }) {
             );
           })}
         </div>
+        {selectedLanguageCodes.length > 1 && (
+          <Select
+            label="Default language"
+            options={languages
+              .filter((r) => values.languages[rowCode(r)])
+              .map((r) => ({ value: rowCode(r), label: rowLabel(r) }))}
+            value={selectedLanguageCodes.includes(values.default_language) ? values.default_language : selectedLanguageCodes[0]}
+            onChange={(e) => set("default_language", e.target.value)}
+          />
+        )}
       </section>
 
       <section className="form-section">
@@ -322,8 +339,13 @@ function InstitutionForm({ row, onSuccess, onCancel }) {
         <Button type="button" variant="secondary" onClick={onCancel}>
           Cancel
         </Button>
+        {(!isEdit || isDraft) && (
+          <Button type="button" variant="secondary" disabled={isSaving} onClick={(e) => handleSubmit(e, { asDraft: true })}>
+            Save as draft
+          </Button>
+        )}
         <Button type="submit" loading={isSaving}>
-          {isEdit ? "Save Changes" : "Create Institution"}
+          {isDraft ? "Submit" : isEdit ? "Save Changes" : "Create Institution"}
         </Button>
       </div>
     </form>
@@ -370,10 +392,7 @@ export function InstitutionFormPage() {
         livePath={API.LIVE.INSTITUTION}
         renderForm={({ onSuccess, onCancel }) => <InstitutionForm onSuccess={onSuccess} onCancel={onCancel} />}
         actions={(row) => (
-          <>
-            <IconButton icon="edit" label="Edit" onClick={() => setEditTarget(row)} />
-            <IconButton icon="trash" label="Delete" tone="danger" onClick={() => setDeleteTarget(row)} />
-          </>
+          <RowActions row={row} onEdit={setEditTarget} onDelete={setDeleteTarget} />
         )}
       />
 

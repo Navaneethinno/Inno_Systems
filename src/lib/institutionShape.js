@@ -16,3 +16,15 @@ export function identifierCodes(value) {
     .filter((k) => value[k])
     .map((k) => k.toUpperCase());
 }
+
+// The shapes to send back (backend round 5: "read and send this shape").
+// `defaultCode` falls back to the first supported language when it isn't
+// one of them.
+export function languageObject(codes, defaultCode) {
+  const supported = [...codes];
+  return { default: supported.includes(defaultCode) ? defaultCode : supported[0] ?? "", supported };
+}
+
+export function identifierObject(codes) {
+  return Object.fromEntries(codes.map((c) => [String(c).toLowerCase(), true]));
+}

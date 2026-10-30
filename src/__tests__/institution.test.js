@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { identifierCodes, languageCodes } from "../lib/institutionShape";
+import { identifierCodes, identifierObject, languageCodes, languageObject } from "../lib/institutionShape";
 
 // Shapes as /institution/profile/list returns them on UAT.
 describe("institution edit prefill", () => {
@@ -15,5 +15,17 @@ describe("institution edit prefill", () => {
     expect(identifierCodes({ username: true, email: false })).toEqual(["USERNAME"]);
     expect(identifierCodes(["MOBILE"])).toEqual(["MOBILE"]);
     expect(identifierCodes(null)).toEqual([]);
+  });
+});
+
+describe("institution save shapes", () => {
+  it("sends languages as { default, supported }", () => {
+    expect(languageObject(["en", "pt"], "pt")).toEqual({ default: "pt", supported: ["en", "pt"] });
+    expect(languageObject(["en", "pt"], "fr")).toEqual({ default: "en", supported: ["en", "pt"] });
+    expect(languageObject([], "en")).toEqual({ default: "", supported: [] });
+  });
+
+  it("sends identifiers as lowercase flags", () => {
+    expect(identifierObject(["USERNAME", "EMAIL"])).toEqual({ username: true, email: true });
   });
 });

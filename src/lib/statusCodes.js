@@ -40,3 +40,14 @@ export function describeStatus(code, name) {
   if (!known) return null;
   return { label: name || known.label, tone: TONE[known.kind] };
 }
+
+// While a change waits for approval the backend refuses any other request on
+// the record (edit, delete, deactivate, reactivate): workflow.invalid_status.
+const WAITING_CODES = new Set([2, 3, 4, 11, 14]);
+
+/** The waiting change's label when `row` has one, else null. */
+export function waitingChange(row) {
+  const code = statusCode(row?.process_status);
+  if (!WAITING_CODES.has(code)) return null;
+  return row.process_status_name || STATUS_CODES[code].label;
+}
