@@ -1,0 +1,211 @@
+/* Access by Location: list cells, the portal cards, the country chips,
+   the address test and the country file facts. */
+.acc__stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.acc__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.acc__title {
+  margin: 0;
+  font-size: var(--text-lg);
+}
+
+.acc__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr));
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.acc__muted {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: 400;
+}
+
+.acc__nowrap {
+  white-space: nowrap;
+}
+
+.acc__link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.acc__link:hover strong {
+  text-decoration: underline;
+}
+
+.acc__cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.acc__mode {
+  align-self: flex-start;
+  padding: 1px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+  font-size: var(--text-2xs);
+  font-weight: 700;
+}
+
+.acc__mode--restricted {
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+}
+
+.acc__refused {
+  color: var(--color-danger-text);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.acc__seg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.acc__seg-btn {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.acc__seg-btn span {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.acc__seg-btn--on {
+  border-color: var(--color-primary);
+  background: var(--color-primary-tint);
+}
+
+.acc__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.acc__area {
+  min-height: 72px;
+  padding: 8px 10px;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  resize: vertical;
+}
+
+.acc__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.acc__chip {
+  padding: 4px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-primary-tint);
+  color: var(--color-text);
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+
+.acc__options {
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.acc__options button {
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text);
+  text-align: left;
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.acc__options button:hover {
+  background: var(--color-row-hover);
+}
+
+.acc__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.acc__test {
+  display: grid;
+  grid-template-columns: minmax(160px, 220px) minmax(200px, 1fr) auto;
+  align-items: end;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+@media (max-width: 640px) {
+  .acc__test,
+  .acc__seg {
+    grid-template-columns: 1fr;
+  }
+}
+
+.acc__filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 260px));
+  gap: var(--space-3);
+}
+
+.acc__facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.acc__facts dt {
+  color: var(--color-text-muted);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+}
+
+.acc__facts dd {
+  margin: 2px 0 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}

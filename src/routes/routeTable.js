@@ -24,6 +24,7 @@ export const SHELL_ROUTES = [
   },
   { path: "/system/:formKey", Component: lazyPage(() => import("../features/system/components/SystemFormPage"), "SystemFormPage") },
   { path: "/system/key-custody", Component: lazyPage(() => import("../features/keys/components/KeyCustodyPage"), "KeyCustodyPage") },
+  { path: "/system/access", Component: lazyPage(() => import("../features/access/components/AccessPolicyPage"), "AccessPolicyPage") },
   { path: "/system/monitor", Component: lazyPage(() => import("../features/monitor/components/PlatformMonitorPage"), "PlatformMonitorPage") },
   { path: "/aml/watchlists", Component: lazyPage(() => import("../features/aml/components/WatchlistsPage"), "WatchlistsPage") },
   { path: "/aml/jobs", Component: lazyPage(() => import("../features/aml/components/BackgroundJobsPage"), "BackgroundJobsPage") },

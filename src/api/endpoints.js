@@ -77,6 +77,9 @@ export const API = {
     MONITOR: {
       view: (view) => `/system/monitor/${view}`,
     },
+    ACCESS: {
+      call: (verb) => `/system/institution/access/${verb}`,
+    },
     SECURITY: {
       EVENTS: "/system/security/events",
     },

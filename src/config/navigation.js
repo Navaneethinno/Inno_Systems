@@ -57,6 +57,7 @@ export const NAVIGATION = [
       })),
       { label: "Key Custody", path: "/system/key-custody", icon: "key" },
       { label: "Platform Monitor", path: "/system/monitor", icon: "activity" },
+      { label: "Access by Location", path: "/system/access", icon: "globe" },
     ],
   },
   {
