@@ -36,7 +36,9 @@ export function Sidebar() {
         </span>
         <span className="sidebar__footer-text sidebar__collapsible">
           <span className="sidebar__footer-user">{user?.username}</span>
-          <span className="sidebar__footer-version">System Console · v{env.appVersion}</span>
+          <span className="sidebar__footer-version">System Console · v{env.appVersion}
+            {env.buildCommit && ` (${env.buildCommit})`}
+          </span>
         </span>
       </footer>
     </aside>

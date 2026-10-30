@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Glyph } from "./Glyph";
 import { EmptyState } from "./EmptyState";
 import "./DataTable.css";
@@ -21,6 +21,30 @@ function pageWindow(page, totalPages) {
   const pages = new Set([1, totalPages, page - 1, page, page + 1]);
   const sorted = [...pages].filter((p) => p >= 1 && p <= totalPages).sort((a, b) => a - b);
   return sorted.flatMap((p, i) => (i > 0 && p - sorted[i - 1] > 1 ? [null, p] : [p]));
+}
+
+// Which sides of a wide table have columns scrolled out of view, so the
+// frame can fade those edges and show that the table scrolls sideways.
+function useScrollEdges() {
+  const ref = useRef(null);
+  const [edges, setEdges] = useState("");
+  const update = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    const left = el.scrollLeft > 1;
+    const right = el.scrollLeft + el.clientWidth < el.scrollWidth - 1;
+    setEdges([left && "dt__scroll--left", right && "dt__scroll--right"].filter(Boolean).join(" "));
+  }, []);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return undefined;
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    if (el.firstElementChild) observer.observe(el.firstElementChild);
+    return () => observer.disconnect();
+  });
+  return { ref, edges, onScroll: update };
 }
 
 function SortIcon({ dir }) {
@@ -56,6 +80,9 @@ function SortIcon({ dir }) {
  * the "View all" fullscreen modal, whose whole point is showing everything
  * at once. `density="compact"` tightens the row padding.
  *
+ * A column may carry `className`, set on its header and every cell (e.g.
+ * to hide it at phone width).
+ *
  * `error` (a load failure's message) replaces the "No records" state with an
  * error state when there are no rows to show, so a failed load never reads
  * as an empty list.
@@ -74,6 +101,7 @@ export function DataTable({
   error,
 }) {
   const [sort, setSort] = useState(null); // { key, dir: 1 | -1 }
+  const { ref: scrollRef, edges: scrollEdges, onScroll } = useScrollEdges();
   const [internalPage, setInternalPage] = useState(1);
   const isServerPaged = typeof onPageChange === "function";
   const page = isServerPaged ? controlledPage : internalPage;
@@ -129,7 +157,7 @@ export function DataTable({
             <th
               key={col.key}
               scope="col"
-              className={`${isNarrow(col) ? "dt__narrow" : ""} ${isSortable ? "dt__sortable" : ""}`}
+              className={`${isNarrow(col) ? "dt__narrow" : ""} ${isSortable ? "dt__sortable" : ""} ${col.className ?? ""}`}
               aria-sort={dir === 1 ? "ascending" : dir === -1 ? "descending" : undefined}
               onClick={isSortable ? () => toggleSort(col) : undefined}
             >
@@ -195,14 +223,14 @@ export function DataTable({
 
   return (
     <div className={`dt__frame dt--${density}`}>
-      <div className="dt__scroll">
+      <div className={`dt__scroll ${scrollEdges}`} ref={scrollRef} onScroll={onScroll}>
         <table className="dt">
           {head}
           <tbody>
             {pageRows.map((row, i) => (
               <tr key={row.id ?? i}>
                 {columns.map((col) => (
-                  <td key={col.key} className={isNarrow(col) ? "dt__narrow" : undefined}>
+                  <td key={col.key} className={[isNarrow(col) && "dt__narrow", col.className].filter(Boolean).join(" ") || undefined}>
                     {col.render ? col.render(row) : String(row[col.key] ?? "—")}
                   </td>
                 ))}

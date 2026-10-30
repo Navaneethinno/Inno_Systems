@@ -32,10 +32,9 @@ function ProfileForm({ row, onSuccess, onCancel }) {
     (async () => {
       setIsLoading(true);
       try {
-        // The list endpoint doesn't include menu_actions, so editing needs
-        // a separate fetch of the one profile's current assignments to
-        // prefill from — otherwise submitting the edit with an empty
-        // menu_info would wipe out every existing permission.
+        // Every /user/profile/list row carries menu_actions, so editing
+        // prefills from the row itself; the one-profile fetch is only a
+        // fallback for a row that somehow lacks them.
         //
         // Actions offered per menu come straight from /master/action (all
         // 6: Add, View, Edit, Delete, Authorise, Self) rather than being
@@ -46,7 +45,7 @@ function ProfileForm({ row, onSuccess, onCancel }) {
           systemService.listActiveInstitutions(),
           masterDataService.list("menu"),
           masterDataService.list("action"),
-          isEdit ? systemService.getProfile(rowValue(row)) : Promise.resolve(null),
+          !isEdit ? null : row.menu_actions ? row : systemService.getProfile(rowValue(row)),
         ]);
         if (cancelled) return;
 
@@ -276,7 +275,6 @@ export function ProfileFormPage() {
         key={refreshKey}
         title="Profiles"
         eyebrow="Access Control"
-        subtitle="Profiles created via the system API, with their menu/action access."
         addLabel="Add Profile"
         formWidth={720}
         columns={[
@@ -289,7 +287,7 @@ export function ProfileFormPage() {
           },
           { key: "auth_status", label: "Status", narrow: true, render: renderStatusCell },
         ]}
-        loadRows={() => systemService.listProfiles()}
+        listPath={API.PROFILE.LIST}
         livePath={API.LIVE.PROFILE}
         renderForm={({ onSuccess, onCancel }) => <ProfileForm onSuccess={onSuccess} onCancel={onCancel} />}
         actions={(row) => (

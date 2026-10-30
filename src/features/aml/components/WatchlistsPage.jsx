@@ -5,7 +5,7 @@ import { Modal } from "../../../components/ui/Modal";
 import { DataTable } from "../../../components/ui/DataTable";
 import { PageHeader } from "../../../components/ui/PageHeader";
 import { Alert } from "../../../components/ui/Alert";
-import { formatBytes, formatDateTime, formatNumber } from "./formatAml";
+import { LOCAL_ZONE, formatBytes, formatDateTime, formatNumber } from "./formatAml";
 import { StatusPill } from "./StatusPill";
 import "./Aml.css";
 
@@ -230,14 +230,14 @@ export function WatchlistsPage() {
       <PageHeader
         eyebrow="AML"
         title="Watchlists"
-        subtitle="Sanctions, PEP and crime lists customers are screened against."
+        subtitle={`Sanctions, PEP and crime lists customers are screened against. Times are ${LOCAL_ZONE}.`}
         actions={
           <>
-            <Button variant="secondary" onClick={load}>
-              Reload
+            <Button variant="secondary" onClick={load} title="Read this table again; doesn't contact the publishers">
+              Reload table
             </Button>
-            <Button onClick={() => refresh()} loading={refreshingAll} icon="refresh">
-              Refresh all now
+            <Button onClick={() => refresh()} loading={refreshingAll} icon="refresh" title="Fetch every list from its publisher now">
+              Download all lists now
             </Button>
           </>
         }

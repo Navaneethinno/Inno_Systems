@@ -11,6 +11,26 @@
   overflow-x: auto;
 }
 
+/* Fade whichever edge has columns scrolled out of view (classes set by
+   DataTable), so a wide table reads as scrollable. With a pinned actions
+   column the right edge is that column, which gets a shadow instead. */
+.dt__scroll--left:not(.dt__scroll--right) {
+  mask-image: linear-gradient(to right, transparent, #000 64px);
+}
+
+.dt__scroll--right:not(.dt__scroll--left):not(:has(.dt__actions)) {
+  mask-image: linear-gradient(to left, transparent, #000 72px);
+}
+
+.dt__scroll--left.dt__scroll--right:not(:has(.dt__actions)) {
+  mask-image: linear-gradient(to right, transparent, #000 64px, #000 calc(100% - 72px), transparent);
+}
+
+.dt__scroll--right .dt__actions-head,
+.dt__scroll--right .dt__actions {
+  box-shadow: inset 1px 0 0 var(--color-border), -10px 0 12px -10px rgb(0 0 0 / 0.25);
+}
+
 .dt {
   width: 100%;
   border-collapse: separate;

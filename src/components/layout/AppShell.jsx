@@ -1,5 +1,8 @@
 import { Suspense, useEffect } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
+import { NAVIGATION } from "../../config/navigation";
+import { env } from "../../config/env";
+import { findTrail } from "../../lib/navTree";
 import { SidebarProvider } from "./SidebarProvider";
 import { useSidebar } from "./sidebarContext";
 import { Sidebar } from "./Sidebar/Sidebar";
@@ -15,8 +18,18 @@ export function AppShell() {
   );
 }
 
+// The tab title names the current page, from the same tree as the breadcrumbs.
+function useDocumentTitle() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    const page = findTrail(NAVIGATION, pathname).at(-1)?.label ?? "Page not found";
+    document.title = `${page} · System Console · ${env.appName}`;
+  }, [pathname]);
+}
+
 function ShellLayout() {
   const { rail, mobileOpen, closeMobile } = useSidebar();
+  useDocumentTitle();
 
   useEffect(() => {
     if (!mobileOpen) return undefined;

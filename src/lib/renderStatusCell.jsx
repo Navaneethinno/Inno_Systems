@@ -2,18 +2,32 @@ import { AuthStatusBadge } from "../components/ui/AuthStatusBadge";
 import { StatusBadge } from "../components/ui/StatusBadge";
 
 /**
- * Shared "Status" column renderer for System list pages (Profile,
- * Institution, Institution Module, User). The API sends up to three status
- * fields on the same row: `auth_status` (maker-checker workflow — AUTHORIZED
- * / PENDING_* / REJECTED / DEAUTHORIZED), `status_name` (plain text —
- * confirmed live, e.g. "Active"), and a bare numeric `status`. Prefer
- * `auth_status` when present (it's the most informative — it also captures
- * "Active but pending edit approval", which `status_name` alone can't), then
- * `status_name` from the response, then fall back to the boolean `status`.
+ * Shared "Status" column renderer. The API sends up to three status fields
+ * on a row: `status` (numeric: 1 Active, 9 Draft, …) with its label
+ * `status_name`, which say whether the record is live; and `auth_status`
+ * (AUTHORIZED / AUTH WAIT / EDIT_DEAUTH / …), which describes only its
+ * latest change. Per the backend, the live state comes from `status`: an
+ * institution whose last edit was rejected is still Active. So the badge
+ * shows `status_name`, and a latest change that isn't authorized is noted
+ * beneath it.
  */
 export function renderStatusCell(row) {
-  if (row.auth_status) return <AuthStatusBadge value={row.auth_status} />;
-  if (row.status_name) return <AuthStatusBadge value={row.status_name} />;
-  if ("status" in row) return <StatusBadge active={Boolean(row.status)} />;
-  return "—";
+  const change = row.auth_status && String(row.auth_status).toUpperCase() !== "AUTHORIZED" ? row.auth_status : null;
+  const live = row.status_name ? (
+    <AuthStatusBadge value={row.status_name} />
+  ) : "status" in row ? (
+    <StatusBadge active={Number(row.status) === 1} />
+  ) : row.auth_status ? (
+    <AuthStatusBadge value={row.auth_status} />
+  ) : (
+    "—"
+  );
+  // Skip the note when it only repeats the status (a draft whose change is "DRAFT").
+  if (!change || !row.status_name || String(change).toUpperCase() === String(row.status_name).toUpperCase()) return live;
+  return (
+    <span className="status-stack">
+      {live}
+      <span className="cell-sub">Last change: {String(change).replace(/_/g, " ").toLowerCase()}</span>
+    </span>
+  );
 }

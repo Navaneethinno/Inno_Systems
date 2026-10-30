@@ -24,16 +24,18 @@ export const systemForms = {
     editServiceMethod: "editUser",
     deleteServiceMethod: "deleteUser",
     idField: "user_id",
-    buildDeletePayload: (row) => ({ userId: rowValue(row) }),
+    // /user/list rows carry their own `user_id`; `id` there isn't the user's
+    // (live, most rows on the first page shared id 12), so read user_id first.
+    buildDeletePayload: (row) => ({ userId: row.user_id ?? rowValue(row) }),
     // Confirmed live via curl: /user/list requires auth ("Please log in
     // again"), i.e. a real route — so this gets the same list+add-modal
     // pattern as profile/institution/institutionModule.
-    listMethod: "listUsers",
+    listPath: API.USER.LIST,
     // Mirrors the /user/* REST paths above — see the Live Menu Updates via
     // WebSocket handoff doc ("<resource-path>/live" is generic).
     livePath: API.LIVE.USER,
     columns: [
-      { key: "id", label: "ID", render: (row) => rowValue(row) ?? "—" },
+      { key: "user_id", label: "ID", narrow: true, render: (row) => row.user_id ?? rowValue(row) ?? "—" },
       { key: "username", label: "Username" },
       { key: "profile_name", label: "Profile" },
       // The backend has been observed live flipping between

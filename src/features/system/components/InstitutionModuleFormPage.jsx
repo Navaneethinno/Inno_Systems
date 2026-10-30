@@ -319,9 +319,13 @@ function ModuleGrace({ instProfileId, onChange }) {
   );
 }
 
+const ALL = "all";
+
 export function InstitutionModuleFormPage() {
   const [institutions, setInstitutions] = useState([]);
-  const [instProfileId, setInstProfileId] = useState("");
+  // "all" lists every institution's modules in one call; a picked
+  // institution narrows it and shows that institution's module grace.
+  const [instProfileId, setInstProfileId] = useState(ALL);
   const [rows, setRows] = useState([]);
   const [isLoadingInstitutions, setIsLoadingInstitutions] = useState(true);
   const [isLoadingModules, setIsLoadingModules] = useState(false);
@@ -334,7 +338,11 @@ export function InstitutionModuleFormPage() {
   const [deleteError, setDeleteError] = useState(null);
   // The module grace (days), for each end date's "Stops on".
   const [grace, setGrace] = useState(null);
-  const shownColumns = useMemo(() => columns.map((c) => (c.key === "effective_to" ? { ...c, render: (row) => c.render(row, grace) } : c)), [grace]);
+  const isAll = instProfileId === ALL;
+  const shownColumns = useMemo(() => {
+    const withGrace = columns.map((c) => (c.key === "effective_to" ? { ...c, render: (row) => c.render(row, isAll ? null : grace) } : c));
+    return isAll ? [{ key: "inst_profile_name", label: "Institution" }, ...withGrace] : withGrace;
+  }, [grace, isAll]);
 
   const { filter, setFilter, query, setQuery, filteredRows, hasAuthStatus, activeCount, pendingCount, totalCount } =
     useAuthStatusFilter(rows);
@@ -363,7 +371,7 @@ export function InstitutionModuleFormPage() {
     if (!silent) setIsLoadingModules(true);
     setError(null);
     try {
-      setRows(await systemService.listInstitutionModules(Number(id)));
+      setRows(await systemService.listInstitutionModules(id === ALL ? null : Number(id)));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -410,7 +418,7 @@ export function InstitutionModuleFormPage() {
       <PageHeader
         eyebrow="Configuration"
         title="Institution Modules"
-        subtitle="Modules assigned to an institution."
+        subtitle="Modules assigned to each institution."
         actions={
           <>
             <Button variant="secondary" onClick={() => setIsFullscreen(true)} disabled={rows.length === 0} icon="expand">
@@ -427,7 +435,7 @@ export function InstitutionModuleFormPage() {
         <span className="field-inline__label">Institution</span>
         <Select
           placeholder={isLoadingInstitutions ? "Loading institutions…" : "Select institution"}
-          options={institutions.map((row) => ({ value: rowValue(row), label: rowLabel(row) }))}
+          options={[{ value: ALL, label: "All institutions" }, ...institutions.map((row) => ({ value: rowValue(row), label: rowLabel(row) }))]}
           value={instProfileId}
           disabled={isLoadingInstitutions}
           onChange={(e) => setInstProfileId(e.target.value)}
@@ -450,7 +458,7 @@ export function InstitutionModuleFormPage() {
       )}
 
       {error && rows.length > 0 && <Alert>{error}</Alert>}
-      {instProfileId && <ModuleGrace key={instProfileId} instProfileId={instProfileId} onChange={setGrace} />}
+      {instProfileId && !isAll && <ModuleGrace key={instProfileId} instProfileId={instProfileId} onChange={setGrace} />}
 
       {!instProfileId ? (
         <EmptyState icon="filter" title="Pick an institution" message="Select an institution to view its assigned modules." />
@@ -473,7 +481,7 @@ export function InstitutionModuleFormPage() {
         <Modal title="Add Institution Module" onClose={() => setIsModalOpen(false)} width={640}>
           <InstitutionModuleForm
             institutions={institutions}
-            defaultInstProfileId={instProfileId}
+            defaultInstProfileId={isAll ? "" : instProfileId}
             onSuccess={handleCreated}
             onCancel={() => setIsModalOpen(false)}
           />

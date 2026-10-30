@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { env } from "../../../config/env";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { loginSchema } from "../schema/loginSchema";
@@ -19,6 +21,11 @@ const stats = [
 export function LoginPage() {
   const { login, isLoading, error, clearError } = useAuth();
   const navigate = useNavigate();
+
+  // After a sign-out the tab still carries the last console page's title.
+  useEffect(() => {
+    document.title = `Sign In · ${env.appName}`;
+  }, []);
 
   const {
     register,

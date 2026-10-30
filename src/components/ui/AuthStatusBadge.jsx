@@ -3,8 +3,8 @@ import "./StatusBadge.css";
 function toneFor(value) {
   const v = String(value ?? "").toUpperCase();
   if (v === "AUTHORIZED" || v === "ACTIVE") return "active";
-  if (v === "REJECTED" || v === "DEAUTHORIZED") return "rejected";
-  if (v.includes("PENDING")) return "pending";
+  if (v.includes("REJECT") || v.includes("DEAUTH")) return "rejected";
+  if (v.includes("PENDING") || v.includes("WAIT")) return "pending";
   return "inactive";
 }
 

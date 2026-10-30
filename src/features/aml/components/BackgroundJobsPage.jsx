@@ -6,7 +6,7 @@ import { TextField } from "../../../components/ui/TextField";
 import { DataTable } from "../../../components/ui/DataTable";
 import { PageHeader } from "../../../components/ui/PageHeader";
 import { Alert } from "../../../components/ui/Alert";
-import { formatDateTime, formatNumber } from "./formatAml";
+import { LOCAL_ZONE, formatDateTime, formatNumber } from "./formatAml";
 import { StatusPill } from "./StatusPill";
 
 // Jobs flip `running` and re-screening runs finish on their own — while
@@ -198,7 +198,7 @@ export function BackgroundJobsPage() {
       <PageHeader
         eyebrow="AML"
         title="Background Jobs"
-        subtitle="The scheduled jobs that keep watchlists and ongoing screening up to date."
+        subtitle={`The scheduled jobs that keep watchlists and ongoing screening up to date. Times are ${LOCAL_ZONE}.`}
         actions={
           <Button variant="secondary" onClick={load} icon="refresh">
             Reload

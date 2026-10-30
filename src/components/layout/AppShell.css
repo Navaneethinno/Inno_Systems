@@ -1,7 +1,7 @@
 /* Layout widths shared by the shell and the sidebar. The 900px drawer
    breakpoint is mirrored in SidebarProvider.jsx (MOBILE_QUERY). */
 .shell {
-  --sidebar-width: 264px;
+  --sidebar-width: 288px;
   --sidebar-rail-width: 76px;
   --sidebar-ease: cubic-bezier(0.22, 1, 0.36, 1);
 

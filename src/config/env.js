@@ -15,6 +15,8 @@ export const env = {
   apiBaseUrl: requireEnv("VITE_API_BASE_URL"),
   appName: "Innovitegra Solutions",
   appVersion: version,
+  // Injected by vite.config.js; empty when git wasn't available at build time.
+  buildCommit: typeof __BUILD_COMMIT__ === "string" ? __BUILD_COMMIT__ : "",
   tokenStorageKey: "innovitegra_access_token",
   refreshStorageKey: "innovitegra_refresh_token",
   userStorageKey: "innovitegra_user",

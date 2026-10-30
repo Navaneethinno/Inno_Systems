@@ -361,7 +361,6 @@ export function InstitutionFormPage() {
         key={refreshKey}
         title="Institutions"
         eyebrow="Registry"
-        subtitle="Institutions created via the system API."
         addLabel="Add Institution"
         formWidth={780}
         columns={[
@@ -369,7 +368,7 @@ export function InstitutionFormPage() {
           { key: "name", label: "Name", render: (row) => rowLabel(row) },
           { key: "auth_status", label: "Status", narrow: true, render: renderStatusCell },
         ]}
-        loadRows={() => systemService.listInstitutions()}
+        listPath={API.INSTITUTION.LIST}
         livePath={API.LIVE.INSTITUTION}
         renderForm={({ onSuccess, onCancel }) => <InstitutionForm onSuccess={onSuccess} onCancel={onCancel} />}
         actions={(row) => (

@@ -479,6 +479,15 @@ button.stat-card:hover {
   display: none;
 }
 
+/* With the scrollbar hidden, tabs past the edge looked like there were
+   none; on a phone they wrap onto a second line instead. */
+@media (max-width: 640px) {
+  .tabs {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+}
+
 .tabs__tab {
   position: relative;
   flex-shrink: 0;
@@ -581,9 +590,11 @@ button.stat-card:hover {
   gap: var(--space-2);
 }
 
+/* bottom matches the negative bottom margin: with bottom: 0 the bar stopped
+   at the body's padding edge, leaving a strip where rows showed through. */
 .modal__body .form-actions {
   position: sticky;
-  bottom: 0;
+  bottom: -24px;
   z-index: var(--z-sticky);
   margin: var(--space-2) -28px -24px;
   padding: 14px 28px;
@@ -593,6 +604,7 @@ button.stat-card:hover {
 
 @media (max-width: 640px) {
   .modal__body .form-actions {
+    bottom: -20px;
     margin: var(--space-2) -18px -20px;
     padding: 12px 18px;
   }

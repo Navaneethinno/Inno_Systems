@@ -38,10 +38,15 @@ export function OverviewTab({ onEvents }) {
     { key: "p95_ms_5m", label: "p95", render: (p) => fmtMs(p.p95_ms_5m) },
     { key: "restarts_24h", label: "Restarts 24 h", render: (p) => <span className={p.restarts_24h ? "pm__warn" : undefined}>{fmtNum(p.restarts_24h)}</span> },
   ];
+  const processors = data?.processors ?? [];
+  const down = processors.filter((p) => p.up === false).map((p) => p.service);
+  const failing = processors.filter((p) => p.err_5xx_5m > 0).map((p) => `${p.service} (${fmtNum(p.err_5xx_5m)} of ${fmtNum(p.requests_5m)})`);
   return (
     <>
       <Err error={error} />
       {data && data.collected === false && <Alert>The platform hasn&apos;t collected any figures yet.</Alert>}
+      {down.length > 0 && <Alert>Down: {down.join(", ")}.</Alert>}
+      {failing.length > 0 && <Alert>Server errors (5xx) in the last 5 minutes: {failing.join(", ")}.</Alert>}
       <div className="pm__tiles">
         <Tile label="Processors up" value={data ? `${fmtNum(data.processors_up)} / ${fmtNum(data.processors_total)}` : "…"} tone={data ? (data.processors_up < data.processors_total ? "bad" : "ok") : undefined} />
         <Tile label="Server CPU" value={fmtPct(s.cpu_pct)} hint={s.cpus ? `${s.cpus} CPUs · load ${fmtNum(s.load1, 2)}` : undefined} tone={tone(s.cpu_pct)} />

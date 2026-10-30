@@ -145,15 +145,26 @@ export const systemService = {
     return { message: envelope.message };
   },
 
+  // The full records (dates, module_id, statuses): the dropdown view has
+  // only id and name. Without an institution it returns every institution's
+  // modules to the System user (46 on UAT); inst_profile_id is a filter.
   async listInstitutionModules(instProfileId) {
-    // The full records (dates, module_id, statuses): the dropdown view has
-    // only id and name. An institution has a handful of modules.
-    const { data: envelope } = await httpClient.post(API.INSTITUTION_MODULE.LIST, {
-      inst_profile_id: instProfileId,
-      page: 1,
-      limit: 200,
-    });
+    const body = { page: 1, limit: 500 };
+    if (instProfileId) body.inst_profile_id = instProfileId;
+    const { data: envelope } = await httpClient.post(API.INSTITUTION_MODULE.LIST, body);
     return extractList(envelope.data);
+  },
+
+  // One page of a System list table. Every list pages, filters and searches
+  // on the server: `filter` is all / active / pending / inactive / draft,
+  // and the reply's `pagination` carries the totals. (view: "dropdown"
+  // returns everything and is only for drop-downs.)
+  async pageList(path, { page = 1, limit = 10, filter, search } = {}) {
+    const body = { page, limit };
+    if (filter && filter !== "all") body.filter = filter;
+    if (search) body.search = search;
+    const { data: envelope } = await httpClient.post(path, body);
+    return { rows: extractList(envelope.data), pagination: envelope.pagination ?? null };
   },
 
   // Confirmed live via curl: /user/list requires auth ("Please log in

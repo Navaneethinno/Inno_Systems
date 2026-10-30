@@ -15,6 +15,10 @@ import { API } from "../../../api/endpoints";
 
 const PAGE_SIZE = 10;
 
+// A 404 here means the backend no longer (or doesn't yet) serves this
+// reference type, not that the request went wrong.
+const NOT_ON_SERVER = "not-on-server";
+
 function buildColumns(rows) {
   if (rows.length === 0) return [];
   // status_name is just status's text label ("Active"/"Inactive") — redundant
@@ -80,7 +84,7 @@ export function MasterListPage() {
         setRows(data);
         setPagination(p);
       })
-      .catch((err) => !cancelled && setError(err.message))
+      .catch((err) => !cancelled && setError(err.status === 404 ? NOT_ON_SERVER : err.message))
       .finally(() => !cancelled && setIsLoading(false));
     return () => {
       cancelled = true;
@@ -119,6 +123,19 @@ export function MasterListPage() {
 
   if (!config) {
     return <EmptyState icon="alert" title="Not found" message={`Unknown master data type "${entityKey}".`} />;
+  }
+
+  if (error === NOT_ON_SERVER) {
+    return (
+      <div className="page">
+        <PageHeader title={config.label} subtitle="Reference data — read-only." />
+        <EmptyState
+          icon="inbox"
+          title="Not available yet"
+          message={`The server doesn't provide ${config.label} yet. This page will show the data once the backend adds it.`}
+        />
+      </div>
+    );
   }
 
   const columns = buildColumns(searchActive ? fullRows ?? [] : rows);

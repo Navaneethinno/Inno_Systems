@@ -280,6 +280,20 @@
   flex: 1;
 }
 
+/* The deepest entries (Reference Data's) are long names in the narrowest
+   column; let them wrap instead of cutting them off. */
+.sidebar-item--depth-2 {
+  height: auto;
+  min-height: 34px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.sidebar-item--depth-2 .sidebar-item__label {
+  white-space: normal;
+  line-height: 1.3;
+}
+
 .sidebar-item--active,
 .sidebar-item--active:hover {
   color: var(--color-white);

@@ -37,7 +37,7 @@ function PolicyCell({ policy }) {
       <span className={`acc__mode ${restricted ? "acc__mode--restricted" : ""}`}>{policy.mode}</span>
       {restricted && <span className="acc__muted">{(policy.allowed_countries ?? []).map((c) => c.code).join(", ") || "IPs only"}</span>}
       {policy.blocked_ips?.length > 0 && <span className="acc__muted">{policy.blocked_ips.length} blocked IP(s)</span>}
-      {policy.refusals_24h > 0 && <span className="acc__refused">{policy.refusals_24h} refused (24 h)</span>}
+      {policy.refusals_24h > 0 && <span className="acc__refused" title={`${policy.refusals_24h} requests refused in the last 24 hours`}>{policy.refusals_24h} refused · 24 h</span>}
     </div>
   );
 }
@@ -108,13 +108,25 @@ function InstitutionsList({ onEdit }) {
           key: "inst_profile_name",
           label: "Institution",
           render: (r) => (
-            <button type="button" className="acc__link" onClick={() => onEdit(r.inst_profile_id)}>
-              <strong>{r.inst_profile_name}</strong>
-              <span className="acc__muted"> {r.inst_code}</span>
-            </button>
+            <>
+              <button type="button" className="acc__link" onClick={() => onEdit(r.inst_profile_id)}>
+                <strong>{r.inst_profile_name}</strong>
+                <span className="acc__muted"> {r.inst_code}</span>
+              </button>
+              {/* On a phone the three portal columns are off-screen, so the
+                  cell stacks them under the name; CSS shows one or the other. */}
+              <div className="acc__compact">
+                {PORTALS.map(([code, label]) => (
+                  <div key={code} className="acc__compact-row">
+                    <span className="acc__muted">{label.replace(" portal", "")}</span>
+                    <PolicyCell policy={of(r, code)} />
+                  </div>
+                ))}
+              </div>
+            </>
           ),
         },
-        ...PORTALS.map(([code, label]) => ({ key: code, label: label.replace(" portal", ""), render: (r) => <PolicyCell policy={of(r, code)} /> })),
+        ...PORTALS.map(([code, label]) => ({ key: code, label: label.replace(" portal", ""), className: "acc__col-portal", render: (r) => <PolicyCell policy={of(r, code)} /> })),
       ]}
       actions={(r) => (
         <Button size="sm" variant="secondary" onClick={() => onEdit(r.inst_profile_id)}>
@@ -359,10 +371,10 @@ function Refusals() {
   return (
     <div className="acc__stack">
       <div className="acc__filters">
-        <Select aria-label="Portal" value={filters.portal} onChange={set("portal")} options={[{ value: "", label: "Any portal" }, ...PORTALS.map(([value, label]) => ({ value, label }))]} />
-        <Select aria-label="Reason" value={filters.reason} onChange={set("reason")} options={REASONS.map(([value, label]) => ({ value, label }))} />
-        <TextField type="date" aria-label="From" value={filters.from} max={filters.to || undefined} onChange={set("from")} />
-        <TextField type="date" aria-label="To" value={filters.to} min={filters.from || undefined} onChange={set("to")} />
+        <Select label="Portal" value={filters.portal} onChange={set("portal")} options={[{ value: "", label: "Any portal" }, ...PORTALS.map(([value, label]) => ({ value, label }))]} />
+        <Select label="Reason" value={filters.reason} onChange={set("reason")} options={REASONS.map(([value, label]) => ({ value, label }))} />
+        <TextField type="date" label="From" value={filters.from} max={filters.to || undefined} onChange={set("from")} />
+        <TextField type="date" label="To" value={filters.to} min={filters.from || undefined} onChange={set("to")} />
       </div>
       <DataTable
         isLoading={!data}
@@ -514,9 +526,9 @@ function History() {
   return (
     <div className="acc__stack">
       <div className="acc__filters">
-        <Select aria-label="Portal" value={filters.portal} onChange={set("portal")} options={[{ value: "", label: "Any portal" }, ...PORTALS.map(([value, label]) => ({ value, label }))]} />
-        <TextField type="date" aria-label="From" value={filters.from} max={filters.to || undefined} onChange={set("from")} />
-        <TextField type="date" aria-label="To" value={filters.to} min={filters.from || undefined} onChange={set("to")} />
+        <Select label="Portal" value={filters.portal} onChange={set("portal")} options={[{ value: "", label: "Any portal" }, ...PORTALS.map(([value, label]) => ({ value, label }))]} />
+        <TextField type="date" label="From" value={filters.from} max={filters.to || undefined} onChange={set("from")} />
+        <TextField type="date" label="To" value={filters.to} min={filters.from || undefined} onChange={set("to")} />
       </div>
       <DataTable
         isLoading={!data}

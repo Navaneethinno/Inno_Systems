@@ -9,7 +9,7 @@ import { PageHeader } from "../../../components/ui/PageHeader";
 import { Alert } from "../../../components/ui/Alert";
 import { StatCard } from "../../../components/ui/StatCard";
 import { TonePill } from "../../../components/ui/StatusBadge";
-import { formatDateTime, formatNumber } from "../../aml/components/formatAml";
+import { LOCAL_ZONE, formatDateTime, formatNumber } from "../../aml/components/formatAml";
 
 const LIMIT = 50;
 
@@ -110,7 +110,7 @@ export function SecurityEventsPage() {
       <PageHeader
         eyebrow="Security"
         title="Security Events"
-        subtitle="What the platform's runtime watch has seen, newest first. Events appear within about a minute."
+        subtitle={`What the platform's runtime watch has seen, newest first. Events appear within about a minute. Times are ${LOCAL_ZONE}.`}
         actions={
           <Button variant="secondary" onClick={() => setVersion((v) => v + 1)} icon="refresh">
             Reload

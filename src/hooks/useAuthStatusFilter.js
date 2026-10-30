@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 
-const AUTHORIZED = "AUTHORIZED";
+const ACTIVE_VALUES = new Set(["AUTHORIZED", "ACTIVE"]);
 
 function rowTimestamp(row) {
   const raw = row.updated_time ?? row.created_time ?? row.last_login;
@@ -9,39 +9,45 @@ function rowTimestamp(row) {
 }
 
 /**
+ * The status a row shows, read the same way as renderStatusCell: the
+ * maker-checker `auth_status` when present, otherwise `status_name`. Some
+ * rows on the same list come back without `auth_status`, so counting on it
+ * alone left the header and tabs disagreeing with the badges.
+ */
+function statusOf(row) {
+  return String(row.auth_status ?? row.status_name ?? "").toUpperCase();
+}
+
+export const isActiveRow = (row) => ACTIVE_VALUES.has(statusOf(row));
+
+/**
  * The real API rows carry a maker-checker `auth_status` (AUTHORIZED /
  * PENDING_ADD / PENDING_EDIT / PENDING_DELETE / REJECTED / DEAUTHORIZED —
  * however many raw values the backend uses), but the *filter* only needs
- * three tabs: All, Active (AUTHORIZED), and Pending (everything else,
+ * three tabs: All, Active (authorized), and Pending (everything else,
  * always sorted latest-first since that's the queue someone has to work
  * through). The raw value itself is still shown as-is in the status
  * column (see AuthStatusBadge) — this hook only simplifies the filter.
  *
- * Returns `hasAuthStatus: false` when the loaded rows don't carry the
- * field at all (some list endpoints only return {id, name}) — callers
- * should skip rendering the filter/search bar in that case.
+ * Returns `hasAuthStatus: false` when no loaded row carries the field
+ * (some list endpoints only return {id, name}) — callers should skip
+ * rendering the filter/search bar in that case.
  */
 export function useAuthStatusFilter(rows) {
   const [filter, setFilter] = useState("all");
   const [query, setQuery] = useState("");
 
-  const hasAuthStatus = rows.length > 0 && "auth_status" in rows[0];
+  const hasAuthStatus = rows.some((r) => r.auth_status != null);
 
-  const activeCount = useMemo(
-    () => (hasAuthStatus ? rows.filter((r) => r.auth_status === AUTHORIZED).length : 0),
-    [rows, hasAuthStatus]
-  );
-  const pendingCount = useMemo(
-    () => (hasAuthStatus ? rows.filter((r) => r.auth_status !== AUTHORIZED).length : 0),
-    [rows, hasAuthStatus]
-  );
+  const activeCount = useMemo(() => (hasAuthStatus ? rows.filter(isActiveRow).length : 0), [rows, hasAuthStatus]);
+  const pendingCount = hasAuthStatus ? rows.length - activeCount : 0;
 
   const statusFiltered = useMemo(() => {
     if (!hasAuthStatus || filter === "all") return rows;
     if (filter === "pending") {
-      return rows.filter((r) => r.auth_status !== AUTHORIZED).sort((a, b) => rowTimestamp(b) - rowTimestamp(a));
+      return rows.filter((r) => !isActiveRow(r)).sort((a, b) => rowTimestamp(b) - rowTimestamp(a));
     }
-    return rows.filter((r) => r.auth_status === AUTHORIZED);
+    return rows.filter(isActiveRow);
   }, [rows, filter, hasAuthStatus]);
 
   const filteredRows = useMemo(() => {

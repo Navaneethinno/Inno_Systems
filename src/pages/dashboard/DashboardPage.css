@@ -266,8 +266,17 @@
 
 .dash__more {
   padding: 6px 12px;
-  color: var(--color-text-muted);
+  border: none;
+  background: none;
+  color: var(--color-primary);
+  font: inherit;
   font-size: var(--text-xs);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dash__more:hover {
+  text-decoration: underline;
 }
 
 @media (max-width: 640px) {

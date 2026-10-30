@@ -85,7 +85,7 @@ function GenericForm({ config, row, onSuccess, onCancel }) {
           .filter(Boolean);
       else payload[field.name] = raw === "" ? undefined : raw;
     });
-    if (isEdit) payload[config.idField] = rowValue(row);
+    if (isEdit) payload[config.idField] = row[config.idField] ?? rowValue(row);
     return payload;
   };
 
@@ -224,10 +224,9 @@ export function SystemFormPage() {
         key={refreshKey}
         title={`${config.label}s`}
         eyebrow={config.eyebrow}
-        subtitle={`Records created via the system API.`}
         addLabel={`Add ${config.label}`}
         columns={config.columns}
-        loadRows={() => systemService[config.listMethod]()}
+        listPath={config.listPath}
         livePath={config.livePath}
         renderForm={({ onSuccess, onCancel }) => (
           <GenericForm config={config} onSuccess={onSuccess} onCancel={onCancel} />

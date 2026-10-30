@@ -36,12 +36,20 @@ httpClient.interceptors.request.use(async (config) => {
   // plain body is kept aside on the request config.
   if (config._plain === undefined) config._plain = config.data;
   config.data = await sealFields(config._plain);
-  // Login carries its own Basic auth header — never overwrite it.
-  if (!config.headers.Authorization) {
+  // Login carries its own Basic auth header — never overwrite it. A Bearer
+  // header is always replaced with the current token, so a request retried
+  // after a refresh doesn't resend the expired one.
+  const auth = config.headers.Authorization;
+  if (!auth || String(auth).startsWith("Bearer ")) {
     const token = tokenStore.getAccessToken();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    if (!token) {
+      // No session (signed out, here or in another tab, while a page or a
+      // live update was still loading): don't send the call without a token —
+      // the backend saw dozens of those — just go back to sign-in.
+      if (window.location.pathname !== "/login") window.location.href = "/login";
+      return Promise.reject({ message: "Your session has ended. Please sign in again.", status: 401, code: "NO_SESSION" });
     }
+    config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });

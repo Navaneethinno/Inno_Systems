@@ -50,10 +50,13 @@
   text-decoration: underline;
 }
 
+/* One line per portal cell (mode, then counts as small pills), so a row
+   with refusals isn't taller than its neighbours. */
 .acc__cell {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
 }
 
 .acc__mode {
@@ -72,9 +75,13 @@
 }
 
 .acc__refused {
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  background: var(--color-danger-bg);
   color: var(--color-danger-text);
-  font-size: var(--text-xs);
-  font-weight: 600;
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .acc__seg {
@@ -102,9 +109,32 @@
   font-size: var(--text-xs);
 }
 
+/* The chosen mode: a heavier primary border, a tinted fill and a check
+   dot, so it reads as selected in either theme, not just as a tint. */
+.acc__seg-btn {
+  position: relative;
+}
+
+.acc__seg-btn:hover:not(.acc__seg-btn--on) {
+  border-color: var(--color-border-strong);
+}
+
 .acc__seg-btn--on {
   border-color: var(--color-primary);
   background: var(--color-primary-tint);
+  box-shadow: inset 0 0 0 1px var(--color-primary);
+}
+
+.acc__seg-btn--on::after {
+  content: "";
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 25%, transparent);
 }
 
 .acc__field {
@@ -113,9 +143,15 @@
   gap: 6px;
 }
 
+/* A bare .tf__input has no border (TextField's wrapper draws it), so
+   these textareas draw their own. */
 .acc__area {
   min-height: 72px;
   padding: 8px 10px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   resize: vertical;
@@ -225,4 +261,35 @@
 .acc__now {
   color: var(--color-success-text);
   font-weight: 600;
+}
+
+.acc__area:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent);
+}
+
+/* Institutions list: three portal columns on wide screens; on a phone the
+   Institution cell lists them under the name instead. */
+.acc__compact {
+  display: none;
+}
+
+.acc__compact-row {
+  display: grid;
+  grid-template-columns: 68px 1fr;
+  align-items: center;
+  gap: 6px;
+}
+
+@media (max-width: 640px) {
+  .acc__col-portal {
+    display: none;
+  }
+
+  .acc__compact {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 8px;
+  }
 }

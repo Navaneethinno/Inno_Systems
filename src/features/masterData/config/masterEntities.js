@@ -92,9 +92,7 @@ export const masterEntities = {
   frequency: { label: "Frequencies", writable: false },
   acct_sequence: { label: "Account Sequences", writable: false },
   residency_type: { label: "Residency Types", writable: false },
-  kyc_data_field: { label: "KYC Data Fields", writable: false },
   kyc_process: { label: "KYC Processes", writable: false },
-  kyc_document_type: { label: "KYC Document Types", writable: false },
   // Lives under /user/, not /master/ — see listPath below and
   // masterDataService.list's `path` override.
   password_policy: { label: "Password Policy", writable: false, listPath: API.USER.PASSWORD_POLICY_LIST },

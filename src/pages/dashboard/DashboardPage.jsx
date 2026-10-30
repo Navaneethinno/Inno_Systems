@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../features/auth/hooks/useAuth";
 import { NAVIGATION } from "../../config/navigation";
@@ -21,6 +22,7 @@ function pagesOf(module) {
 export function DashboardPage() {
   const { user } = useAuth();
   const modules = NAVIGATION.filter((module) => module.id !== "overview");
+  const [expanded, setExpanded] = useState({});
   const initials = String(user?.username ?? "?").slice(0, 2).toUpperCase();
 
   const facts = [
@@ -68,6 +70,8 @@ export function DashboardPage() {
         <div className="dash__modules">
           {modules.map((module) => {
             const pages = pagesOf(module);
+            const isExpanded = Boolean(expanded[module.id]);
+            const shown = isExpanded ? pages : pages.slice(0, 6);
             return (
               <article key={module.id} className="card card--interactive dash__module">
                 <Link to={pages[0]?.path ?? "/"} className="dash__module-head">
@@ -83,7 +87,7 @@ export function DashboardPage() {
                   </span>
                 </Link>
                 <ul className="dash__links">
-                  {pages.slice(0, 6).map((page) => (
+                  {shown.map((page) => (
                     <li key={page.path}>
                       <Link to={page.path} className="dash__link">
                         {page.label}
@@ -91,7 +95,18 @@ export function DashboardPage() {
                       </Link>
                     </li>
                   ))}
-                  {pages.length > 6 && <li className="dash__more">+{pages.length - 6} more in the sidebar</li>}
+                  {pages.length > 6 && (
+                    <li>
+                      <button
+                        type="button"
+                        className="dash__more"
+                        aria-expanded={isExpanded}
+                        onClick={() => setExpanded((prev) => ({ ...prev, [module.id]: !isExpanded }))}
+                      >
+                        {isExpanded ? "Show fewer" : `Show all ${pages.length} pages`}
+                      </button>
+                    </li>
+                  )}
                 </ul>
               </article>
             );
