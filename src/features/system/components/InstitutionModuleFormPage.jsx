@@ -18,7 +18,7 @@ import { IconButton } from "../../../components/ui/IconButton";
 import { EmptyState } from "../../../components/ui/EmptyState";
 import { Alert } from "../../../components/ui/Alert";
 import { Glyph } from "../../../components/ui/Glyph";
-import { useAuthStatusFilter } from "../../../hooks/useAuthStatusFilter";
+import { useServerList } from "../../../hooks/useServerList";
 import { useLiveList } from "../../../hooks/useLiveList";
 import { API } from "../../../api/endpoints";
 import "./SystemFormPage.css";
@@ -326,10 +326,7 @@ export function InstitutionModuleFormPage() {
   // "all" lists every institution's modules in one call; a picked
   // institution narrows it and shows that institution's module grace.
   const [instProfileId, setInstProfileId] = useState(ALL);
-  const [rows, setRows] = useState([]);
   const [isLoadingInstitutions, setIsLoadingInstitutions] = useState(true);
-  const [isLoadingModules, setIsLoadingModules] = useState(false);
-  const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
@@ -344,8 +341,10 @@ export function InstitutionModuleFormPage() {
     return isAll ? [{ key: "inst_profile_name", label: "Institution" }, ...withGrace] : withGrace;
   }, [grace, isAll]);
 
-  const { filter, setFilter, query, setQuery, filteredRows, hasAuthStatus, activeCount, pendingCount, totalCount } =
-    useAuthStatusFilter(rows);
+  // Paged, filtered and searched on the server; a picked institution is a filter.
+  const listParams = useMemo(() => (isAll ? undefined : { inst_profile_id: Number(instProfileId) }), [isAll, instProfileId]);
+  const { rows, pagination, counts, page, setPage, filter, changeFilter, query, setQuery, search, isLoading, error, refresh, fetchPage } =
+    useServerList(API.INSTITUTION_MODULE.LIST, listParams);
 
   const loadInstitutions = useCallback(({ silent = false } = {}) => {
     if (!silent) setIsLoadingInstitutions(true);
@@ -363,31 +362,11 @@ export function InstitutionModuleFormPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const loadModulesFor = useCallback(async (id, { silent = false } = {}) => {
-    if (!id) {
-      setRows([]);
-      return;
-    }
-    if (!silent) setIsLoadingModules(true);
-    setError(null);
-    try {
-      setRows(await systemService.listInstitutionModules(id === ALL ? null : Number(id)));
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      if (!silent) setIsLoadingModules(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadModulesFor(instProfileId);
-  }, [instProfileId, loadModulesFor]);
-
   // See the Live Menu Updates via WebSocket handoff doc: refetch the
   // institution list and the selected institution's modules whenever
   // another user/tab changes either.
   useLiveList(API.LIVE.INSTITUTION, () => loadInstitutions({ silent: true }));
-  useLiveList(API.LIVE.INSTITUTION_MODULE, () => loadModulesFor(instProfileId, { silent: true }));
+  useLiveList(API.LIVE.INSTITUTION_MODULE, refresh);
 
   const handleCreated = (createdInstProfileId) => {
     setIsModalOpen(false);
@@ -395,7 +374,7 @@ export function InstitutionModuleFormPage() {
     if (createdInstProfileId && String(createdInstProfileId) !== String(instProfileId)) {
       setInstProfileId(String(createdInstProfileId));
     } else {
-      loadModulesFor(instProfileId);
+      refresh();
     }
   };
 
@@ -405,7 +384,7 @@ export function InstitutionModuleFormPage() {
     try {
       await systemService.deleteInstitutionModule({ id: rowValue(deleteTarget) });
       setDeleteTarget(null);
-      loadModulesFor(instProfileId);
+      refresh();
     } catch (err) {
       setDeleteError(err.message);
     } finally {
@@ -442,20 +421,18 @@ export function InstitutionModuleFormPage() {
         />
       </div>
 
-      {rows.length > 0 && (
-        <div className="toolbar">
-          <TableSearchBar value={query} onChange={setQuery} placeholder="Search institution modules…" />
-          {hasAuthStatus && (
-            <StatusFilterTabs
-              filter={filter}
-              onChange={setFilter}
-              totalCount={totalCount}
-              activeCount={activeCount}
-              pendingCount={pendingCount}
-            />
-          )}
-        </div>
-      )}
+      <div className="toolbar">
+        <TableSearchBar value={query} onChange={setQuery} placeholder="Search institution modules…" />
+        {counts && (
+          <StatusFilterTabs
+            filter={filter}
+            onChange={changeFilter}
+            totalCount={counts.all}
+            activeCount={counts.active}
+            pendingCount={counts.pending}
+          />
+        )}
+      </div>
 
       {error && rows.length > 0 && <Alert>{error}</Alert>}
       {instProfileId && !isAll && <ModuleGrace key={instProfileId} instProfileId={instProfileId} onChange={setGrace} />}
@@ -465,9 +442,13 @@ export function InstitutionModuleFormPage() {
       ) : (
         <DataTable
           columns={shownColumns}
-          rows={filteredRows}
-          isLoading={isLoadingModules}
+          rows={rows}
+          isLoading={isLoading}
           error={error}
+          emptyMessage={search || filter !== "all" ? "No matching records." : "No modules assigned."}
+          pagination={pagination}
+          page={page}
+          onPageChange={setPage}
           actions={(row) => (
             <>
               <IconButton icon="edit" label="Edit" onClick={() => setEditTarget(row)} />
@@ -494,7 +475,7 @@ export function InstitutionModuleFormPage() {
             row={editTarget}
             onSuccess={() => {
               setEditTarget(null);
-              loadModulesFor(instProfileId);
+              refresh();
             }}
             onCancel={() => setEditTarget(null)}
           />
@@ -528,8 +509,12 @@ export function InstitutionModuleFormPage() {
         <FullscreenTableModal
           title="Institution Modules"
           columns={shownColumns}
-          rows={filteredRows}
+          rows={rows}
           onClose={() => setIsFullscreen(false)}
+          fetchMore={async (fetchPageNo, limit) => {
+            const result = await fetchPage({ page: fetchPageNo, limit });
+            return { rows: result.rows, totalPages: result.pagination?.totalPages ?? 1 };
+          }}
         />
       )}
     </div>

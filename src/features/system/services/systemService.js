@@ -116,22 +116,13 @@ export const systemService = {
     return extractList(envelope.data);
   },
 
-  // The list endpoint above doesn't include menu_actions — confirmed live
-  // that /user/profile/get (no /system prefix) does, needed to prefill the
-  // Edit form's menu/action checkboxes with what's actually assigned today.
+  // One profile with its approved menu_actions. List rows carry the same
+  // (backend round 3), so the edit form only falls back to this.
   async getProfile(profileId) {
     const { data: envelope } = await httpClient.post(API.PROFILE.GET, { profile_id: profileId });
     return extractOne(envelope.data);
   },
 
-  // Confirmed live: /institution/module/get_active requires auth ("Please
-  // log in again" without a token), matching the /institution/profile/
-  // get_active naming pattern — /system/institution/module/* and
-  // /institution/module/{getall,list} all fall through to the generic
-  // fallback instead. Unlike the other dropdown sources, this one also
-  // requires `inst_profile_id` in the request (confirmed live: omitting it
-  // returns "Field 'inst_profile_id' is required in request") — it lists
-  // modules for one institution, not all institutions' modules at once.
   // An institution's expiry rules (one settings document): the System user
   // sets only the module subscriptions' grace (days a module keeps working
   // after its end date). Self applies at once.
@@ -145,22 +136,13 @@ export const systemService = {
     return { message: envelope.message };
   },
 
-  // The full records (dates, module_id, statuses): the dropdown view has
-  // only id and name. Without an institution it returns every institution's
-  // modules to the System user (46 on UAT); inst_profile_id is a filter.
-  async listInstitutionModules(instProfileId) {
-    const body = { page: 1, limit: 500 };
-    if (instProfileId) body.inst_profile_id = instProfileId;
-    const { data: envelope } = await httpClient.post(API.INSTITUTION_MODULE.LIST, body);
-    return extractList(envelope.data);
-  },
-
   // One page of a System list table. Every list pages, filters and searches
   // on the server: `filter` is all / active / pending / inactive / draft,
   // and the reply's `pagination` carries the totals. (view: "dropdown"
   // returns everything and is only for drop-downs.)
-  async pageList(path, { page = 1, limit = 10, filter, search } = {}) {
-    const body = { page, limit };
+  // `params` adds fixed fields, e.g. { inst_profile_id } to narrow a list.
+  async pageList(path, { page = 1, limit = 10, filter, search, params } = {}) {
+    const body = { ...params, page, limit };
     if (filter && filter !== "all") body.filter = filter;
     if (search) body.search = search;
     const { data: envelope } = await httpClient.post(path, body);

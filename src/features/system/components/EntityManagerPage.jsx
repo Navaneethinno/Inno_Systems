@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { DataTable } from "../../../components/ui/DataTable";
 import { Button } from "../../../components/ui/Button";
 import { Modal } from "../../../components/ui/Modal";
@@ -8,21 +8,15 @@ import { TableSearchBar } from "../../../components/ui/TableSearchBar";
 import { PageHeader } from "../../../components/ui/PageHeader";
 import { Alert } from "../../../components/ui/Alert";
 import { useLiveList } from "../../../hooks/useLiveList";
-import { systemService } from "../services/systemService";
-
-const PAGE_SIZE = 10;
-const SEARCH_DELAY_MS = 300;
-const FILTERS = ["all", "active", "pending"];
+import { useServerList } from "../../../hooks/useServerList";
 
 /**
  * Shared shell for the "System" list pages: a server-paged table of what
  * already exists plus a "+ Add" button that opens the create form in a
  * modal.
  *
- * `listPath` is the list endpoint. Paging, the All / Active / Pending tabs
- * and search all run on the server (page, limit, filter, search), as the
- * backend asks: the tab counts are each filter's `totalRecords`, so they
- * always agree with what the tab shows.
+ * `listPath` is the list endpoint; paging, the tabs and search run on the
+ * server (see useServerList).
  *
  * `actions(row)` is optional (edit/delete icon buttons) and passed straight
  * through to DataTable/FullscreenTableModal — this component doesn't own
@@ -50,72 +44,11 @@ export function EntityManagerPage({
   livePath,
   formWidth = 640,
 }) {
-  const [rows, setRows] = useState([]);
-  const [pagination, setPagination] = useState(null);
-  const [counts, setCounts] = useState(null);
-  const [page, setPage] = useState(1);
-  const [filter, setFilter] = useState("all");
-  const [query, setQuery] = useState("");
-  const [search, setSearch] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [tick, setTick] = useState(0);
+  const { rows, pagination, counts, page, setPage, filter, changeFilter, query, setQuery, search, isLoading, error, refresh, fetchPage } =
+    useServerList(listPath);
 
-  // Search waits for a pause in typing, and starts again from page 1.
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setSearch(query.trim());
-      setPage(1);
-    }, SEARCH_DELAY_MS);
-    return () => clearTimeout(t);
-  }, [query]);
-
-  const changeFilter = (next) => {
-    setFilter(next);
-    setPage(1);
-  };
-
-  const fetchPage = useCallback(
-    (args) => systemService.pageList(listPath, { limit: PAGE_SIZE, filter, search, ...args }),
-    [listPath, filter, search]
-  );
-
-  // `tick` > 0 is a refresh after a change: reload quietly, keeping the rows.
-  useEffect(() => {
-    let cancelled = false;
-    if (tick === 0) setIsLoading(true);
-    setError(null);
-    fetchPage({ page })
-      .then((result) => {
-        if (cancelled) return;
-        setRows(result.rows);
-        setPagination(result.pagination);
-      })
-      .catch((err) => !cancelled && setError(err.message))
-      .finally(() => !cancelled && setIsLoading(false));
-    return () => {
-      cancelled = true;
-    };
-  }, [fetchPage, page, tick]);
-
-  // The tab counts: one row per filter is enough to read its total.
-  useEffect(() => {
-    let cancelled = false;
-    Promise.all(FILTERS.map((f) => systemService.pageList(listPath, { page: 1, limit: 1, filter: f, search })))
-      .then((results) => {
-        if (cancelled) return;
-        const [all, active, pending] = results.map((r) => r.pagination?.totalRecords ?? r.rows.length);
-        setCounts({ all, active, pending });
-      })
-      .catch(() => !cancelled && setCounts(null));
-    return () => {
-      cancelled = true;
-    };
-  }, [listPath, search, tick]);
-
-  const refresh = () => setTick((t) => t + 1);
   useLiveList(livePath, refresh);
 
   const handleCreated = () => {

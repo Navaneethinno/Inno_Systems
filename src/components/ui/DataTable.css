@@ -301,6 +301,14 @@
     justify-content: center;
   }
 
+  /* The first column names the row; with the pinned actions column taking
+     much of a phone's width it was cut off, so here it wraps instead. */
+  .dt td:first-child {
+    min-width: 9rem;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
   .dt__page-btn-text {
     display: none;
   }

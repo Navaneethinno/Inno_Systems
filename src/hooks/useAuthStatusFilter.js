@@ -9,13 +9,12 @@ function rowTimestamp(row) {
 }
 
 /**
- * The status a row shows, read the same way as renderStatusCell: the
- * maker-checker `auth_status` when present, otherwise `status_name`. Some
- * rows on the same list come back without `auth_status`, so counting on it
- * alone left the header and tabs disagreeing with the badges.
+ * Whether a row is live, read the same way as renderStatusCell: by
+ * `status_name` (the backend: `auth_status` only describes the latest
+ * change), falling back to `auth_status` for rows without one.
  */
 function statusOf(row) {
-  return String(row.auth_status ?? row.status_name ?? "").toUpperCase();
+  return String(row.status_name ?? row.auth_status ?? "").toUpperCase();
 }
 
 export const isActiveRow = (row) => ACTIVE_VALUES.has(statusOf(row));
