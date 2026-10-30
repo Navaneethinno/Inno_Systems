@@ -7,13 +7,13 @@ All routes (except login) require `Authorization: Bearer <jwt_token>` from the S
 
 ## 1. POST /system/user/login
 
-Auth: HTTP Basic `system` / `123456` (separate from the bearer-token gate used by every other route).
+Auth: HTTP Basic `<gateway user>` / `<gateway password>` (separate from the bearer-token gate used by every other route).
 
 **Request**
 ```json
 {
   "user_name": "System",
-  "password": "123456"
+  "password": "<password>"
 }
 ```
 

@@ -17,7 +17,7 @@ Authenticates the SYSTEM account. Requires an additional `Authorization: Basic <
 ```json
 {
   "user_name": "System",
-  "password": "123456"
+  "password": "<password>"
 }
 ```
 
@@ -320,7 +320,7 @@ Creates/manages a `urmg.user` record.
 ```json
 {
   "username": "teller1",
-  "password_hash": "123456",
+  "password_hash": "<new user's password>",
   "profile_id": 9,
   "inst_profile_id": 6,
   "pwd_policy": 1,

@@ -25,10 +25,10 @@ VITE_API_BASE_URL=https://etakuapi.innovitegrasuite.com
 
 # POST /system/user/login requires a fixed Basic-auth header on top of the
 # user's own username/password. These identify the client app, not the
-# person logging in — ask whoever owns the target environment for the real
-# values (they may differ between dev/staging/prod).
-VITE_SYSTEM_BASIC_USER=system
-VITE_SYSTEM_BASIC_PASSWORD=123456
+# person logging in. The backend team gives out the values for each
+# environment; keep them in .env only, never in the README or a commit.
+VITE_SYSTEM_BASIC_USER=
+VITE_SYSTEM_BASIC_PASSWORD=
 ```
 
 `.env` (and `.env.local`) are gitignored — never commit real credentials.
@@ -80,66 +80,50 @@ src/
       services/           # systemService — profile/user/institution/institution-module add + dropdown sources
       components/
         EntityManagerPage.jsx        # shared list-table + "+ Add" modal shell
-        SystemFormPage.jsx           # bare form for entities with no list source (User)
+        SystemFormPage.jsx           # user list + add/edit modal
         ProfileFormPage.jsx          # profile list + nested menu/action assignment modal
         InstitutionFormPage.jsx      # institution list + nested schema modal
-        InstitutionModuleFormPage.jsx # institution-module list + add modal
+        InstitutionModuleFormPage.jsx # institution-module list (all or one institution) + add modal
 ```
 
 ## Backend contract
 
-Implements the flow from `SYSTEM_API_GUIDE.md` — a live capture of real request/response pairs, which supersedes the earlier `SYSTEM_API_REQUEST_RESPONSE.md`/`handoff.md` docs wherever they disagree (see "Known discrepancies" below).
+The backend team's handoffs are the source of truth for paths and payloads; when this section and a handoff disagree, the handoff wins. The API isn't versioned while the platform is in development. `SYSTEM_API_GUIDE.md` and the other API docs in this repo are older captures, kept for payload shapes.
 
-- **Envelope**: every response is `{ message, status, code, remark, data, api }` with `pagination` present on list endpoints only. `data` is a one-element array for single-record endpoints (unwrapped via `extractOne()`) and a list for multi-record ones (`extractList()`). `extractOne()` stays defensive of a bare-object `data` too — the backend was observed briefly returning that shape mid-deploy (see "Live redeploy" note below) — so nothing breaks if that recurs. Status casing varies live ("Fail"/"Success", not "FAIL"/"SUCCESS"), so it's compared case-insensitively. A failing status is treated as an error even on HTTP 200.
-- `POST /system/user/login` — `Authorization: Basic base64(user:password)` (app credentials, see env above) + JSON body `{ user_name, password }`. `data[0]` holds `user_details`, `user_session_info` (`jwt_token`, `refresh_token`), `full_access`. The institution field is `user_details.inst_profile_name`.
-- `POST /system/user/refresh_token` — `Authorization: Bearer <refresh_token>`, no body. `data[0]` is the session object directly (`jwt_token`/`refresh_token` at the top level), not nested under `user_session_info` like login. Called automatically by the API client on a 401.
-- `POST /system/master/{module,menu,menu_action}/{add,edit,delete}` — full add/edit/delete UI at `/master/:entityKey` (menu_action instead gets the dedicated Module → Menu → Actions page at the same route). Dependent fields (menu's module/parent menu, menu_action's menu/action) are `<select>`s resolved by name, never raw ID inputs. Delete is a **soft delete** — status becomes `7`, the row isn't removed.
-- `POST /master/{type}` — **the one exception without `/system`**, and as of the 2026-09-07 backend redeploy, **without a `/list` suffix either** (`/master/{type}/list` now 404s across the board; `/master/{type}` is the confirmed-live replacement, list of paths shared directly by the backend team). Used both for the 3 writable types above and the read-only reference types (tables at `/reference/:entityKey`).
-- `POST /system/user/add` — exactly 5 required fields: `username`, `password_hash`, `profile_id`, `inst_profile_id`, `pwd_policy`. Institution/profile/policy are all name-resolved `<select>`s, not raw ID inputs.
-- `POST /system/institution/profile/{add,edit,delete}` — `language` and `allowed_login_identifiers` are flat arrays (`["en"]`, `["MOBILE","EMAIL"]`), identifier/pin-type values are uppercase (`MOBILE`, `NUMERIC`) — no more `{default, supported}` or `{identifiers:[]}` wrapper objects. **Path moved as of 2026-09-08** — confirmed live that the old `/system/institution/{add,edit,delete}` (no `/profile/` segment) now 404s. Edit/delete both take `{ id, ...fields }`; edit is applied immediately for the SYSTEM caller like add is.
-- `POST /system/institution/module/{add,edit,delete}` — add is a **batch endpoint**: one call takes `{ inst_profile_id, modules: [{module_id, effective_from?, effective_to?, configuration_status?}, ...] }` and assigns all of them, all-or-nothing server-side. Edit takes `{ id, module_id, ... }` for one existing assignment — **confirmed live: omitting `module_id` on edit silently zeroes it out on the stored record** (unlike every other edit endpoint here, where an omitted field keeps its stored value), so the edit form always re-sends it from the row being edited. Delete takes `{ id }`.
-- `POST /system/user/profile/{add,edit,delete}` — add/edit use a nested `profile_info` + `menu_info[]` payload. The list endpoint (`/user/profile/list`) doesn't include `menu_actions`, so editing fetches the one profile's full detail first via `POST /user/profile/get` `{ profile_id }` (confirmed live, no `/system` prefix) to prefill the menu/action checkboxes — submitting an edit with an empty `menu_info` would otherwise wipe every existing permission. Delete takes `{ profile_id, inst_profile_id?, del_narration? }` — confirmed live that `profile_id` alone is enough.
-- `POST /system/user/{edit,delete}` — edit takes `{ user_id, ...fields }` (note: `user_id`, not `id` — matches the field name `/user/list` rows already use); a blank/omitted `password_hash` on edit keeps the current password. Delete takes `{ user_id }`.
+Login details are never kept in this repo. Ask the backend team for the System login and the gateway (Basic auth) values for each environment.
 
-### Live redeploy note (2026-09-07)
+### Calling the API
 
-The backend was re-verified twice this day after the team reported changed list endpoints, and was caught mid-rollout the first time — `/system/user/login`'s `data` flip-flopped between a bare object (`institution_name`) and a one-element array (`inst_profile_name`) across consecutive requests seconds apart. Once it settled, a full sweep confirmed the actual, deliberate change: **every `/master/{type}/list` route dropped its `/list` suffix.** The backend team then shared the full list of valid `/master/{type}` paths directly, all confirmed live:
+- Every call is `POST` with a JSON body. `resolveApiPath()` (`src/api/endpoints.js`) adds the `/config` prefix to every path except `/master/*` and `/aml/*`.
+- **Envelope:** `{ message, status, code, remark, data, api }`, plus `pagination` on lists. `status` casing varies ("Fail", "Success"), so it's compared case-insensitively, and a failing status is an error even on HTTP 200.
+- **Auth:** `/system/user/login` takes the gateway Basic-auth header plus `{ user_name, password }`. Every other call sends `Authorization: Bearer <jwt>`; on a 401 the client refreshes through `/system/user/refresh_token` once and retries. With no session the client sends nothing and returns to sign-in.
+- **Prefixes, by design:** reads use `/master/...` and `/config/...`. Writes only the System user may make go under `/config/system/...`, and that prefix is what restricts them.
 
-`action`, `status`, `module`, `menu`, `menu_action`, `channel`, `acct_prod_type`, `acct_operation_mode`, `acct_dormancy_action`, `acct_sequence`, `transaction`, `frequency`, `kyc_process`, `kyc_data_field`, `kyc_document_type`, `party_type`, `institution_type`, `ownership`, `residency_type`, `country`, `currency`, `language`
+### Lists
 
-Also confirmed changed in the same redeploy: `/profile/getall` (used for the Profile dropdown/list) now 404s — the live replacement is `/user/profile/list`. And Profile add/edit moved onto `SYSTEM_API_GUIDE.md`'s documented path, `/system/user/profile/{add,edit}` — the old `/system/profile/{add,edit}` (no `/user/` segment) now 404s, so the earlier "known discrepancy" about that path not being live yet no longer applies.
+- Every list pages, filters and searches on the server. Send `page`, `limit`, and optionally `search` and `filter` (`all`, `active`, `pending`, `inactive`, `draft`); the reply's `pagination` has `totalRecords`, `totalPages`, `currentPage` and `limit`. The All / Active / Pending tabs show each filter's `totalRecords`.
+- `view: "dropdown"` returns everything, for drop-downs only. Don't use it for tables.
+- **Status:** `status` / `status_name` say whether a record is live (1 Active, 9 Draft, …). `auth_status` / `process_status` describe only its latest change. The Status column shows `status_name`, with the latest change noted underneath when it isn't authorized.
 
-Unaffected by this redeploy, confirmed still live: `/system/master/{type}/{add,edit,delete}`, `/system/institution/module/add`, `/system/user/add`, `/user/list`, `/user/password_policy/list`, `/institution/profile/get_active`, `/institution/module/get_active`.
+### Endpoints the console uses
 
-### Full CRUD pass (2026-09-08)
+| What | Path |
+|---|---|
+| Reference and master data lists | `/master/{type}` (e.g. `/master/country`) |
+| Master data writes | `/config/system/master/{module,menu,menu_action}/{add,edit,delete}` |
+| Institutions | `/config/institution/profile/list`; writes `/config/system/institution/profile/{add,edit,delete}` |
+| Institution modules | `/config/institution/module/list` (`{}` lists every institution; `inst_profile_id` filters); writes `/config/system/institution/module/{add,edit,delete}` |
+| Profiles | `/config/user/profile/list` or `/config/user/profile/get_active`; writes `/config/system/user/profile/{add,edit,delete}` |
+| Users | `/config/user/list`; writes `/config/system/user/{add,edit,delete}` |
 
-Every System entity now has Edit and Delete, not just Add — reported as missing and implemented against `System_API_Requests.md` (cross-checked live via curl before implementing, including the `/system/institution/add` → `/system/institution/profile/add` path move and the institution-module edit's `module_id` footgun noted above). `EntityManagerPage.jsx` gained an optional `actions(row)` prop (edit ✎ / delete 🗑 icon buttons, passed straight through to `DataTable`/`FullscreenTableModal`) — it doesn't own edit/delete state itself; each page manages its own edit/delete modals and forces a refetch by remounting `EntityManagerPage` with a bumped `key` after a successful edit/delete, rather than this component exposing an imperative refresh.
+Retired, return 404: `/master/{type}/list`, `/system/institution/{add,edit,delete}`, `/user/profile/getall`, and the `kyc_data_field` / `kyc_document_type` reference lists (KYC is set per institution in the admin portal).
 
-The Institutions table switched from `listActiveInstitutions()` (the `{view:"dropdown"}` call, which strips every field down to `{id, name}`) to a new `listInstitutions()` calling `POST /institution/profile/list` — needed both to show a real Status column and to have enough detail to prefill the Edit form. `listActiveInstitutions()` is unchanged and still used everywhere only an `{id, name}` dropdown is needed (Add User's institution picker, etc.).
+### Payload notes
 
-**List + add-modal pattern**: Profile, Institution, Institution Module, and User each get a table of what already exists (via `EntityManagerPage.jsx`) with a "+ Add" button that opens the create form in a modal — not a bare form with no way to see what you've created. List sources, all confirmed live:
-- Profiles: `POST /user/profile/list` `{"view":"dropdown"}`
-- Institutions: `POST /institution/profile/get_active` `{"view":"dropdown"}`
-- Users: `POST /user/list` `{"view":"dropdown"}`
-- Institution Modules: `POST /institution/module/get_active` — **also requires `inst_profile_id` in the body** (confirmed live: omitting it returns `"Field 'inst_profile_id' is required in request"`), unlike every other dropdown source here. It lists one institution's modules, not all of them — so this page picks an institution first, then loads that institution's modules; there's no "all institution-modules" view.
+- **Users:** rows carry `user_id`; edit and delete take `{ user_id, ... }`. Add needs `username`, `password_hash`, `profile_id`, `inst_profile_id` and `pwd_policy`. A blank `password_hash` on edit keeps the current password.
+- **Profiles:** add and edit send `profile_info` + `menu_info[]`. List rows already carry `menu_actions`, so editing prefills from the row. An edit with an empty `menu_info` is refused (400), not applied.
+- **Institution modules:** add is a batch, `{ inst_profile_id, modules: [...] }`, all or nothing. Edit keeps the stored `module_id` when it's left out.
+- **Institutions:** `language` and `allowed_login_identifiers` are flat arrays; identifier and PIN-type values are uppercase.
+- **Deletes** are soft: the record's status changes, the row stays.
 
-None of these dropdown sources are documented in `SYSTEM_API_GUIDE.md`, only confirmed by live requests — worth re-verifying periodically given how much has shifted underneath in a single day.
-
-There's no `/me` endpoint, so the logged-in user is cached at login time (`localStorage` if "Remember me" is checked, `sessionStorage` otherwise) and rehydrated on page load as long as a token is present.
-
-The post-login navigation/sidebar is static (hardcoded in the UI) — there is no menu-tree API to fetch it from.
-
-## Table UX (manager feedback pass)
-
-Applied across every `DataTable`-backed page (Master Data, Reference Data, and the System list+modal pages):
-
-- **Sortable columns** — click any header to sort by that column (asc → desc → unsorted), built into `DataTable.jsx` itself.
-- **Pagination** — 10 rows per page with Previous/Next controls, built into `DataTable.jsx` in two modes. **Server mode** (Reference Data's `MasterListPage.jsx`, the large tables — Countries at 249 rows, Currencies at 156): sends the API's real `{ page, limit }` request per page turn — confirmed live that `/master/{type}` genuinely returns a different slice per `page`, not a re-sort of the same rows (verified against a sibling internal frontend's own `Institutions.jsx`, which pages the same way: `{ page, limit }` request, `pagination.totalRecords` in the response). `DataTable`'s `page`/`onPageChange`/`pagination` props drive this — see the doc comment on `DataTable.jsx`. **Client mode** (everywhere else — Master Data CRUD, System pages): the page already has the full row set in memory (small tables, or a dropdown/full fetch), and `DataTable` slices it into pages of 10 itself. `masterDataService.list()`/`systemService.js`'s dropdown methods request a high limit (1000) so full-fetch consumers aren't truncated by the backend's own `limit=10` default.
-- **"View all"** — a fullscreen modal (`FullscreenTableModal.jsx`, `paginate={false}` on its `DataTable`) with a search box that filters across every raw field on each row, not just what's visibly rendered — shows every row on one page, since paginating "view everything" would defeat the point. `MasterListPage.jsx` lazily fetches the whole table (once, cached) only when "View all" is opened or a search is typed, since the API's own `search` param is confirmed live as a no-op on this deployment — full-dataset search has to happen client-side.
-- **Active/Pending filter** — the real API rows carry a maker-checker `auth_status` (`AUTHORIZED`/`PENDING`/`REJECTED`/`DEAUTHORIZED`), but the UI only needs two states: Active (`AUTHORIZED`) and Pending (everything else, sorted latest-first by `updated_time`). `useAuthStatusFilter.js` detects whether a given list's rows actually carry `auth_status` and only shows the filter tabs when they do — Modules/Menus/Menu Actions don't have this field, so they don't get the tabs.
-- **Popup redesign** — `Modal.css` got a gradient top accent, a proper close button, a tinted footer, and an entrance animation instead of a flat white box.
-- **Password Policy** — Add User's `pwd_policy` is now a name-resolved `<select>` sourced from `/user/password_policy/list` (previously free text), with a "View Password Policy ▾" toggle that expands a read-only panel listing every policy's fields instead of cramming them into the form.
-
-### Flag: login credentials in the reference doc don't work against the deployed API
-
-`SYSTEM_API_REQUEST_RESPONSE.md` was captured against `http://localhost:15003` (a local dev server), not `https://etakuapi.innovitegrasuite.com` (what this app is configured to use). Testing the documented `System`/`123456` login against the deployed API returns `"User not found"` — that seed user doesn't exist in this environment. The endpoint paths and payload/response *shapes* were still cross-checked against the deployed API where possible (e.g. the `/system/master/*` vs `/master/*/list` prefix split) and match; only the specific test data differs by environment. You'll need real credentials for whichever environment `VITE_API_BASE_URL` points at.
+The sidebar is fixed in the UI on purpose: the System user may use every System Console screen, and profiles and menu permissions apply to institution users in the admin portal.

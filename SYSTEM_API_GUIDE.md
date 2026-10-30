@@ -17,8 +17,8 @@ if it is false. A normal user's token will not work here, even a valid one.
 
 | What | Value | Where it goes |
 |---|---|---|
-| Gateway credentials | `system` / `123456` | HTTP Basic Auth header |
-| Account credentials | `System` / `123456` | Request body |
+| Gateway credentials | `<gateway user>` / `<gateway password>` (ask the backend team) | HTTP Basic Auth header |
+| Account credentials | `System` / `<password>` (ask the backend team) | Request body |
 
 They are different things that happen to share a password today. The gateway
 credentials are the same for every caller; the account credentials identify a
@@ -69,12 +69,12 @@ does not exist, `500` means something broke on the server.
 
 `POST /system/user/login`
 
-Basic Auth `system:123456`, plus:
+Basic Auth `<gateway user>:<gateway password>`, plus:
 
 ```json
 {
   "user_name": "System",
-  "password": "123456"
+  "password": "<password>"
 }
 ```
 
