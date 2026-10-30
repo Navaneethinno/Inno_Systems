@@ -148,6 +148,13 @@ function ProfileForm({ row, onSuccess, onCancel }) {
   return (
     <form className="stack" onSubmit={handleSubmit}>
       {error && <Alert>{error}</Alert>}
+      {/* menu_actions holds only the approved grants; an edit still waiting
+          for approval is in menu_actions_edited, which these boxes don't show. */}
+      {isEdit && (row.menu_actions_edited ?? row.edited_menu_actions) && (
+        <Alert tone="warning">
+          This profile has an edit waiting for approval. The boxes show only what is approved now, not the waiting edit.
+        </Alert>
+      )}
 
       <div className="form-grid">
         <TextField
