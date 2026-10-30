@@ -22,6 +22,9 @@ const REASONS = [
   ["COUNTRY_UNKNOWN", "Country unknown"],
 ];
 const reasonLabel = (code) => REASONS.find(([c]) => c === code)?.[1] ?? code;
+// A filter body with only what is set.
+const setOnly = (filters) => Object.fromEntries(Object.entries(filters).filter(([, v]) => v !== "" && v != null));
+const FIELD_LABELS = { mode: "Mode", allowed_countries: "Allowed countries", allowed_ips: "Allowed IPs", blocked_ips: "Blocked IPs", note: "Note" };
 const errorOf = (e) => e?.message ?? "Something went wrong.";
 const when = (v) => (v ? new Date(String(v).replace(" ", "T")).toLocaleString() : "—");
 
@@ -63,6 +66,7 @@ export function AccessPolicyPage() {
             {[
               ["institutions", "Institutions"],
               ["refusals", "Refusals"],
+              ["history", "History"],
               ["geoip", "Country file"],
             ].map(([key, label]) => (
               <button key={key} type="button" role="tab" aria-selected={tab === key} className={`tabs__tab ${tab === key ? "tabs__tab--active" : ""}`} onClick={() => setTab(key)}>
@@ -72,6 +76,7 @@ export function AccessPolicyPage() {
           </div>
           {tab === "institutions" && <InstitutionsList onEdit={setEditing} />}
           {tab === "refusals" && <Refusals />}
+          {tab === "history" && <History />}
           {tab === "geoip" && <CountryFile />}
         </>
       )}
@@ -327,15 +332,16 @@ function TestAddress({ instProfileId }) {
 }
 
 function Refusals() {
-  const [filters, setFilters] = useState({ portal: "", reason: "" });
+  const [filters, setFilters] = useState({ portal: "", reason: "", from: "", to: "" });
   const [page, setPage] = useState(1);
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   useEffect(() => {
     let live = true;
     setData(null);
+    setError("");
     accessService
-      .refusals({ ...(filters.portal ? { portal: filters.portal } : {}), ...(filters.reason ? { reason: filters.reason } : {}), page, limit: 50 })
+      .refusals({ ...setOnly(filters), page, limit: 50 })
       .then((d) => live && setData(d))
       .catch((e) => {
         if (!live) return;
@@ -355,6 +361,8 @@ function Refusals() {
       <div className="acc__filters">
         <Select aria-label="Portal" value={filters.portal} onChange={set("portal")} options={[{ value: "", label: "Any portal" }, ...PORTALS.map(([value, label]) => ({ value, label }))]} />
         <Select aria-label="Reason" value={filters.reason} onChange={set("reason")} options={REASONS.map(([value, label]) => ({ value, label }))} />
+        <TextField type="date" aria-label="From" value={filters.from} max={filters.to || undefined} onChange={set("from")} />
+        <TextField type="date" aria-label="To" value={filters.to} min={filters.from || undefined} onChange={set("to")} />
       </div>
       <DataTable
         isLoading={!data}
@@ -413,6 +421,9 @@ function CountryFile() {
       }
     >
       <div className="acc__stack">
+        {file?.stale && <Alert tone="warning">The country file is {file.age_days} days old: monthly updates have stopped. Press Update now, and check the job below.</Alert>}
+        {file?.auto_update?.last_status === "FAILED" && <Alert>The last automatic update failed: {file.auto_update.last_error || "no reason given"}.</Alert>}
+        {file && file.auto_update === null && <Alert tone="warning">The automatic update job (GEOIP_UPDATE) is missing: update by hand once a month.</Alert>}
         {file && !file.loaded && <Alert tone="warning">No country file is loaded: every country is unknown, so restricted portals let in only their allowed IPs.</Alert>}
         {error && <Alert>{error}</Alert>}
         {message && <Alert tone="success">{message}</Alert>}
@@ -423,9 +434,32 @@ function CountryFile() {
               <dd>{when(file.built_at)}</dd>
             </div>
             <div>
+              <dt>Age</dt>
+              <dd>{file.age_days != null ? `${file.age_days} days` : "—"}</dd>
+            </div>
+            <div>
               <dt>Installed</dt>
               <dd>{when(file.file_time)}</dd>
             </div>
+            {file.auto_update && (
+              <>
+                <div>
+                  <dt>Automatic update</dt>
+                  <dd>{file.auto_update.enabled ? "Daily, 03:15" : "Switched off"}</dd>
+                </div>
+                <div>
+                  <dt>Last run</dt>
+                  <dd>
+                    {when(file.auto_update.last_run)}
+                    {file.auto_update.last_status && <span className="acc__muted"> · {file.auto_update.last_status}</span>}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Next run</dt>
+                  <dd>{when(file.auto_update.next_run)}</dd>
+                </div>
+              </>
+            )}
             <div>
               <dt>Size</dt>
               <dd>{file.size_bytes ? `${(file.size_bytes / 1048576).toFixed(1)} MB` : "—"}</dd>
@@ -447,5 +481,77 @@ function CountryFile() {
         </p>
       </div>
     </Card>
+  );
+}
+
+// Every saved change: who, when, which fields, and the values before and after
+// (a portal never set before shows as OPEN with empty lists).
+function History() {
+  const [filters, setFilters] = useState({ portal: "", from: "", to: "" });
+  const [page, setPage] = useState(1);
+  const [data, setData] = useState(null);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    let live = true;
+    setData(null);
+    setError("");
+    accessService
+      .history({ ...setOnly(filters), page, limit: 50 })
+      .then((d) => live && setData(d))
+      .catch((e) => {
+        if (!live) return;
+        setError(errorOf(e));
+        setData({ items: [], total: 0 });
+      });
+    return () => {
+      live = false;
+    };
+  }, [filters, page]);
+  const set = (key) => (e) => {
+    setFilters((f) => ({ ...f, [key]: e.target.value }));
+    setPage(1);
+  };
+  return (
+    <div className="acc__stack">
+      <div className="acc__filters">
+        <Select aria-label="Portal" value={filters.portal} onChange={set("portal")} options={[{ value: "", label: "Any portal" }, ...PORTALS.map(([value, label]) => ({ value, label }))]} />
+        <TextField type="date" aria-label="From" value={filters.from} max={filters.to || undefined} onChange={set("from")} />
+        <TextField type="date" aria-label="To" value={filters.to} min={filters.from || undefined} onChange={set("to")} />
+      </div>
+      <DataTable
+        isLoading={!data}
+        error={error}
+        rows={data?.items ?? []}
+        emptyMessage="No changes recorded. Changes made before 30 Oct 2026 weren't recorded."
+        page={page}
+        onPageChange={setPage}
+        pagination={{ totalRecords: data?.total ?? 0, totalPages: Math.max(1, Math.ceil((data?.total ?? 0) / 50)), limit: 50 }}
+        columns={[
+          { key: "changed_time", label: "When", render: (r) => <span className="acc__nowrap">{when(r.changed_time)}</span> },
+          { key: "inst_profile_name", label: "Institution" },
+          { key: "portal", label: "Portal", render: (r) => portalLabel(r.portal) },
+          { key: "changed_by", label: "By" },
+          { key: "changed", label: "What changed", render: (r) => <PolicyDiff row={r} /> },
+        ]}
+      />
+    </div>
+  );
+}
+
+const show = (value) => (Array.isArray(value) ? value.join(", ") || "none" : value || "—");
+const NEVER_SET = { mode: "OPEN", allowed_countries: [], allowed_ips: [], blocked_ips: [], note: "" };
+
+function PolicyDiff({ row }) {
+  const before = row.before ?? NEVER_SET;
+  const after = row.after ?? {};
+  if (!row.changed?.length) return <span className="acc__muted">Saved again, nothing changed</span>;
+  return (
+    <ul className="acc__diff">
+      {row.changed.map((field) => (
+        <li key={field}>
+          <strong>{FIELD_LABELS[field] ?? field}:</strong> <span className="acc__was">{show(before[field])}</span> → <span className="acc__now">{show(after[field])}</span>
+        </li>
+      ))}
+    </ul>
   );
 }

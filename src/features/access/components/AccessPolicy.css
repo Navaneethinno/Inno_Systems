@@ -209,3 +209,20 @@
   font-weight: 600;
   overflow-wrap: anywhere;
 }
+
+.acc__diff {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-xs);
+}
+
+.acc__was {
+  color: var(--color-danger-text);
+  text-decoration: line-through;
+}
+
+.acc__now {
+  color: var(--color-success-text);
+  font-weight: 600;
+}

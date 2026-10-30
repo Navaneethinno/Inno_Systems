@@ -21,6 +21,8 @@ export const accessService = {
   save: async (body) => extractOne(await call("save", body)),
   check: async (body) => extractOne(await call("check", body)),
   refusals: async (body) => extractOne(await call("refusals", body)) ?? { items: [], total: 0 },
+  // Every save: before and after, and the fields that changed.
+  history: async (body) => extractOne(await call("history", body)) ?? { items: [], total: 0 },
   geoip: async () => extractOne(await call("geoip")),
   geoipUpdate: async () => extractOne(await call("geoip_update")),
   // ISO alpha-2 codes from the country master list.
