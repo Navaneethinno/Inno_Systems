@@ -239,7 +239,7 @@ function OverviewTab({ filters, onInstitution }) {
           />
         )}
         <Tile
-          label="Time in the portal"
+          label="Time spent"
           value={data ? minutes(sum("active_minutes")) : "…"}
         />
         <Tile
@@ -444,15 +444,11 @@ function SessionsTab({ filters, user, onClearUser, onJourney }) {
         <span className="nowrap">
           {r.ip}
           <br />
-          <span className="muted">{country(r.country_name)}</span>
+          <span className="muted">
+            {[country(r.country_name), deviceOf(r)].filter(Boolean).join(" · ")}
+          </span>
         </span>
       ),
-    },
-    {
-      key: "channel",
-      label: "Device",
-      sortable: false,
-      render: (r) => <span className="muted">{deviceOf(r) || "—"}</span>,
     },
   ];
   return (
