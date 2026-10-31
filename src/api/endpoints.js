@@ -81,6 +81,9 @@ export const API = {
     ACCESS: {
       call: (verb) => `/system/institution/access/${verb}`,
     },
+    USAGE: {
+      call: (verb) => `/system/usage/${verb}`,
+    },
     SECURITY: {
       EVENTS: "/system/security/events",
     },

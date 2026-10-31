@@ -82,7 +82,7 @@ const COLORS = ["#2266ee", "#e0342f", "#17b26a", "#f79009", "#7a5af8", "#06aed4"
 
 // A line chart of `rows` (each with `t`): one line per `lines` entry
 // ({ key, label }). Hover shows every line's value at that point.
-export function LineChart({ rows, lines, format = fmtNum, height = 150 }) {
+export function LineChart({ rows, lines, format = fmtNum, height = 150, tick = fmtTick, when = fmtTime }) {
   const ref = useRef(null);
   const [hover, setHover] = useState(null);
   const W = 600;
@@ -111,7 +111,7 @@ export function LineChart({ rows, lines, format = fmtNum, height = 150 }) {
             {row && <b> {format(row[l.key])}</b>}
           </span>
         ))}
-        {row && <span className="pm__legend-time">{fmtTime(row.t)}</span>}
+        {row && <span className="pm__legend-time">{when(row.t)}</span>}
       </div>
       <svg ref={ref} viewBox={`0 0 ${W} ${H}`} className="pm__svg" onMouseMove={move} onMouseLeave={() => setHover(null)} role="img">
         <line x1={pad.l} x2={W - pad.r} y1={y(0)} y2={y(0)} className="pm__axis" />
@@ -123,10 +123,10 @@ export function LineChart({ rows, lines, format = fmtNum, height = 150 }) {
           0
         </text>
         <text x={pad.l} y={H - 4} className="pm__label">
-          {fmtTick(data[0].t)}
+          {tick(data[0].t)}
         </text>
         <text x={W - pad.r} y={H - 4} className="pm__label" textAnchor="end">
-          {fmtTick(data[data.length - 1].t)}
+          {tick(data[data.length - 1].t)}
         </text>
         {lines.length === 1 && (
           <polygon
