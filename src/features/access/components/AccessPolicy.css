@@ -145,7 +145,7 @@
 
 /* A bare .tf__input has no border (TextField's wrapper draws it), so
    these textareas draw their own. */
-.acc__area {
+.tf__input.acc__area {
   min-height: 72px;
   padding: 8px 10px;
   border: 1px solid var(--color-border-strong);
@@ -157,20 +157,92 @@
   resize: vertical;
 }
 
-.acc__chips {
+.acc__tagbox {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 6px;
+  min-height: 42px;
+  padding: 6px 8px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
 }
 
-.acc__chip {
-  padding: 4px 10px;
-  border: 1px solid var(--color-border);
+.acc__tagbox:focus-within,
+.tf__input.acc__area:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-tint);
+}
+
+.acc__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 4px 3px 10px;
+  border: 1px solid var(--color-primary);
   border-radius: var(--radius-pill);
   background: var(--color-primary-tint);
   color: var(--color-text);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.acc__tag-code {
   font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.acc__tag-x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 15px;
+  line-height: 1;
   cursor: pointer;
+}
+
+.acc__tag-x:hover {
+  background: var(--color-danger);
+  color: #fff;
+}
+
+.acc__tag-input {
+  flex: 1;
+  min-width: 180px;
+  padding: 4px;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-sm);
+}
+
+.acc__tagbox .acc__options {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  max-height: 260px;
+  overflow-y: auto;
+  box-shadow: var(--shadow-md, 0 8px 24px rgba(0, 0, 0, 0.12));
+}
+
+.acc__tagbox .acc__options--empty {
+  display: block;
+  padding: 8px 12px;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
 }
 
 .acc__options {

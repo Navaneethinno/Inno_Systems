@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useId } from "react";
 import { Alert } from "../../../components/ui/Alert";
 import { Button } from "../../../components/ui/Button";
 import { Card } from "../../../components/ui/Card";
@@ -269,41 +269,76 @@ function PortalCard({ instProfileId, policy, countries, onSaved }) {
   );
 }
 
-// Countries as chips, with a search to add more.
+// Countries as tags inside one box, with a search at the end to add more.
+// Enter adds the first match; Backspace in an empty search removes the last.
 function CountryPicker({ countries, value, onChange }) {
+  const id = useId();
   const [query, setQuery] = useState("");
   const name = (code) => countries.find((c) => c.code === code)?.name ?? code;
   const q = query.trim().toLowerCase();
-  const matches = q ? countries.filter((c) => !value.includes(c.code) && (c.name.toLowerCase().includes(q) || c.code.toLowerCase() === q)).slice(0, 8) : [];
+  // Best first: the code itself, then names that start with the text, then
+  // a word that starts with it, then anywhere in the name.
+  const rank = (c) => {
+    const n = c.name.toLowerCase();
+    if (c.code.toLowerCase() === q) return 0;
+    if (n.startsWith(q)) return 1;
+    if (n.split(/[\s(,-]+/).some((w) => w.startsWith(q))) return 2;
+    return n.includes(q) ? 3 : 9;
+  };
+  const matches = q
+    ? countries
+        .filter((c) => !value.includes(c.code) && rank(c) < 9)
+        .sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name))
+        .slice(0, 8)
+    : [];
+  const add = (code) => {
+    onChange([...value, code]);
+    setQuery("");
+  };
   return (
     <div className="acc__field">
-      <span className="tf__label">Allowed countries</span>
-      <div className="acc__chips">
-        {value.length === 0 && <span className="acc__muted">None yet</span>}
+      <label className="tf__label" htmlFor={id}>
+        Allowed countries
+      </label>
+      <div className="acc__tagbox">
         {value.map((code) => (
-          <button key={code} type="button" className="acc__chip" onClick={() => onChange(value.filter((c) => c !== code))} title="Remove">
-            {name(code)} <span className="acc__muted">{code}</span> ×
-          </button>
+          <span key={code} className="acc__tag">
+            {name(code)} <span className="acc__tag-code">{code}</span>
+            <button type="button" className="acc__tag-x" onClick={() => onChange(value.filter((c) => c !== code))} aria-label={`Remove ${name(code)}`} title="Remove">
+              ×
+            </button>
+          </span>
         ))}
+        <input
+          id={id}
+          className="acc__tag-input"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && matches[0]) {
+              e.preventDefault();
+              add(matches[0].code);
+            } else if (e.key === "Backspace" && !query && value.length) onChange(value.slice(0, -1));
+          }}
+          placeholder={value.length ? "Add another country…" : "Search a country, e.g. India"}
+          autoComplete="off"
+        />
+        {matches.length > 0 && (
+          <ul className="acc__options" role="listbox">
+            {matches.map((c) => (
+              <li key={c.code}>
+                <button type="button" onClick={() => add(c.code)}>
+                  {c.name} <span className="acc__muted">{c.code}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        {q && matches.length === 0 && <span className="acc__options acc__options--empty">No country matches “{query.trim()}”.</span>}
       </div>
-      <input className="tf__input" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Type a country to add it" aria-label="Add a country" />
-      {matches.length > 0 && (
-        <ul className="acc__options">
-          {matches.map((c) => (
-            <li key={c.code}>
-              <button
-                type="button"
-                onClick={() => {
-                  onChange([...value, c.code]);
-                  setQuery("");
-                }}
-              >
-                {c.name} <span className="acc__muted">{c.code}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+      <span className="tf__hint">
+        {value.length === 0 ? "No country yet. Staff can sign in only from the IPs below." : `Staff can sign in from ${value.length === 1 ? "this country" : `these ${value.length} countries`}, plus the IPs below. × removes a country.`}
+      </span>
     </div>
   );
 }
