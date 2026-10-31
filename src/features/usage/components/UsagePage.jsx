@@ -424,7 +424,9 @@ function SessionsTab({ filters, user, onClearUser, onJourney }) {
         <span className="nowrap">
           {r.user_name}
           <br />
-          <span className="muted">{r.inst_profile_name}</span>
+          <span className="muted">
+            {[r.portal && r.portal !== "ADMIN" && (PORTAL_LABEL[r.portal] ?? r.portal), r.inst_profile_name].filter(Boolean).join(" · ")}
+          </span>
         </span>
       ),
     },
