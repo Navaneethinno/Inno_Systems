@@ -113,7 +113,7 @@ function OverviewTab({ filters, onInstitution }) {
         <Tile label="Time in the portal" value={data ? minutes(sum("active_minutes")) : "…"} />
         <Tile label="Sign-ins" value={data ? fmtNum(sum("logins_ok")) : "…"} hint={data && sum("logins_failed") ? `${fmtNum(sum("logins_failed"))} failed` : undefined} tone={data && sum("logins_failed") ? "warn" : undefined} />
         <Tile label="Calls" value={data ? fmtNum(calls) : "…"} />
-        <Tile label="Error rate" value={data ? fmtPct(calls ? (sum("errors") / calls) * 100 : 0) : "…"} hint={data ? `${fmtNum(sum("errors"))} failed calls` : undefined} tone={data && sum("errors") ? "warn" : undefined} />
+        <Tile label="Error rate" value={data ? fmtPct(calls ? (sum("errors") / calls) * 100 : 0) : "…"} hint={data ? `${fmtNum(sum("errors"))} failed call${sum("errors") === 1 ? "" : "s"}` : undefined} tone={data && sum("errors") ? "warn" : undefined} />
       </div>
       <div className="pm__grid">
         <Panel title="Per day" hint="Days without activity show as 0.">
@@ -159,7 +159,7 @@ function LoginsTab({ filters }) {
     <>
       <Err error={list.error} />
       <div className="pm__filters">
-        <Select label="Result" value={status} onChange={(e) => setStatus(e.target.value)} options={[{ value: "", label: "All" }, { value: "SUCCESS", label: "Signed in" }, { value: "FAIL", label: "Failed" }]} />
+        <Select id="usage-result" label="Result" value={status} onChange={(e) => setStatus(e.target.value)} options={[{ value: "", label: "All" }, { value: "SUCCESS", label: "Signed in" }, { value: "FAIL", label: "Failed" }]} />
       </div>
       <DataTable columns={columns} rows={list.rows} isLoading={!list.data} page={list.page} onPageChange={list.onPageChange} pagination={list.pagination} emptyMessage="No sign-ins in this period." />
     </>
@@ -170,14 +170,13 @@ function SessionsTab({ filters, user, onClearUser, onJourney }) {
   const list = usePaged("sessions", { ...filters, ...(user && { user_id: user.user_id }) });
   const columns = [
     { key: "started", label: "Started", render: (r) => <span className="nowrap">{r.started}</span> },
-    { key: "user_name", label: "User" },
-    { key: "inst_profile_name", label: "Institution" },
+    { key: "user_name", label: "User", render: (r) => <span className="nowrap">{r.user_name}<br /><span className="muted">{r.inst_profile_name}</span></span> },
     { key: "minutes", label: "Length", render: (r) => minutes(r.minutes) },
     { key: "screens", label: "Screens", render: (r) => fmtNum(r.screens) },
     { key: "calls", label: "Calls", render: (r) => fmtNum(r.calls) },
     { key: "errors", label: "Errors", render: (r) => <Bad n={r.errors} /> },
     { key: "top_screen", label: "Top screen", render: (r) => r.top_screen || "—" },
-    { key: "ip", label: "IP", render: (r) => <span className="nowrap">{r.ip} · {country(r.country)}</span> },
+    { key: "ip", label: "From", render: (r) => <span className="nowrap">{r.ip}<br /><span className="muted">{country(r.country)}</span></span> },
   ];
   return (
     <>
@@ -215,7 +214,7 @@ function ScreensTab({ filters }) {
     { key: "minutes", label: "Time", render: (s) => (
         <span className="us__bar-cell">
           <span className="us__bar"><i style={{ width: `${((Number(s.minutes) || 0) / top) * 100}%` }} /></span>
-          <span className="nowrap">{minutes(s.minutes)} · {fmtPct(s.share)}</span>
+          <span className="us__bar-text">{minutes(s.minutes)} · {fmtPct(s.share)}</span>
         </span>
       ) },
     { key: "users", label: "Users", render: (s) => fmtNum(s.users) },
@@ -259,7 +258,7 @@ function ActionsTab({ filters }) {
     <>
       <Err error={list.error} />
       <div className="pm__filters">
-        <Select label="Screen" value={menu} onChange={(e) => setMenu(e.target.value)} options={options} />
+        <Select id="usage-screen-actions" label="Screen" value={menu} onChange={(e) => setMenu(e.target.value)} options={options} />
       </div>
       <DataTable columns={columns} rows={list.rows} isLoading={!list.data} page={list.page} onPageChange={list.onPageChange} pagination={list.pagination} emptyMessage="No calls in this period." />
     </>
@@ -272,9 +271,8 @@ function ErrorsTab({ filters }) {
   const list = usePaged("errors", { ...filters, ...(menu && { menu_id: Number(menu) }) });
   const columns = [
     { key: "count", label: "Times", render: (r) => <b className="pm__bad">{fmtNum(r.count)}</b> },
-    { key: "message", label: "What the user saw", render: (r) => <span>{r.message || "—"}<br /><span className="muted">{r.error_code}{r.http_status ? ` · HTTP ${r.http_status}` : ""}</span></span> },
-    { key: "menu_name", label: "Screen", render: (r) => r.menu_label ?? r.menu_name ?? "—" },
-    { key: "path", label: "Call", render: (r) => <code className="pm__sql">{r.path}</code> },
+    { key: "message", label: "What the user saw", render: (r) => <span className="us__msg">{r.message || "—"}<br /><span className="muted">{r.error_code}{r.http_status ? ` · HTTP ${r.http_status}` : ""}</span></span> },
+    { key: "menu_name", label: "Screen and call", render: (r) => <span>{r.menu_label ?? r.menu_name ?? "—"}<br /><span className="us__path">{r.path}</span></span> },
     { key: "users", label: "Users", render: (r) => fmtNum(r.users) },
     { key: "institutions", label: "Institutions", render: (r) => fmtNum(r.institutions) },
     { key: "last_at", label: "Last", render: (r) => <span className="nowrap muted">{r.last_at}<br />{r.last_user}</span> },
@@ -283,7 +281,7 @@ function ErrorsTab({ filters }) {
     <>
       <Err error={list.error} />
       <div className="pm__filters">
-        <Select label="Screen" value={menu} onChange={(e) => setMenu(e.target.value)} options={options} />
+        <Select id="usage-screen-errors" label="Screen" value={menu} onChange={(e) => setMenu(e.target.value)} options={options} />
       </div>
       {list.data && <p className="pm__note">{fmtNum(list.data.total_errors)} failed steps in {fmtNum(list.data.total)} groups. Failed sign-ins are included.</p>}
       <DataTable columns={columns} rows={list.rows} isLoading={!list.data} page={list.page} onPageChange={list.onPageChange} pagination={list.pagination} emptyMessage="No errors in this period." />
@@ -294,15 +292,14 @@ function ErrorsTab({ filters }) {
 function UsersTab({ filters, onSessions }) {
   const { data, error } = useUsage("users", filters);
   const columns = [
-    { key: "user_name", label: "User", render: (u) => <b>{u.user_name}</b> },
-    { key: "inst_profile_name", label: "Institution" },
+    { key: "user_name", label: "User", render: (u) => <span className="nowrap"><b>{u.user_name}</b><br /><span className="muted">{u.inst_profile_name}</span></span> },
     { key: "minutes", label: "Time", render: (u) => minutes(u.minutes) },
     { key: "sessions", label: "Sessions", render: (u) => fmtNum(u.sessions) },
     { key: "logins", label: "Sign-ins", render: (u) => <span className="nowrap">{fmtNum(u.logins)}{u.failed_logins ? <span className="pm__bad"> · {fmtNum(u.failed_logins)} failed</span> : null}</span> },
     { key: "calls", label: "Calls", render: (u) => fmtNum(u.calls) },
     { key: "errors", label: "Errors", render: (u) => <Bad n={u.errors} /> },
     { key: "top_screen", label: "Top screen", render: (u) => u.top_screen || "—" },
-    { key: "ips", label: "From", sortable: false, render: (u) => <span className="muted">{[...(u.countries ?? []).map(country), ...(u.ips ?? [])].join(", ") || "—"}</span> },
+    { key: "ips", label: "From", sortable: false, render: (u) => <span className="nowrap muted" title={(u.ips ?? []).join(", ")}>{(u.countries ?? []).map(country).join(", ") || "—"}{u.ips?.length ? ` · ${u.ips.length} IP${u.ips.length === 1 ? "" : "s"}` : ""}</span> },
     { key: "last_seen", label: "Last seen", render: (u) => <span className="nowrap muted">{u.last_seen}</span> },
   ];
   return (
@@ -400,6 +397,7 @@ export function UsagePage() {
       />
       <div className="pm__filters">
         <Select
+          id="usage-institution"
           label="Institution"
           value={inst}
           onChange={(e) => {
@@ -408,11 +406,11 @@ export function UsagePage() {
           }}
           options={[{ value: "", label: "All" }, ...institutions.map((i) => ({ value: String(i.inst_profile_id), label: i.inst_profile_name ?? i.inst_code }))]}
         />
-        <Select label="Period" value={preset} onChange={(e) => setPreset(e.target.value)} options={PRESETS.map(([value, label]) => ({ value, label }))} />
+        <Select id="usage-period" label="Period" value={preset} onChange={(e) => setPreset(e.target.value)} options={PRESETS.map(([value, label]) => ({ value, label }))} />
         {preset === "custom" && (
           <>
-            <TextField label="From" type="date" value={custom.from} max={custom.to} onChange={(e) => setCustom((c) => ({ ...c, from: e.target.value }))} />
-            <TextField label="To" type="date" value={custom.to} min={custom.from} onChange={(e) => setCustom((c) => ({ ...c, to: e.target.value }))} />
+            <TextField id="usage-from" label="From" type="date" value={custom.from} max={custom.to} onChange={(e) => setCustom((c) => ({ ...c, from: e.target.value }))} />
+            <TextField id="usage-to" label="To" type="date" value={custom.to} min={custom.from} onChange={(e) => setCustom((c) => ({ ...c, to: e.target.value }))} />
           </>
         )}
         <label className="us__check">
