@@ -11,8 +11,8 @@ import { TextField } from "../../../components/ui/TextField";
 import { fatfService } from "../services/fatfService";
 
 const LISTS = [
-  { value: "GREY", label: "Grey" },
-  { value: "BLACK", label: "Black" },
+  { value: "GREY", label: "Grey list" },
+  { value: "BLACK", label: "Black list" },
 ];
 const errorOf = (err) => err?.response?.data?.message ?? err?.message ?? "Something went wrong.";
 

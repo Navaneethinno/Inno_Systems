@@ -1,6 +1,6 @@
 import "./StatusFilterTabs.css";
 
-const LABELS = { all: "All", active: "Active", pending: "Pending", inactive: "Inactive", grey: "Grey", black: "Black" };
+const LABELS = { all: "All", active: "Active", pending: "Pending", inactive: "Inactive", grey: "Grey list", black: "Black list" };
 const TONES = { active: "active", pending: "pending" };
 
 /**
