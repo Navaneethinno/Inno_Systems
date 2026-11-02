@@ -13,6 +13,7 @@ function lazyPage(load, name) {
  */
 export const SHELL_ROUTES = [
   { path: "/", Component: lazyPage(() => import("../pages/dashboard/DashboardPage"), "DashboardPage") },
+  { path: "/master/fatf-lists", Component: lazyPage(() => import("../features/fatf/components/FatfListsPage"), "FatfListsPage") },
   { path: "/master/menu_action", Component: lazyPage(() => import("../features/masterData/components/MenuActionsPage"), "MenuActionsPage") },
   { path: "/master/:entityKey", Component: lazyPage(() => import("../features/masterData/components/MasterCrudPage"), "MasterCrudPage") },
   { path: "/reference/:entityKey", Component: lazyPage(() => import("../features/masterData/components/MasterListPage"), "MasterListPage") },

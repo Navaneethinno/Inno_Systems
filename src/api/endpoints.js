@@ -84,6 +84,9 @@ export const API = {
     USAGE: {
       call: (verb) => `/system/usage/${verb}`,
     },
+    FATF: {
+      call: (verb) => `/system/fatf_country/${verb}`,
+    },
     SECURITY: {
       EVENTS: "/system/security/events",
     },

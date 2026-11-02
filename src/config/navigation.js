@@ -29,6 +29,7 @@ export const NAVIGATION = [
         path: `/master/${key}`,
         icon: MASTER_ICONS[key],
       })),
+      { label: "FATF lists", path: "/master/fatf-lists", icon: "globe" },
       {
         id: "reference",
         label: "Reference Data",
