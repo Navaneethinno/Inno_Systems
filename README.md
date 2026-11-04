@@ -32,8 +32,6 @@ VITE_SYSTEM_BASIC_PASSWORD=
 ```
 
 `.env` (and `.env.local`) are gitignored — never commit real credentials.
-For a Vercel deployment, set the same three variables under the project's
-Environment Variables settings so the build has them at deploy time.
 
 ## Start the app
 
