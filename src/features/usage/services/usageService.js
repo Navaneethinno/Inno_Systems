@@ -14,4 +14,9 @@ export const usageService = {
     const { data: envelope } = await httpClient.post(API.SYSTEM.USAGE.call(call), body);
     return extractOne(envelope.data) ?? {};
   },
+  // The Country filter's choices, most calls first: same body as the reports.
+  async countries(body = {}) {
+    const { data: envelope } = await httpClient.post(API.SYSTEM.USAGE.call("countries"), body);
+    return Array.isArray(envelope.data) ? envelope.data : [];
+  },
 };

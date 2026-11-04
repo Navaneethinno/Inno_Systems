@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Alert } from "../../../components/ui/Alert";
 import { Button } from "../../../components/ui/Button";
 import { DataTable } from "../../../components/ui/DataTable";
@@ -805,11 +805,68 @@ function UsersTab({ filters, onSessions }) {
 const KIND = { LOGIN: "Signed in", VIEW: "Opened", API: "Did" };
 
 // One user's steps in order; failed steps in red with what the user saw.
+// Country filter: several at once; none picked means all. The choices come
+// from the period and filters in use, without the countries themselves.
+function CountryFilter({ body, value, onChange }) {
+  const [options, setOptions] = useState([]);
+  const [open, setOpen] = useState(false);
+  const box = useRef(null);
+  const key = JSON.stringify(body);
+  useEffect(() => {
+    let live = true;
+    usageService
+      .countries(JSON.parse(key))
+      .then((rows) => live && setOptions(rows))
+      .catch(() => live && setOptions([]));
+    return () => {
+      live = false;
+    };
+  }, [key]);
+  useEffect(() => {
+    if (!open) return undefined;
+    const close = (e) => !box.current?.contains(e.target) && setOpen(false);
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [open]);
+  const nameOf = (code) => options.find((o) => o.code === code)?.name ?? code;
+  const text = !value.length ? "All" : value.length === 1 ? nameOf(value[0]) : `${value.length} countries`;
+  return (
+    <div className="us__country" ref={box}>
+      <span className="us__country-label">Country</span>
+      <button type="button" className="us__country-button" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+        {text}
+      </button>
+      {open && (
+        <div className="us__country-panel">
+          {value.length > 0 && (
+            <button type="button" className="us__country-clear" onClick={() => onChange([])}>
+              Clear
+            </button>
+          )}
+          {!options.length && <p className="us__country-none">No countries in this period</p>}
+          {options.map((o) => (
+            <label key={o.code} className="us__country-row">
+              <input
+                type="checkbox"
+                checked={value.includes(o.code)}
+                onChange={(e) => onChange(e.target.checked ? [...value, o.code] : value.filter((c) => c !== o.code))}
+              />
+              <span>{o.name}</span>
+              <span className="us__country-calls">{fmtNum(o.calls)}</span>
+            </label>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function JourneyModal({ journey, filters, onClose }) {
   const [page, setPage] = useState(1);
   const { data, error } = useUsage("journey", {
     from: filters.from,
     to: filters.to,
+    ...(filters.countries && { countries: filters.countries }),
     ...whoOf(journey),
     ...(journey.session != null && { session: journey.session }),
     page,
@@ -913,6 +970,7 @@ export function UsagePage() {
     to: dayOf(new Date()),
   });
   const [withSystem, setWithSystem] = useState(false);
+  const [countries, setCountries] = useState([]);
   const [user, setUser] = useState(null);
   const [portal, setPortal] = useState("ADMIN");
   const [journey, setJourney] = useState(null);
@@ -941,7 +999,7 @@ export function UsagePage() {
   const badRange =
     preset === "custom" &&
     (!custom.from || !custom.to || custom.from > custom.to);
-  const filters = {
+  const baseFilters = {
     from: period.from,
     to: period.to,
     portal,
@@ -949,6 +1007,7 @@ export function UsagePage() {
     ...(withSystem &&
       (portal === "ADMIN" || portal === "ALL") && { include_system: true }),
   };
+  const filters = { ...baseFilters, ...(countries.length > 0 && { countries }) };
   const props = { filters };
   return (
     <div className="page">
@@ -1000,6 +1059,7 @@ export function UsagePage() {
           onChange={(e) => setPreset(e.target.value)}
           options={PRESETS.map(([value, label]) => ({ value, label }))}
         />
+        {!badRange && <CountryFilter body={{ ...baseFilters, ...(user && whoOf(user)) }} value={countries} onChange={setCountries} />}
         {preset === "custom" && (
           <>
             <TextField
