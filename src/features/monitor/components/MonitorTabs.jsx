@@ -4,6 +4,7 @@ import { Modal } from "../../../components/ui/Modal";
 import { Select } from "../../../components/ui/Select";
 import { TableSearchBar } from "../../../components/ui/TableSearchBar";
 import { Alert } from "../../../components/ui/Alert";
+import { depName, depStatus, depTone } from "./dependencyNames";
 import { Dot, LineChart, MiniTable, Panel, Tile, fmtBytes, fmtDuration, fmtMs, fmtNum, fmtPct, fmtTime, useMonitor } from "./monitorShared";
 
 const Err = ({ error }) => (error ? <Alert>{error}</Alert> : null);
@@ -54,7 +55,7 @@ export function OverviewTab({ onEvents }) {
         <Tile label="Disk used" value={fmtPct(diskPct, 0)} hint={s.disk_total_bytes ? `${fmtBytes(s.disk_free_bytes)} free` : undefined} tone={tone(diskPct, 80, 92)} />
         <Tile label="DB connections" value={`${fmtNum(db.connections)} / ${fmtNum(db.max_connections)}`} hint={`${fmtNum(db.active)} active · ${fmtNum(db.waiting_on_lock)} waiting on a lock`} tone={tone(dbPct)} />
         {deps.map((d) => (
-          <Tile key={d.dependency} label={d.dependency === "elasticsearch" ? "Elasticsearch" : d.dependency === "redis" ? "Redis" : d.dependency} value={d.status === "up" ? "Up" : d.status ?? "—"} hint={fmtMs(d.latency_ms)} tone={d.status === "up" ? "ok" : "bad"} />
+          <Tile key={d.dependency} label={depName(d.dependency)} value={depStatus(d.status)} hint={fmtMs(d.latency_ms ?? d.last_latency_ms)} tone={depTone(d.status)} />
         ))}
       </div>
       <Panel title="Events in the last 24 hours" hint="Click one to see it in Deadlocks & Stalls.">
@@ -415,7 +416,7 @@ export function ServerTab({ period }) {
       </div>
       <div className="pm__grid">
         {deps.map((d) => (
-          <Panel key={d.dependency} title={`${d.dependency === "elasticsearch" ? "Elasticsearch" : d.dependency === "redis" ? "Redis" : d.dependency} · ${d.status}`} hint={`${fmtMs(d.latency_ms)} · read ${fmtTime(d.at)}`}>
+          <Panel key={d.dependency} title={`${depName(d.dependency)} · ${depStatus(d.status)}`} hint={`${fmtMs(d.latency_ms)} · read ${fmtTime(d.at)}`}>
             <LineChart rows={latency(d.dependency)} lines={[{ key: "latency_ms", label: "Latency" }]} format={fmtMs} height={110} />
             {d.dependency === "elasticsearch" ? (
               <>
@@ -482,6 +483,8 @@ const STALL_KINDS = [
   ["RESTART", "A processor started again"],
   ["SLOW_CALL", "A call over 1 s"],
   ["SLOW_QUERY", "A statement over 1 s"],
+  ["DEPENDENCY_DOWN", "An outbound partner failed too many times in a row"],
+  ["DEPENDENCY_RECOVERED", "An outbound partner answers again"],
 ];
 const KIND_MEANING = Object.fromEntries(STALL_KINDS);
 
@@ -528,7 +531,7 @@ export function StallsTab({ period, services, kind, onKind }) {
       <div className="pm__tiles">
         <Tile label="Postgres deadlocks" value={fmtNum(data?.postgres_deadlocks)} tone={data?.postgres_deadlocks ? "bad" : "ok"} />
         {(data?.counts ?? []).map((c) => (
-          <Tile key={c.kind} label={c.kind} value={fmtNum(c.count)} hint={KIND_MEANING[c.kind]} tone={["DEADLOCK", "DOWN", "HUNG", "STUCK_CALL"].includes(c.kind) ? "bad" : "warn"} onClick={() => onKind(kind === c.kind ? "" : c.kind)} />
+          <Tile key={c.kind} label={c.kind} value={fmtNum(c.count)} hint={KIND_MEANING[c.kind]} tone={["DEADLOCK", "DOWN", "HUNG", "STUCK_CALL", "DEPENDENCY_DOWN"].includes(c.kind) ? "bad" : "warn"} onClick={() => onKind(kind === c.kind ? "" : c.kind)} />
         ))}
       </div>
       <div className="pm__filters">

@@ -4,6 +4,7 @@ import { Select } from "../../../components/ui/Select";
 import { PageHeader } from "../../../components/ui/PageHeader";
 import { useMonitor } from "./monitorShared";
 import { ApisTab, DatabaseTab, OverviewTab, ProcessorsTab, ServerTab, StallsTab, ThroughputTab } from "./MonitorTabs";
+import { DependenciesTab } from "./DependenciesTab";
 import "./PlatformMonitor.css";
 
 const TABS = [
@@ -12,6 +13,7 @@ const TABS = [
   ["apis", "API calls"],
   ["database", "Database"],
   ["server", "Server"],
+  ["dependencies", "Dependencies"],
   ["throughput", "Throughput"],
   ["stalls", "Deadlocks & Stalls"],
 ];
@@ -76,6 +78,7 @@ export function PlatformMonitorPage() {
         {tab === "apis" && <ApisTab {...props} />}
         {tab === "database" && <DatabaseTab {...props} />}
         {tab === "server" && <ServerTab {...props} />}
+        {tab === "dependencies" && <DependenciesTab {...props} />}
         {tab === "throughput" && <ThroughputTab {...props} />}
         {tab === "stalls" && <StallsTab {...props} kind={stallKind} onKind={setStallKind} />}
       </div>

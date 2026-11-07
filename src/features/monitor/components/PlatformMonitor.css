@@ -360,3 +360,9 @@
 .pm__panel .pm__note {
   margin: var(--space-2) 0;
 }
+
+/* A dependency no processor reported for 5 minutes. */
+.pm__stale {
+  opacity: 0.55;
+  filter: grayscale(1);
+}
