@@ -4,6 +4,7 @@ import { useAuth } from "../../features/auth/hooks/useAuth";
 import { NAVIGATION } from "../../config/navigation";
 import { Icon } from "../../components/icons/Icon";
 import { Glyph } from "../../components/ui/Glyph";
+import { formatIst } from "../../lib/istTime";
 import "./DashboardPage.css";
 
 function greeting(hour) {
@@ -28,7 +29,7 @@ export function DashboardPage() {
   const facts = [
     ["Profile", user?.profileName ?? "—"],
     ["Institution", user?.institutionName ?? "—"],
-    ["Last login", user?.lastLogin ? new Date(user.lastLogin).toLocaleString() : "—"],
+    ["Last login", formatIst(user?.lastLogin)],
     ["Access level", user?.fullAccess ? "Full access" : "Restricted"],
   ];
 

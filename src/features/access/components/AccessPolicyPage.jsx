@@ -7,6 +7,7 @@ import { PageHeader } from "../../../components/ui/PageHeader";
 import { Select } from "../../../components/ui/Select";
 import { TextField } from "../../../components/ui/TextField";
 import { accessService } from "../services/accessService";
+import { formatIst } from "../../../lib/istTime";
 import "./AccessPolicy.css";
 
 const PORTALS = [
@@ -26,7 +27,7 @@ const reasonLabel = (code) => REASONS.find(([c]) => c === code)?.[1] ?? code;
 const setOnly = (filters) => Object.fromEntries(Object.entries(filters).filter(([, v]) => v !== "" && v != null));
 const FIELD_LABELS = { mode: "Mode", allowed_countries: "Allowed countries", allowed_ips: "Allowed IPs", blocked_ips: "Blocked IPs", note: "Note" };
 const errorOf = (e) => e?.message ?? "Something went wrong.";
-const when = (v) => (v ? new Date(String(v).replace(" ", "T")).toLocaleString() : "—");
+const when = formatIst;
 
 // One portal's policy in a list cell: OPEN, or RESTRICTED with its countries.
 function PolicyCell({ policy }) {

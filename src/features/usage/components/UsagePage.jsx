@@ -15,7 +15,9 @@ import {
   fmtMs,
   fmtNum,
   fmtPct,
+  fmtTime,
 } from "../../monitor/components/monitorShared";
+import { formatIstClock } from "../../../lib/istTime";
 import { usageService } from "../services/usageService";
 import "../../monitor/components/PlatformMonitor.css";
 import "./Usage.css";
@@ -210,7 +212,7 @@ function OverviewTab({ filters, onInstitution }) {
     {
       key: "last_seen",
       label: "Last seen",
-      render: (i) => <span className="nowrap muted">{i.last_seen || "—"}</span>,
+      render: (i) => <span className="nowrap muted">{fmtTime(i.last_seen)}</span>,
     },
   ];
   return (
@@ -325,7 +327,7 @@ function LoginsTab({ filters }) {
     {
       key: "at",
       label: "When",
-      render: (r) => <span className="nowrap">{r.at}</span>,
+      render: (r) => <span className="nowrap">{fmtTime(r.at)}</span>,
     },
     { key: "inst_profile_name", label: "Institution" },
     {
@@ -415,7 +417,7 @@ function SessionsTab({ filters, user, onClearUser, onJourney }) {
     {
       key: "started",
       label: "Started",
-      render: (r) => <span className="nowrap">{r.started}</span>,
+      render: (r) => <span className="nowrap">{fmtTime(r.started)}</span>,
     },
     {
       key: "user_name",
@@ -530,7 +532,7 @@ function ScreensTab({ filters }) {
     {
       key: "last_used",
       label: "Last used",
-      render: (s) => <span className="nowrap muted">{s.last_used || "—"}</span>,
+      render: (s) => <span className="nowrap muted">{fmtTime(s.last_used)}</span>,
     },
   ];
   return (
@@ -606,7 +608,7 @@ function ActionsTab({ filters }) {
     {
       key: "last_at",
       label: "Last",
-      render: (r) => <span className="nowrap muted">{r.last_at}</span>,
+      render: (r) => <span className="nowrap muted">{fmtTime(r.last_at)}</span>,
     },
   ];
   return (
@@ -683,7 +685,7 @@ function ErrorsTab({ filters }) {
       label: "Last",
       render: (r) => (
         <span className="nowrap muted">
-          {r.last_at}
+          {fmtTime(r.last_at)}
           <br />
           {r.last_user}
         </span>
@@ -781,7 +783,7 @@ function UsersTab({ filters, onSessions }) {
     {
       key: "last_seen",
       label: "Last seen",
-      render: (u) => <span className="nowrap muted">{u.last_seen}</span>,
+      render: (u) => <span className="nowrap muted">{fmtTime(u.last_seen)}</span>,
     },
   ];
   return (
@@ -879,7 +881,7 @@ function JourneyModal({ journey, filters, onClose }) {
       title={`Journey: ${journey.user_name}`}
       subtitle={[
         journey.session != null
-          ? `Session ${journey.session}, started ${journey.started}`
+          ? `Session ${journey.session}, started ${fmtTime(journey.started)}`
           : "The whole period",
         deviceOf(journey),
       ]
@@ -897,7 +899,7 @@ function JourneyModal({ journey, filters, onClose }) {
             key={`${s.at}:${i}`}
             className={`us__step us__step--${s.kind?.toLowerCase()} ${s.ok === false ? "us__step--bad" : ""}`}
           >
-            <span className="us__step-time">{s.at?.slice(11) || s.at}</span>
+            <span className="us__step-time">{formatIstClock(s.at)}</span>
             <div className="us__step-body">
               <div>
                 <b>{KIND[s.kind] ?? s.kind}</b> {s.screen}

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { istIfDateTime } from "../../lib/istTime";
 import { Glyph } from "./Glyph";
 import { EmptyState } from "./EmptyState";
 import "./DataTable.css";
@@ -231,7 +232,7 @@ export function DataTable({
               <tr key={row.id ?? i}>
                 {columns.map((col) => (
                   <td key={col.key} className={[isNarrow(col) && "dt__narrow", col.className].filter(Boolean).join(" ") || undefined}>
-                    {col.render ? col.render(row) : String(row[col.key] ?? "—")}
+                    {col.render ? col.render(row) : String(istIfDateTime(row[col.key]) ?? "—")}
                   </td>
                 ))}
                 {actions && (

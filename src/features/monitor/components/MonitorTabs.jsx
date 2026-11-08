@@ -6,6 +6,7 @@ import { TableSearchBar } from "../../../components/ui/TableSearchBar";
 import { Alert } from "../../../components/ui/Alert";
 import { depKey, depName, depStatus, depTone, isServerProbe } from "./dependencyNames";
 import { Dot, LineChart, MiniTable, Panel, Tile, fmtBytes, fmtDuration, fmtMs, fmtNum, fmtPct, fmtTime, useMonitor } from "./monitorShared";
+import { istIfDateTime } from "../../../lib/istTime";
 
 const Err = ({ error }) => (error ? <Alert>{error}</Alert> : null);
 const Sql = ({ text }) => <code className="pm__sql">{text || "—"}</code>;
@@ -473,7 +474,7 @@ export function ServerTab({ period }) {
                   .map(([k, v]) => (
                     <div key={k}>
                       <dt>{k.replace(/_/g, " ")}</dt>
-                      <dd>{/bytes/.test(k) ? fmtBytes(v) : typeof v === "number" ? fmtNum(v, 2) : String(v)}</dd>
+                      <dd>{/bytes/.test(k) ? fmtBytes(v) : typeof v === "number" ? fmtNum(v, 2) : String(istIfDateTime(v))}</dd>
                     </div>
                   ))}
               </dl>

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { monitorService } from "../services/monitorService";
 import { Card } from "../../../components/ui/Card";
 import { StatCard } from "../../../components/ui/StatCard";
+import { formatIst, formatIstTick, istIfDateTime } from "../../../lib/istTime";
 
 // Shared pieces of the Platform Monitor: the data hook, formatters, tiles,
 // panels and a small SVG line chart (the console has no chart library).
@@ -56,8 +57,8 @@ export function fmtDuration(seconds) {
   const m = Math.floor((s % 3600) / 60);
   return d ? `${d}d ${h}h` : h ? `${h}h ${m}m` : m ? `${m}m` : `${s}s`;
 }
-export const fmtTime = (v) => (v ? new Date(v).toLocaleString() : "—");
-const fmtTick = (v) => (v ? new Date(v).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "");
+export const fmtTime = formatIst;
+const fmtTick = formatIstTick;
 
 export function Dot({ up }) {
   return <span className={`pm__dot ${up ? "pm__dot--up" : "pm__dot--down"}`} aria-label={up ? "Up" : "Down"} />;
@@ -171,7 +172,7 @@ export function MiniTable({ rows, columns, empty = "Nothing here." }) {
             <tr key={i}>
               {columns.map((c) => (
                 <td key={c.key} className={c.num ? "pm__num" : undefined}>
-                  {c.render ? c.render(r) : (r[c.key] ?? "—")}
+                  {c.render ? c.render(r) : (istIfDateTime(r[c.key]) ?? "—")}
                 </td>
               ))}
             </tr>

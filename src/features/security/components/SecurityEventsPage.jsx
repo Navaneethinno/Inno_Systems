@@ -9,7 +9,8 @@ import { PageHeader } from "../../../components/ui/PageHeader";
 import { Alert } from "../../../components/ui/Alert";
 import { StatCard } from "../../../components/ui/StatCard";
 import { TonePill } from "../../../components/ui/StatusBadge";
-import { LOCAL_ZONE, formatDateTime, formatNumber } from "../../aml/components/formatAml";
+import { formatDateTime, formatNumber } from "../../aml/components/formatAml";
+import { istInText } from "../../../lib/istTime";
 
 const LIMIT = 50;
 
@@ -99,7 +100,7 @@ export function SecurityEventsPage() {
       ),
     },
     { key: "subject", label: "Subject", render: (r) => <span className="mono cell-wrap">{r.subject || "—"}</span> },
-    { key: "detail", label: "Detail", render: (r) => <span className="cell-wrap">{r.detail ? unbrokenWords(r.detail) : "—"}</span> },
+    { key: "detail", label: "Detail", render: (r) => <span className="cell-wrap">{r.detail ? unbrokenWords(istInText(r.detail)) : "—"}</span> },
     { key: "repeats", label: "Repeats", render: (r) => (r.repeats > 1 ? `×${formatNumber(r.repeats)}` : "—") },
     { key: "inst_profile_name", label: "Institution", render: (r) => r.inst_profile_name || "—" },
     { key: "source", label: "Source", render: (r) => <span className="mono">{r.source || "—"}</span> },
@@ -110,7 +111,7 @@ export function SecurityEventsPage() {
       <PageHeader
         eyebrow="Security"
         title="Security Events"
-        subtitle={`What the platform's runtime watch has seen, newest first. Events appear within about a minute. Times are ${LOCAL_ZONE}.`}
+        subtitle={`What the platform's runtime watch has seen, newest first. Events appear within about a minute. Times are IST.`}
         actions={
           <Button variant="secondary" onClick={() => setVersion((v) => v + 1)} icon="refresh">
             Reload
