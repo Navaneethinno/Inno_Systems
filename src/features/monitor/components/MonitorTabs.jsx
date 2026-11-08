@@ -4,7 +4,7 @@ import { Modal } from "../../../components/ui/Modal";
 import { Select } from "../../../components/ui/Select";
 import { TableSearchBar } from "../../../components/ui/TableSearchBar";
 import { Alert } from "../../../components/ui/Alert";
-import { depName, depStatus, depTone } from "./dependencyNames";
+import { depKey, depName, depStatus, depTone, isServerProbe } from "./dependencyNames";
 import { Dot, LineChart, MiniTable, Panel, Tile, fmtBytes, fmtDuration, fmtMs, fmtNum, fmtPct, fmtTime, useMonitor } from "./monitorShared";
 
 const Err = ({ error }) => (error ? <Alert>{error}</Alert> : null);
@@ -55,7 +55,7 @@ export function OverviewTab({ onEvents }) {
         <Tile label="Disk used" value={fmtPct(diskPct, 0)} hint={s.disk_total_bytes ? `${fmtBytes(s.disk_free_bytes)} free` : undefined} tone={tone(diskPct, 80, 92)} />
         <Tile label="DB connections" value={`${fmtNum(db.connections)} / ${fmtNum(db.max_connections)}`} hint={`${fmtNum(db.active)} active · ${fmtNum(db.waiting_on_lock)} waiting on a lock`} tone={tone(dbPct)} />
         {deps.map((d) => (
-          <Tile key={d.dependency} label={depName(d.dependency)} value={depStatus(d.status)} hint={fmtMs(d.latency_ms ?? d.last_latency_ms)} tone={depTone(d.status)} />
+          <Tile key={depKey(d)} label={depName(d.dependency)} value={depStatus(d.status)} hint={[d.service, fmtMs(d.latency_ms ?? d.last_latency_ms)].filter(Boolean).join(" · ")} tone={depTone(d.status)} />
         ))}
       </div>
       <Panel title="Events in the last 24 hours" hint="Click one to see it in Deadlocks & Stalls.">
@@ -391,12 +391,85 @@ export function DatabaseTab({ period }) {
   );
 }
 
+// One field of a `recent` result, formatted by what its name says it holds.
+function recentValue(key, v) {
+  if (typeof v === "boolean") return v ? "yes" : "no";
+  if (/(^|_)(at|t|time)$/.test(key)) return fmtTime(v);
+  if (/(^|_)ms$/.test(key)) return fmtMs(v);
+  return typeof v === "number" ? fmtNum(v, 2) : String(v);
+}
+// One `recent` result as a line of text; nested values are left out.
+function recentLine(r) {
+  if (r == null) return "—";
+  if (typeof r !== "object") return typeof r === "boolean" ? (r ? "Success" : "Failure") : String(r);
+  const parts = Object.entries(r)
+    .filter(([, v]) => v != null && typeof v !== "object")
+    .map(([k, v]) => `${k.replace(/_/g, " ")}: ${recentValue(k, v)}`);
+  return parts.join(" · ") || "—";
+}
+const recentOk = (r) => (typeof r === "boolean" ? r : r && typeof r === "object" ? (r.ok ?? r.success) : undefined);
+
+// `recent`, a partner's last results: how many failed, and the latest few.
+function RecentResults({ recent }) {
+  const rows = Array.isArray(recent) ? recent : recent ? [recent] : [];
+  if (!rows.length) return null;
+  const known = rows.map(recentOk).filter((ok) => typeof ok === "boolean");
+  const ok = known.filter(Boolean).length;
+  const shown = rows.slice(-5).map((r) => ({ line: recentLine(r) }));
+  return (
+    <>
+      <p className="pm__note">
+        Recent results: {fmtNum(rows.length)}
+        {known.length === rows.length ? ` (${fmtNum(ok)} succeeded, ${fmtNum(rows.length - ok)} failed)` : ""}
+        {rows.length > shown.length ? `, ${fmtNum(shown.length)} shown` : ""}
+      </p>
+      <MiniTable rows={shown} columns={[{ key: "line", label: "Result" }]} />
+    </>
+  );
+}
+
+// A partner's last report (`data`), read the same way as the probes' details.
+function PartnerDetails({ data }) {
+  if (!data) return <p className="pm__empty">No details reported.</p>;
+  const facts = [
+    ["Attempts", fmtNum(data.attempts)],
+    ["Failures", fmtNum(data.failures)],
+    ["Timeouts", fmtNum(data.timeouts)],
+    ["Failures in a row", `${fmtNum(data.consecutive_failures)} / ${fmtNum(data.fail_after)}`],
+    ["Last success", fmtTime(data.last_success_at)],
+    ["Last failure", fmtTime(data.last_failure_at)],
+    ["Last call timed out", data.last_timeout == null ? "—" : data.last_timeout ? "Yes" : "No"],
+    ["Last latency", fmtMs(data.last_latency_ms)],
+    ["Average latency", fmtMs(data.avg_latency_ms)],
+    ["Slowest", fmtMs(data.max_latency_ms)],
+  ];
+  return (
+    <>
+      <dl className="pm__facts">
+        {facts.map(([k, v]) => (
+          <div key={k}>
+            <dt>{k}</dt>
+            <dd>{v}</dd>
+          </div>
+        ))}
+        {data.last_error && (
+          <div>
+            <dt>Last error</dt>
+            <dd className="pm__bad">{String(data.last_error)}</dd>
+          </div>
+        )}
+      </dl>
+      <RecentResults recent={data.recent} />
+    </>
+  );
+}
+
 // 5. Server: load, CPU, memory and disk, and Elasticsearch and Redis.
 export function ServerTab({ period }) {
   const { data, error } = useMonitor("server", period);
   const series = (data?.series ?? []).map((r) => ({ ...r, mem_used_bytes: r.mem_total_bytes - r.mem_avail_bytes, disk_used_bytes: r.disk_total_bytes - r.disk_free_bytes }));
   const deps = data?.dependencies ?? [];
-  const latency = (name) => (data?.dependency_series ?? []).filter((d) => d.dependency === name);
+  const latency = (dep) => (data?.dependency_series ?? []).filter((r) => depKey(r) === depKey(dep));
   return (
     <>
       <Err error={error} />
@@ -416,15 +489,20 @@ export function ServerTab({ period }) {
       </div>
       <div className="pm__grid">
         {deps.map((d) => (
-          <Panel key={d.dependency} title={`${depName(d.dependency)} · ${depStatus(d.status)}`} hint={`${fmtMs(d.latency_ms)} · read ${fmtTime(d.at)}`}>
-            <LineChart rows={latency(d.dependency)} lines={[{ key: "latency_ms", label: "Latency" }]} format={fmtMs} height={110} />
+          <Panel key={depKey(d)} title={[depName(d.dependency), depStatus(d.status), d.service].filter(Boolean).join(" · ")} hint={`${fmtMs(d.latency_ms)} · read ${fmtTime(d.at)}`}>
+            <LineChart rows={latency(d)} lines={[{ key: "latency_ms", label: "Latency" }]} format={fmtMs} height={110} />
             {d.dependency === "elasticsearch" ? (
               <>
-                <p className="pm__note">
-                  Cluster {d.data?.cluster} is {d.data?.cluster_status} · {fmtNum(d.data?.active_shards)} active shards
-                </p>
-                <MiniTable rows={d.data?.indices} columns={[{ key: "index", label: "Index" }, { key: "health", label: "Health" }, { key: "docs.count", label: "Docs", num: true, render: (r) => fmtNum(r["docs.count"]) }, { key: "store.size", label: "Size", num: true, render: (r) => fmtBytes(r["store.size"]) }]} />
+                {d.data?.error && <p className="pm__bad">{String(d.data.error)}</p>}
+                {d.data?.cluster && (
+                  <p className="pm__note">
+                    Cluster {d.data.cluster} is {d.data.cluster_status} · {fmtNum(d.data.active_shards)} active shards
+                  </p>
+                )}
+                <MiniTable rows={d.data?.indices} empty="No indices reported." columns={[{ key: "index", label: "Index" }, { key: "health", label: "Health" }, { key: "docs.count", label: "Docs", num: true, render: (r) => fmtNum(r["docs.count"]) }, { key: "store.size", label: "Size", num: true, render: (r) => fmtBytes(r["store.size"]) }]} />
               </>
+            ) : !isServerProbe(d.dependency) ? (
+              <PartnerDetails data={d.data} />
             ) : (
               <dl className="pm__facts">
                 {Object.entries(d.data ?? {})

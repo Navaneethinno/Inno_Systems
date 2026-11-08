@@ -78,7 +78,7 @@ export function PlatformMonitorPage() {
         {tab === "apis" && <ApisTab {...props} />}
         {tab === "database" && <DatabaseTab {...props} />}
         {tab === "server" && <ServerTab {...props} />}
-        {tab === "dependencies" && <DependenciesTab {...props} />}
+        {tab === "dependencies" && <DependenciesTab {...props} processors={overview.data?.processors} />}
         {tab === "throughput" && <ThroughputTab {...props} />}
         {tab === "stalls" && <StallsTab {...props} kind={stallKind} onKind={setStallKind} />}
       </div>

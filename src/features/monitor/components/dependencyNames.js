@@ -9,5 +9,14 @@ export function depName(name) {
   if (s.startsWith("NETWORK:")) return `Card network ${s.slice(8)}`;
   return s || "—";
 }
-export const depStatus = (s) => ({ up: "Up", degraded: "Degraded", down: "Down" })[s] ?? s ?? "—";
-export const depTone = (s) => (s === "up" ? "ok" : s === "degraded" ? "warn" : s ? "bad" : undefined);
+export const depStatus = (s) => ({ up: "Up", degraded: "Degraded", down: "Down", unknown: "Unknown" })[s] ?? s ?? "—";
+// `unknown` means a probe reported no status: neutral, not a failure.
+export const depTone = (s) => (s === "up" ? "ok" : s === "degraded" ? "warn" : s && s !== "unknown" ? "bad" : undefined);
+// Rows come one per dependency and processor.
+export const depKey = (r) => `${r.dependency}|${r.service ?? ""}`;
+// Lower-case names (elasticsearch, redis) are probes on the server itself;
+// upper-case names are partners.
+export const isServerProbe = (name) => {
+  const s = String(name ?? "");
+  return s !== "" && s === s.toLowerCase();
+};
