@@ -391,43 +391,6 @@ export function DatabaseTab({ period }) {
   );
 }
 
-// One field of a `recent` result, formatted by what its name says it holds.
-function recentValue(key, v) {
-  if (typeof v === "boolean") return v ? "yes" : "no";
-  if (/(^|_)(at|t|time)$/.test(key)) return fmtTime(v);
-  if (/(^|_)ms$/.test(key)) return fmtMs(v);
-  return typeof v === "number" ? fmtNum(v, 2) : String(v);
-}
-// One `recent` result as a line of text; nested values are left out.
-function recentLine(r) {
-  if (r == null) return "—";
-  if (typeof r !== "object") return typeof r === "boolean" ? (r ? "Success" : "Failure") : String(r);
-  const parts = Object.entries(r)
-    .filter(([, v]) => v != null && typeof v !== "object")
-    .map(([k, v]) => `${k.replace(/_/g, " ")}: ${recentValue(k, v)}`);
-  return parts.join(" · ") || "—";
-}
-const recentOk = (r) => (typeof r === "boolean" ? r : r && typeof r === "object" ? (r.ok ?? r.success) : undefined);
-
-// `recent`, a partner's last results: how many failed, and the latest few.
-function RecentResults({ recent }) {
-  const rows = Array.isArray(recent) ? recent : recent ? [recent] : [];
-  if (!rows.length) return null;
-  const known = rows.map(recentOk).filter((ok) => typeof ok === "boolean");
-  const ok = known.filter(Boolean).length;
-  const shown = rows.slice(-5).map((r) => ({ line: recentLine(r) }));
-  return (
-    <>
-      <p className="pm__note">
-        Recent results: {fmtNum(rows.length)}
-        {known.length === rows.length ? ` (${fmtNum(ok)} succeeded, ${fmtNum(rows.length - ok)} failed)` : ""}
-        {rows.length > shown.length ? `, ${fmtNum(shown.length)} shown` : ""}
-      </p>
-      <MiniTable rows={shown} columns={[{ key: "line", label: "Result" }]} />
-    </>
-  );
-}
-
 // A partner's last report (`data`), read the same way as the probes' details.
 function PartnerDetails({ data }) {
   if (!data) return <p className="pm__empty">No details reported.</p>;
@@ -438,7 +401,7 @@ function PartnerDetails({ data }) {
     ["Failures in a row", `${fmtNum(data.consecutive_failures)} / ${fmtNum(data.fail_after)}`],
     ["Last success", fmtTime(data.last_success_at)],
     ["Last failure", fmtTime(data.last_failure_at)],
-    ["Last call timed out", data.last_timeout == null ? "—" : data.last_timeout ? "Yes" : "No"],
+    ["Last failure timed out", data.last_timeout == null ? "—" : data.last_timeout ? "Yes" : "No"],
     ["Last latency", fmtMs(data.last_latency_ms)],
     ["Average latency", fmtMs(data.avg_latency_ms)],
     ["Slowest", fmtMs(data.max_latency_ms)],
@@ -459,7 +422,7 @@ function PartnerDetails({ data }) {
           </div>
         )}
       </dl>
-      <RecentResults recent={data.recent} />
+      {data.recent > 0 && <p className="pm__note">Latency over the last {fmtNum(data.recent)} calls.</p>}
     </>
   );
 }
